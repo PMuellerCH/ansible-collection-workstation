@@ -1,0 +1,30 @@
+---
+namespace: pmuellerch
+name: workstation
+version: 0.1.0
+readme: README.md
+description: Ansible collection for provisioning personal workstation tools
+license:
+  - Apache-2.0
+authors:
+  - Philipp Müller <philipp@mueller-vu.ch>
+tags:
+  - workstation
+  - personal
+  - ubuntu
+  - desktop
+repository: https://github.com/PMuellerCH/ansible-collection-workstation
+homepage: https://github.com/PMuellerCH/ansible-collection-workstation
+issues: https://github.com/PMuellerCH/ansible-collection-workstation/issues
+build_ignore:
+  - "*.tar.gz"
+  - ".git"
+  - ".github"
+  - ".ansible"
+  - ".yamllint.yml"
+  - ".ansible-lint"
+  - ".markdownlint.yml"
+  - ".editorconfig"
+  - ".secrets.baseline"
+  - ".pre-commit-config.yaml"
+  - "molecule"

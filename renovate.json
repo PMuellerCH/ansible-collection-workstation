@@ -1,0 +1,33 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "labels": ["dependencies"],
+  "pip_requirements": {
+    "managerFilePatterns": [
+      "/^requirements[\\w-]*\\.txt$/",
+      "/^\\.github/requirements[\\w-]*\\.txt$/"
+    ]
+  },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Update versions pinned in Ansible role defaults via inline renovate comments",
+      "managerFilePatterns": [
+        "/^roles/.+/defaults/main\\.yml$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>[^\\s]+)( registryUrl=(?<registryUrl>[^\\s]+))?( extractVersion=(?<extractVersion>[^\\s]+))?\\n[a-z_]+: \"(?<currentValue>[^\"]+)\""
+      ]
+    },
+    {
+      "customType": "regex",
+      "description": "Update Ansible Galaxy collection versions in requirements.yml",
+      "managerFilePatterns": [
+        "/^requirements\\.yml$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>[^\\s]+)\\n  - name: [^\\n]+\\n    version: \"(?<currentValue>[^\"]+)\""
+      ]
+    }
+  ]
+}
