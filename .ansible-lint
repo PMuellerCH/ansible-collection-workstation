@@ -1,0 +1,13 @@
+---
+profile: production
+
+warn_list:
+  - yaml[truthy]
+  - yaml[line-length]
+  - name[casing]
+
+exclude_paths:
+  - .git/
+  - .cache/
+  - .ansible/
+  - .github/node_modules/
