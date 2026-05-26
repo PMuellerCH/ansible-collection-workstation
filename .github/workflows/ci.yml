@@ -37,7 +37,8 @@ jobs:
         run: ansible-galaxy collection install . --force
 
       - name: Install collection dependencies
-        if: steps.ansible-cache.outputs.cache-hit != 'true' && hashFiles('requirements.yml') != ''
+        if: steps.ansible-cache.outputs.cache-hit != 'true' &&
+          hashFiles('requirements.yml') != ''
         run: ansible-galaxy collection install -r requirements.yml
 
       - name: Set up Node.js
