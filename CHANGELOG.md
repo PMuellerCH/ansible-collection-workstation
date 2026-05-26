@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.2](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/v0.1.1...v0.1.2) (2026-05-26)
+
+
+### Bug Fixes
+
+* resolve pre-commit markdownlint failures ([bfc4498](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/bfc4498f23704f4f6a50f3aa5b2902885996ac60)), closes [#7](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/7)
+* resolve pre-commit markdownlint failures ([#8](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/8)) ([cdb8cf0](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/cdb8cf050c9618617331c8309c31a7f17f1bcfeb))
+
 ## [0.1.1](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/v0.1.0...v0.1.1) (2026-05-26)
 
 
