@@ -1,0 +1,14 @@
+---
+default: true
+
+# Line length — 160 chars, skip tables and code blocks
+MD013:
+  line_length: 160
+  tables: false
+  code_blocks: false
+
+# Allow inline HTML (useful for badges, details tags)
+MD033: false
+
+# First line doesn't have to be h1 (README may start with a badge block)
+MD041: false

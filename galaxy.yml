@@ -1,0 +1,31 @@
+---
+namespace: swisstopo
+name: workstation
+version: 0.1.0
+readme: README.md
+description: Ansible collection for provisioning and maintaining IaC developer workstations
+license:
+  - Apache-2.0
+authors:
+  - swisstopo cloud infrastructure <cloud-admin@swisstopo.ch>
+tags:
+  - infrastructure
+  - workstation
+  - developer
+  - ubuntu
+  - desktop
+repository: https://github.com/swisstopo/infra-ansible-collection-workstation
+homepage: https://github.com/swisstopo/infra-ansible-collection-workstation
+issues: https://github.com/swisstopo/infra-ansible-collection-workstation/issues
+build_ignore:
+  - "*.tar.gz"
+  - ".git"
+  - ".github"
+  - ".ansible"
+  - ".yamllint.yml"
+  - ".ansible-lint"
+  - ".markdownlint.yml"
+  - ".editorconfig"
+  - ".secrets.baseline"
+  - ".pre-commit-config.yaml"
+  - "molecule"
