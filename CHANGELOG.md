@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.3](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/v0.1.2...v0.1.3) (2026-05-26)
+
+
+### Bug Fixes
+
+* restore --- in galaxy.yml and prevent recurrence via generic updater ([#10](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/10)) ([3365431](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/3365431699bb4eb8f8eaee6d3c784e63fd092837))
+* restore --- in galaxy.yml and switch release-please to generic updater ([f3fba28](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/f3fba28c44c7fb2485d51d706dda8fcdb6bca00e))
+
 ## [0.1.2](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/v0.1.1...v0.1.2) (2026-05-26)
 
 
