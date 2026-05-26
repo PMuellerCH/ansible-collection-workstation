@@ -9,6 +9,7 @@ license:
 authors:
   - swisstopo cloud infrastructure <cloud-admin@swisstopo.ch>
 tags:
+  - infrastructure
   - workstation
   - developer
   - ubuntu
