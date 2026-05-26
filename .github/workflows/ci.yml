@@ -24,7 +24,6 @@ jobs:
           cache-dependency-path: .github/requirements.txt
 
       - name: Install Python tools
-        if: steps.setup-python.outputs.cache-hit != 'true'
         run: pip install -r .github/requirements.txt
 
       - name: Cache Ansible collections and roles
