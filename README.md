@@ -5,7 +5,7 @@ An Ansible Galaxy collection for provisioning personal/home workstation tools on
 ## Roles
 
 | Role | Description |
-|---|---|
+| --- | --- |
 | `bitwarden` | Bitwarden password manager desktop app |
 | `synology` | Synology Drive client |
 | `thunderbird` | Thunderbird email client |

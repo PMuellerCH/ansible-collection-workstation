@@ -15,15 +15,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: yamllint
+        uses: frenck/action-yamllint@v1.5.0
+        with:
+          config: .yamllint.yml
+
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
           python-version: "3.14"
-          cache: pip
-          cache-dependency-path: .github/requirements.txt
-
-      - name: Install Python tools
-        run: pip install -r .github/requirements.txt
 
       - name: Cache Ansible collections and roles
         id: ansible-cache
@@ -40,32 +40,17 @@ jobs:
         run: ansible-galaxy collection install -r requirements.yml
         continue-on-error: true
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: "24"
-
-      - name: Cache node_modules
-        id: node-cache
-        uses: actions/cache@v5
-        with:
-          path: .github/node_modules
-          key: node-modules-${{ hashFiles('.github/package-lock.json') }}
-
-      - name: Install Node.js tools
-        if: steps.node-cache.outputs.cache-hit != 'true'
-        run: npm ci --prefix .github
-
-      - name: yamllint
-        run: yamllint --config-file .yamllint.yml .
-
       - name: ansible-lint
-        run: ansible-lint
-        env:
-          ANSIBLE_PYTHON_INTERPRETER: auto_silent
+        uses: ansible/ansible-lint@v26.6.0
 
       - name: markdownlint
-        run: npx --prefix .github markdownlint --config .markdownlint.yml '**/*.md'
+        uses: DavidAnson/markdownlint-cli2-action@v20
+        with:
+          globs: "**/*.md"
 
       - name: checkov
-        run: checkov --framework ansible --directory . --quiet
+        uses: bridgecrewio/checkov-action@v12.3112.0
+        with:
+          framework: ansible
+          directory: .
+          quiet: true

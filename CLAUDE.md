@@ -25,8 +25,8 @@ ansible-lint
 # Security scan
 checkov --framework ansible --directory . --quiet
 
-# Markdown lint
-npx --prefix .github markdownlint --config .markdownlint.yml '**/*.md'
+# Markdown lint (via pre-commit, uses markdownlint-cli2)
+pre-commit run markdownlint-cli2 --all-files
 ```
 
 The collection must be installed locally (`ansible-galaxy collection install . --force`)
@@ -51,7 +51,8 @@ roles/<name>/
 
 Every version string must be pinned to an exact version and covered by a Renovate manager:
 
-- **apt packages**: version variable in `defaults/main.yml` with `# renovate: datasource=deb` comment; `dpkg_selections: hold` applied after install to prevent `apt upgrade` from overriding
+- **apt packages**: version variable in `defaults/main.yml` with `# renovate: datasource=deb`
+  comment; `dpkg_selections: hold` applied after install to prevent `apt upgrade` from overriding
 - **GitHub releases / pipx / npm**: version variable in `defaults/main.yml` with appropriate Renovate datasource comment
 - **Python CI tools** (`.github/requirements.txt`): exact pin, tracked by `pip_requirements` manager
 - **Node CI tools** (`.github/package.json`): exact pin, tracked by npm manager
