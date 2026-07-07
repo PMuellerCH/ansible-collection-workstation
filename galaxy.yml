@@ -24,7 +24,9 @@ build_ignore:
   - .ansible
   - .yamllint.yml
   - .ansible-lint
-  - .markdownlint.yml
+  - .markdownlint-cli2.yaml
+  - .markdownlint-standard.yml
+  - .markdownlint-changelog.yml
   - .editorconfig
   - .secrets.baseline
   - .pre-commit-config.yaml
