@@ -24,8 +24,9 @@ ansible-lint
 # Security scan
 checkov --framework ansible --directory . --quiet
 
-# Markdown lint
-npx --prefix .github markdownlint --config .markdownlint.yml '**/*.md'
+# Markdown lint (two-pass: standard files, then CHANGELOG.md with relaxed line length)
+.github/node_modules/.bin/markdownlint-cli2 --config .markdownlint-standard.yml '**/*.md' '#CHANGELOG.md' '#**/node_modules/**'
+.github/node_modules/.bin/markdownlint-cli2 --config .markdownlint-changelog.yml 'CHANGELOG.md'
 ```
 
 The collection must be installed locally (`ansible-galaxy collection install . --force`)
