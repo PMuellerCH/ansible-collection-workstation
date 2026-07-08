@@ -1,0 +1,30 @@
+---
+modern_cli_bat_enabled: true
+modern_cli_btop_enabled: true
+modern_cli_eza_enabled: true
+modern_cli_fd_enabled: true
+modern_cli_ripgrep_enabled: true
+modern_cli_zoxide_enabled: true
+
+# renovate: datasource=deb depName=bat registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
+modern_cli_bat_version: "0.24.0-1build1"
+
+# renovate: datasource=deb depName=btop registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
+modern_cli_btop_version: "1.3.0-1"
+
+# renovate: datasource=github-releases depName=catppuccin/btop
+modern_cli_btop_catppuccin_version: "1.0.0"
+
+# renovate: datasource=deb depName=eza registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
+modern_cli_eza_version: "0.18.2-1"
+
+# renovate: datasource=deb depName=fd-find registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
+modern_cli_fd_version: "9.0.0-1"
+
+# renovate: datasource=deb depName=ripgrep registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
+modern_cli_ripgrep_version: "14.1.0-1"
+
+# renovate: datasource=deb depName=zoxide registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
+modern_cli_zoxide_version: "0.9.3-1"
+
+modern_cli_deploy_shell_aliases: true

@@ -1,0 +1,32 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Gather package facts
+      ansible.builtin.package_facts:
+        manager: apt
+
+    - name: Assert git is installed
+      ansible.builtin.assert:
+        that: "'git' in ansible_facts.packages"
+
+    - name: Read global git config
+      community.general.git_config_info:
+        name: user.name
+        scope: global
+      register: _git_user_name
+
+    - name: Assert user.name was configured
+      ansible.builtin.assert:
+        that: _git_user_name.config_value == "Molecule Test"
+
+    - name: Read global signing key config
+      community.general.git_config_info:
+        name: user.signingkey
+        scope: global
+      register: _git_signing_key
+
+    - name: Assert signing key defaults to id_ed25519.pub
+      ansible.builtin.assert:
+        that: "_git_signing_key.config_value.endswith('/.ssh/id_ed25519.pub')"

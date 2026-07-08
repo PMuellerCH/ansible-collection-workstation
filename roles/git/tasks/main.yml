@@ -1,0 +1,78 @@
+---
+- name: Install git
+  ansible.builtin.apt:
+    name: "git={{ git_version }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+
+- name: Hold git package version
+  ansible.builtin.dpkg_selections:
+    name: git
+    selection: hold
+  become: true
+
+- name: Configure git user name
+  community.general.git_config:
+    name: user.name
+    value: "{{ git_user_name }}"
+    scope: global
+
+- name: Configure git user email
+  community.general.git_config:
+    name: user.email
+    value: "{{ git_user_email }}"
+    scope: global
+
+- name: Configure git default branch
+  community.general.git_config:
+    name: init.defaultBranch
+    value: "{{ git_default_branch }}"
+    scope: global
+
+- name: Configure git pull strategy
+  community.general.git_config:
+    name: pull.rebase
+    value: "{{ git_pull_rebase | ternary('true', 'false') }}"
+    scope: global
+
+- name: Configure git push default
+  community.general.git_config:
+    name: push.default
+    value: "{{ git_push_default }}"
+    scope: global
+
+- name: Set core editor
+  community.general.git_config:
+    name: core.editor
+    value: "{{ git_editor }}"
+    scope: global
+
+- name: Configure git gpg format to ssh
+  community.general.git_config:
+    name: gpg.format
+    value: ssh
+    scope: global
+  when: git_signing_enabled
+
+- name: Configure git signing key
+  community.general.git_config:
+    name: user.signingkey
+    value: "{{ git_signing_key }}"
+    scope: global
+  when: git_signing_enabled
+
+- name: Configure git commit auto-signing
+  community.general.git_config:
+    name: commit.gpgsign
+    value: "true"
+    scope: global
+  when: git_signing_enabled
+
+- name: Configure git tag auto-signing
+  community.general.git_config:
+    name: tag.gpgSign
+    value: "true"
+    scope: global
+  when: git_signing_enabled
