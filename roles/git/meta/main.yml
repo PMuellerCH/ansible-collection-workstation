@@ -1,0 +1,9 @@
+---
+galaxy_info:
+  role_name: git
+  namespace: swisstopo
+  author: swisstopo
+  license: MIT
+  description: Install and configure git
+  min_ansible_version: "2.17"
+dependencies: []

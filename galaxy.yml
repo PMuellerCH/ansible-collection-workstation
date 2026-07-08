@@ -17,6 +17,8 @@ tags:
 repository: https://github.com/swisstopo/infra-ansible-collection-workstation
 homepage: https://github.com/swisstopo/infra-ansible-collection-workstation
 issues: https://github.com/swisstopo/infra-ansible-collection-workstation/issues
+dependencies:
+  community.general: ">=13.0.0"
 build_ignore:
   - '*.tar.gz'
   - .git

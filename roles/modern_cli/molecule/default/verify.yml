@@ -1,0 +1,54 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Gather package facts
+      ansible.builtin.package_facts:
+        manager: apt
+
+    - name: Assert all tools are installed
+      ansible.builtin.assert:
+        that:
+          - "'bat' in ansible_facts.packages"
+          - "'btop' in ansible_facts.packages"
+          - "'eza' in ansible_facts.packages"
+          - "'fd-find' in ansible_facts.packages"
+          - "'ripgrep' in ansible_facts.packages"
+          - "'zoxide' in ansible_facts.packages"
+
+    - name: Stat fd symlink
+      ansible.builtin.stat:
+        path: /usr/local/bin/fd
+      register: _modern_cli_fd_symlink
+
+    - name: Assert fd symlink exists
+      ansible.builtin.assert:
+        that: _modern_cli_fd_symlink.stat.exists
+
+    - name: Stat bat Catppuccin theme
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/bat/themes/Catppuccin Mocha.tmTheme"
+      register: _modern_cli_bat_theme
+
+    - name: Assert bat theme was downloaded
+      ansible.builtin.assert:
+        that: _modern_cli_bat_theme.stat.exists
+
+    - name: Stat btop Catppuccin theme
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/btop/themes/catppuccin_mocha.theme"
+      register: _modern_cli_btop_theme
+
+    - name: Assert btop theme was downloaded
+      ansible.builtin.assert:
+        that: _modern_cli_btop_theme.stat.exists
+
+    - name: Stat zsh alias snippet
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/modern_cli.zsh"
+      register: _modern_cli_zsh_snippet
+
+    - name: Assert zsh alias snippet was deployed
+      ansible.builtin.assert:
+        that: _modern_cli_zsh_snippet.stat.exists

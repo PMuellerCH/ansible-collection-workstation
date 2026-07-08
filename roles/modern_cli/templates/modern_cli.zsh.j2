@@ -1,0 +1,32 @@
+# Modern CLI tool aliases — managed by Ansible (modern_cli role)
+{% if modern_cli_bat_enabled %}
+command -v batcat  &>/dev/null && alias cat='batcat --paging=never'
+{% endif %}
+{% if modern_cli_btop_enabled %}
+command -v btop    &>/dev/null && alias top='btop'
+{% endif %}
+{% if modern_cli_ripgrep_enabled %}
+command -v rg      &>/dev/null && alias grep='rg'
+{% endif %}
+{% if modern_cli_fd_enabled %}
+command -v fd      &>/dev/null && alias find='fd'
+{% endif %}
+{% if modern_cli_eza_enabled %}
+
+# eza — modern ls replacement
+if command -v eza &>/dev/null; then
+  alias ls='eza --icons'
+  alias l='eza --icons'
+  alias ll='eza -l --icons'
+  alias la='eza -lah --icons'
+  alias lt='eza --tree --icons'
+fi
+{% endif %}
+{% if modern_cli_zoxide_enabled %}
+
+# zoxide — smarter cd
+if command -v zoxide &>/dev/null; then
+  eval "$(zoxide init zsh)"
+  alias cd='z'
+fi
+{% endif %}

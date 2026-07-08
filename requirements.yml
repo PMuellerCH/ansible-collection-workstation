@@ -1,2 +1,5 @@
 ---
-collections: []
+collections:
+  # renovate: datasource=galaxy-collection depName=community.general
+  - name: community.general
+    version: "13.1.0"

@@ -1,0 +1,229 @@
+---
+# bat
+- name: Install bat
+  ansible.builtin.apt:
+    name: "bat={{ modern_cli_bat_version }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: modern_cli_bat_enabled
+  tags: [bat, modern_cli]
+
+- name: Hold bat package version
+  ansible.builtin.dpkg_selections:
+    name: bat
+    selection: hold
+  become: true
+  when: modern_cli_bat_enabled
+  tags: [bat, modern_cli]
+
+- name: Create bat config and themes directories
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/bat/themes"
+    state: directory
+    mode: "0755"
+  become: false
+  when: modern_cli_bat_enabled
+  tags: [bat, modern_cli]
+
+- name: Deploy bat config
+  ansible.builtin.copy:
+    src: bat_config
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/bat/config"
+    mode: "0644"
+    force: false
+  become: false
+  when: modern_cli_bat_enabled
+  tags: [bat, modern_cli]
+
+- name: Download Catppuccin Mocha theme for bat
+  ansible.builtin.get_url:
+    url: "https://raw.githubusercontent.com/catppuccin/bat/{{ modern_cli_bat_theme_ref }}/themes/Catppuccin%20Mocha.tmTheme"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/bat/themes/Catppuccin Mocha.tmTheme"
+    checksum: "{{ modern_cli_bat_theme_checksum }}"
+    mode: "0644"
+  become: false
+  when: modern_cli_bat_enabled
+  notify: Rebuild bat cache
+  ignore_errors: "{{ ansible_check_mode }}"
+  tags: [bat, modern_cli]
+
+# btop
+- name: Install btop
+  ansible.builtin.apt:
+    name: "btop={{ modern_cli_btop_version }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: modern_cli_btop_enabled
+  tags: [btop, modern_cli]
+
+- name: Hold btop package version
+  ansible.builtin.dpkg_selections:
+    name: btop
+    selection: hold
+  become: true
+  when: modern_cli_btop_enabled
+  tags: [btop, modern_cli]
+
+- name: Create btop themes directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/btop/themes"
+    state: directory
+    mode: "0755"
+  become: false
+  when: modern_cli_btop_enabled
+  tags: [btop, modern_cli]
+
+- name: Check if Catppuccin Mocha btop theme is installed
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/btop/themes/catppuccin_mocha.theme"
+  register: modern_cli_btop_theme_stat
+  become: false
+  when: modern_cli_btop_enabled
+  tags: [btop, modern_cli]
+
+- name: Download Catppuccin btop themes archive
+  ansible.builtin.get_url:
+    url: "https://github.com/catppuccin/btop/releases/download/{{ modern_cli_btop_catppuccin_version }}/themes.tar.gz"
+    dest: "/tmp/catppuccin-btop-themes.tar.gz"
+    checksum: "{{ modern_cli_btop_catppuccin_checksum }}"
+    mode: "0644"
+  register: modern_cli_btop_theme_archive
+  when: modern_cli_btop_enabled
+  tags: [btop, modern_cli]
+
+- name: Extract Catppuccin Mocha btop theme
+  ansible.builtin.unarchive:
+    src: "/tmp/catppuccin-btop-themes.tar.gz"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/btop/themes"
+    include:
+      - themes/catppuccin_mocha.theme
+    extra_opts:
+      - --strip-components=1
+    remote_src: true
+  become: false
+  when: >-
+    modern_cli_btop_enabled and
+    (modern_cli_btop_theme_archive.changed or not modern_cli_btop_theme_stat.stat.exists)
+  ignore_errors: "{{ ansible_check_mode }}"
+  tags: [btop, modern_cli]
+
+- name: Configure btop to use Catppuccin Mocha theme
+  ansible.builtin.copy:
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/btop/btop.conf"
+    content: |
+      color_theme = "catppuccin_mocha"
+    mode: "0644"
+    force: false
+  become: false
+  when: modern_cli_btop_enabled
+  tags: [btop, modern_cli]
+
+# eza
+- name: Install eza
+  ansible.builtin.apt:
+    name: "eza={{ modern_cli_eza_version }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: modern_cli_eza_enabled
+  tags: [cli-tools, modern_cli]
+
+- name: Hold eza package version
+  ansible.builtin.dpkg_selections:
+    name: eza
+    selection: hold
+  become: true
+  when: modern_cli_eza_enabled
+  tags: [cli-tools, modern_cli]
+
+# fd
+- name: Install fd-find
+  ansible.builtin.apt:
+    name: "fd-find={{ modern_cli_fd_version }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: modern_cli_fd_enabled
+  tags: [cli-tools, modern_cli]
+
+- name: Hold fd-find package version
+  ansible.builtin.dpkg_selections:
+    name: fd-find
+    selection: hold
+  become: true
+  when: modern_cli_fd_enabled
+  tags: [cli-tools, modern_cli]
+
+- name: Create /usr/local/bin/fd symlink (fd-find installs as fdfind on Debian/Ubuntu)
+  ansible.builtin.file:
+    src: /usr/bin/fdfind
+    dest: /usr/local/bin/fd
+    state: link
+    force: true
+  become: true
+  when: modern_cli_fd_enabled
+  ignore_errors: "{{ ansible_check_mode }}"
+  tags: [cli-tools, modern_cli]
+
+# ripgrep
+- name: Install ripgrep
+  ansible.builtin.apt:
+    name: "ripgrep={{ modern_cli_ripgrep_version }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: modern_cli_ripgrep_enabled
+  tags: [cli-tools, modern_cli]
+
+- name: Hold ripgrep package version
+  ansible.builtin.dpkg_selections:
+    name: ripgrep
+    selection: hold
+  become: true
+  when: modern_cli_ripgrep_enabled
+  tags: [cli-tools, modern_cli]
+
+# zoxide
+- name: Install zoxide
+  ansible.builtin.apt:
+    name: "zoxide={{ modern_cli_zoxide_version }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: modern_cli_zoxide_enabled
+  tags: [cli-tools, modern_cli]
+
+- name: Hold zoxide package version
+  ansible.builtin.dpkg_selections:
+    name: zoxide
+    selection: hold
+  become: true
+  when: modern_cli_zoxide_enabled
+  tags: [cli-tools, modern_cli]
+
+# shell integration
+- name: Create zsh conf.d directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d"
+    state: directory
+    mode: "0755"
+  become: false
+  when: modern_cli_deploy_shell_aliases
+  tags: [bat, btop, cli-tools, modern_cli]
+
+- name: Deploy modern_cli shell aliases
+  ansible.builtin.template:
+    src: modern_cli.zsh.j2
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/modern_cli.zsh"
+    mode: "0644"
+  become: false
+  when: modern_cli_deploy_shell_aliases
+  tags: [bat, btop, cli-tools, modern_cli]

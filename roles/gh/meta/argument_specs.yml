@@ -1,0 +1,10 @@
+---
+argument_specs:
+  main:
+    short_description: Install the GitHub CLI (gh) via apt
+    options:
+      gh_version:
+        type: str
+        required: false
+        default: "2.45.0-1ubuntu0.3"
+        description: Exact apt package version of gh to install (held after install).
