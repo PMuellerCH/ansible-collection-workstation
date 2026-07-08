@@ -1,5 +1,34 @@
 # Changelog
 
+## [0.1.4](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/v0.1.3...v0.1.4) (2026-07-08)
+
+
+### Features
+
+* add gh, git, and modern_cli roles ([ff31076](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/ff31076e61a460f5c1c8ffcd26035000413e186d))
+* add gh, git, and modern_cli roles ([#24](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/24)) ([47a8ced](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/47a8ced839a2d7de50abd1d5f027a2c42a0bf905)), closes [#22](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/22)
+
+
+### Bug Fixes
+
+* address Copilot review findings on PR [#24](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/24) ([e1561c5](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/e1561c5817f2a20bd2e8a8869487cb67b4105e3b))
+* address second Copilot review round on PR [#24](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/24) ([abfed0c](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/abfed0cb8f0e629fd1be62720ad71e77bbe5f874))
+* address third Copilot review round on PR [#24](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/24) ([e17d237](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/e17d2374c4fdde0670f2e021b3e36d01dfafdc06))
+* declare community.general dependency in requirements.yml ([ae3760c](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/ae3760cee08aefe51b1a08b34758d3aec8522be1))
+
+
+### Miscellaneous
+
+* merge main into feat/22-gh-git-modern-cli-roles ([907f216](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/907f2169de198a013006ab1918233c918f29828b))
+
+
+### CI/CD
+
+* migrate CI/CD to shared infra-github-shared-actions workflows ([10c70b6](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/10c70b66aabb718c77fa66f7cf2bf68281fd45b0)), closes [#18](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/18)
+* migrate CI/CD to shared infra-github-shared-actions workflows ([#19](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/19)) ([81916d5](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/81916d5bc1e9339b571138d44cedc2dd8e75b836))
+* retrigger after repo visibility change ([5f93a85](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/5f93a85e054eaee1703591d4d4f9bab019b1ff03))
+* retrigger workflow check ([a1c799b](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/a1c799b1529c2f07de0f7ac16436a491a87a5efc))
+
 ## [0.1.3](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/v0.1.2...v0.1.3) (2026-05-26)
 
 
