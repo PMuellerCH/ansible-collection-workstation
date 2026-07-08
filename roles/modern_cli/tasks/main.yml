@@ -37,14 +37,6 @@
   when: modern_cli_bat_enabled
   tags: [bat, modern_cli]
 
-- name: Check if Catppuccin Mocha theme is installed
-  ansible.builtin.stat:
-    path: "{{ ansible_facts['env']['HOME'] }}/.config/bat/themes/Catppuccin Mocha.tmTheme"
-  register: modern_cli_bat_theme_stat
-  become: false
-  when: modern_cli_bat_enabled
-  tags: [bat, modern_cli]
-
 - name: Download Catppuccin Mocha theme for bat
   ansible.builtin.get_url:
     url: "https://raw.githubusercontent.com/catppuccin/bat/{{ modern_cli_bat_theme_ref }}/themes/Catppuccin%20Mocha.tmTheme"
@@ -52,7 +44,7 @@
     checksum: "{{ modern_cli_bat_theme_checksum }}"
     mode: "0644"
   become: false
-  when: modern_cli_bat_enabled and not modern_cli_bat_theme_stat.stat.exists
+  when: modern_cli_bat_enabled
   notify: Rebuild bat cache
   ignore_errors: "{{ ansible_check_mode }}"
   tags: [bat, modern_cli]
@@ -99,7 +91,8 @@
     dest: "/tmp/catppuccin-btop-themes.tar.gz"
     checksum: "{{ modern_cli_btop_catppuccin_checksum }}"
     mode: "0644"
-  when: modern_cli_btop_enabled and not modern_cli_btop_theme_stat.stat.exists
+  register: modern_cli_btop_theme_archive
+  when: modern_cli_btop_enabled
   tags: [btop, modern_cli]
 
 - name: Extract Catppuccin Mocha btop theme
@@ -112,7 +105,9 @@
       - --strip-components=1
     remote_src: true
   become: false
-  when: modern_cli_btop_enabled and not modern_cli_btop_theme_stat.stat.exists
+  when: >-
+    modern_cli_btop_enabled and
+    (modern_cli_btop_theme_archive.changed or not modern_cli_btop_theme_stat.stat.exists)
   ignore_errors: "{{ ansible_check_mode }}"
   tags: [btop, modern_cli]
 
@@ -170,6 +165,7 @@
     src: /usr/bin/fdfind
     dest: /usr/local/bin/fd
     state: link
+    force: true
   become: true
   when: modern_cli_fd_enabled
   ignore_errors: "{{ ansible_check_mode }}"
