@@ -45,6 +45,13 @@ not per role.
 | `modern_cli_ripgrep_version` | `14.1.0-1` | Exact apt version of ripgrep |
 | `modern_cli_zoxide_version` | `0.9.3-1` | Exact apt version of zoxide |
 | `modern_cli_deploy_shell_aliases` | `true` | Deploy `~/.config/zsh/conf.d/modern_cli.zsh` with aliases for enabled tools |
+| `modern_cli_bat_theme_ref` | `6810349b28055dce54076712fc05fc68da4b8ec0` | Pinned commit of `catppuccin/bat` the theme file is downloaded from |
+| `modern_cli_bat_theme_checksum` | `sha256:395566f0...` | Checksum of the bat theme file, verified by `get_url` |
+| `modern_cli_btop_catppuccin_checksum` | `sha256:5331e055...` | Checksum of the btop themes archive, verified by `get_url` |
+
+**Note:** this role only drops the `modern_cli.zsh` snippet into `~/.config/zsh/conf.d/` —
+it does not enable the aliases itself. Your `.zshrc` must actually source
+`~/.config/zsh/conf.d/*.zsh` for them to take effect.
 
 ## Platforms
 

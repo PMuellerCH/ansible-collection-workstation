@@ -23,6 +23,7 @@
     path: "{{ ansible_facts['env']['HOME'] }}/.config/bat/themes"
     state: directory
     mode: "0755"
+  become: false
   when: modern_cli_bat_enabled
   tags: [bat, modern_cli]
 
@@ -32,6 +33,7 @@
     dest: "{{ ansible_facts['env']['HOME'] }}/.config/bat/config"
     mode: "0644"
     force: false
+  become: false
   when: modern_cli_bat_enabled
   tags: [bat, modern_cli]
 
@@ -39,14 +41,17 @@
   ansible.builtin.stat:
     path: "{{ ansible_facts['env']['HOME'] }}/.config/bat/themes/Catppuccin Mocha.tmTheme"
   register: modern_cli_bat_theme_stat
+  become: false
   when: modern_cli_bat_enabled
   tags: [bat, modern_cli]
 
 - name: Download Catppuccin Mocha theme for bat
   ansible.builtin.get_url:
-    url: "https://raw.githubusercontent.com/catppuccin/bat/main/themes/Catppuccin%20Mocha.tmTheme"
+    url: "https://raw.githubusercontent.com/catppuccin/bat/{{ modern_cli_bat_theme_ref }}/themes/Catppuccin%20Mocha.tmTheme"
     dest: "{{ ansible_facts['env']['HOME'] }}/.config/bat/themes/Catppuccin Mocha.tmTheme"
+    checksum: "{{ modern_cli_bat_theme_checksum }}"
     mode: "0644"
+  become: false
   when: modern_cli_bat_enabled and not modern_cli_bat_theme_stat.stat.exists
   notify: Rebuild bat cache
   ignore_errors: "{{ ansible_check_mode }}"
@@ -76,6 +81,7 @@
     path: "{{ ansible_facts['env']['HOME'] }}/.config/btop/themes"
     state: directory
     mode: "0755"
+  become: false
   when: modern_cli_btop_enabled
   tags: [btop, modern_cli]
 
@@ -83,6 +89,7 @@
   ansible.builtin.stat:
     path: "{{ ansible_facts['env']['HOME'] }}/.config/btop/themes/catppuccin_mocha.theme"
   register: modern_cli_btop_theme_stat
+  become: false
   when: modern_cli_btop_enabled
   tags: [btop, modern_cli]
 
@@ -90,6 +97,7 @@
   ansible.builtin.get_url:
     url: "https://github.com/catppuccin/btop/releases/download/{{ modern_cli_btop_catppuccin_version }}/themes.tar.gz"
     dest: "/tmp/catppuccin-btop-themes.tar.gz"
+    checksum: "{{ modern_cli_btop_catppuccin_checksum }}"
     mode: "0644"
   when: modern_cli_btop_enabled and not modern_cli_btop_theme_stat.stat.exists
   tags: [btop, modern_cli]
@@ -103,6 +111,7 @@
     extra_opts:
       - --strip-components=1
     remote_src: true
+  become: false
   when: modern_cli_btop_enabled and not modern_cli_btop_theme_stat.stat.exists
   ignore_errors: "{{ ansible_check_mode }}"
   tags: [btop, modern_cli]
@@ -114,6 +123,7 @@
       color_theme = "catppuccin_mocha"
     mode: "0644"
     force: false
+  become: false
   when: modern_cli_btop_enabled
   tags: [btop, modern_cli]
 
@@ -209,6 +219,7 @@
     path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d"
     state: directory
     mode: "0755"
+  become: false
   when: modern_cli_deploy_shell_aliases
   tags: [bat, btop, cli-tools, modern_cli]
 
@@ -217,5 +228,6 @@
     src: modern_cli.zsh.j2
     dest: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/modern_cli.zsh"
     mode: "0644"
+  become: false
   when: modern_cli_deploy_shell_aliases
   tags: [bat, btop, cli-tools, modern_cli]

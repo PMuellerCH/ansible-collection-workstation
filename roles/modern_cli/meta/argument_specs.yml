@@ -45,11 +45,26 @@ argument_specs:
         required: false
         default: "1.3.0-1"
         description: Exact apt package version of btop to install (held after install).
+      modern_cli_bat_theme_ref:
+        type: str
+        required: false
+        default: "6810349b28055dce54076712fc05fc68da4b8ec0"  # pragma: allowlist secret
+        description: Pinned commit of catppuccin/bat the theme file is downloaded from (immutable, unlike the "main" branch).
+      modern_cli_bat_theme_checksum:
+        type: str
+        required: false
+        default: "sha256:395566f08ceb301b936b91c077690ef94f7aeb651b121553f201c99c2bd4aa77"
+        description: Checksum of the bat theme file at modern_cli_bat_theme_ref, verified by get_url.
       modern_cli_btop_catppuccin_version:
         type: str
         required: false
         default: "1.0.0"
         description: Release tag of catppuccin/btop to download the Mocha theme archive from.
+      modern_cli_btop_catppuccin_checksum:
+        type: str
+        required: false
+        default: "sha256:5331e055f239d2b42a15496905c6f357493940e1213cc91acfcba67b3fd7a281"
+        description: Checksum of the themes.tar.gz archive at modern_cli_btop_catppuccin_version, verified by get_url.
       modern_cli_eza_version:
         type: str
         required: false
