@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.5](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/v0.1.4...0.1.5) (2026-07-08)
+
+
+### Bug Fixes
+
+* cut release tags without a v prefix ([2e8d8f4](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/2e8d8f4047c614f541fe392b126527b7e3a5cd44))
+* cut release tags without a v prefix ([#27](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/27)) ([62882be](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/62882be8f7e320ef1f74362419066bc6de9f44ff))
+
 ## [0.1.4](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/v0.1.3...v0.1.4) (2026-07-08)
 
 
