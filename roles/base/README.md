@@ -31,12 +31,14 @@ per-tool granularity is preserved via task tags (`base`, `git`, `ssh`, `python`,
 | `base_git_signing_key` | `~/.ssh/id_ed25519.pub` | Path to the SSH public key used as git's `user.signingkey` |
 | `base_ssh_extra_hosts` | `[]` | Extra SSH host blocks (`name`, `hostname`, `user`, optional `identity_file`) |
 | `base_python_uv_version` | see `defaults/main.yml` | `uv` version (github-releases `astral-sh/uv`) |
+| `base_python_uv_checksum` | see `defaults/main.yml` | sha256 checksum of the `uv` release tarball |
 | `base_python_build_essential_version` | see `defaults/main.yml` | `build-essential` apt package version |
 | `base_python_pip_version` | see `defaults/main.yml` | `python3-pip` apt package version |
 | `base_python_venv_version` | see `defaults/main.yml` | `python3-venv` apt package version |
 | `base_fonts_fontconfig_version` | see `defaults/main.yml` | `fontconfig` apt package version |
 | `base_fonts_unzip_version` | see `defaults/main.yml` | `unzip` apt package version (pinned independently of `base_unzip_version` so `--tags fonts` is self-sufficient) |
 | `base_fonts_nerd_font_version` | see `defaults/main.yml` | Nerd Fonts release version (github-releases `ryanoasis/nerd-fonts`) |
+| `base_fonts_nerd_font_checksum` | see `defaults/main.yml` | sha256 checksum of the JetBrainsMono Nerd Font zip |
 
 All other apt-pinned base packages (`curl`, `jq`, `yq`, `unzip`, `dnsutils`, `cifs-utils`,
 `pwgen`, `openssl`, `direnv`, `open-vm-tools`, `locales`, `hunspell-de-ch`,

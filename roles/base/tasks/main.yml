@@ -252,6 +252,7 @@
 
 - name: Flush handlers (rebuild CA bundle before syncing to Flatpak path)
   ansible.builtin.meta: flush_handlers
+  tags: [base]
 
 - name: Create Flatpak CA bundle directory
   ansible.builtin.file:
@@ -262,11 +263,30 @@
   when: base_http_proxy != ''
   tags: [base]
 
+- name: Stat system CA bundle
+  ansible.builtin.stat:
+    path: /etc/ssl/certs/ca-certificates.crt
+    checksum_algorithm: sha256
+  register: base_ca_bundle_source_stat
+  when: base_http_proxy != ''
+  tags: [base]
+
+- name: Stat Flatpak-accessible CA bundle
+  ansible.builtin.stat:
+    path: /var/lib/ca-certificates/ca-bundle.crt
+    checksum_algorithm: sha256
+  register: base_ca_bundle_flatpak_stat
+  when: base_http_proxy != ''
+  tags: [base]
+
 - name: Sync system CA bundle to Flatpak-accessible location
   ansible.builtin.command:
     cmd: install -m 0644 /etc/ssl/certs/ca-certificates.crt /var/lib/ca-certificates/ca-bundle.crt
   become: true
-  when: base_http_proxy != ''
+  when: >-
+    base_http_proxy != '' and
+    (not base_ca_bundle_flatpak_stat.stat.exists or
+     base_ca_bundle_flatpak_stat.stat.checksum != base_ca_bundle_source_stat.stat.checksum)
   changed_when: true
   # noqa: command-instead-of-module - copy remote_src=true triggers ansible-core _ansible_inject_invocation bug
   tags: [base]
@@ -319,7 +339,7 @@
     content: |
       strict-ssl=false
       proxy={{ base_http_proxy }}
-      https-proxy={{ base_http_proxy }}
+      https-proxy={{ base_https_proxy }}
       fetch-retries=3
       fetch-retry-mintimeout=5000
       fetch-retry-maxtimeout=15000
@@ -553,6 +573,7 @@
   ansible.builtin.get_url:
     url: "https://github.com/astral-sh/uv/releases/download/{{ base_python_uv_version }}/uv-x86_64-unknown-linux-musl.tar.gz"
     dest: "/tmp/uv-{{ base_python_uv_version }}.tar.gz"
+    checksum: "{{ base_python_uv_checksum }}"
     mode: "0644"
   when: base_python_uv_installed_version.rc != 0 or base_python_uv_version not in base_python_uv_installed_version.stdout
   tags: [python]
@@ -611,6 +632,7 @@
   ansible.builtin.get_url:
     url: "https://github.com/ryanoasis/nerd-fonts/releases/download/v{{ base_fonts_nerd_font_version }}/JetBrainsMono.zip"
     dest: "/tmp/JetBrainsMono.zip"
+    checksum: "{{ base_fonts_nerd_font_checksum }}"
     mode: "0644"
   when: not base_fonts_version_stat.stat.exists or (base_fonts_installed_version.content | b64decode | trim) != base_fonts_nerd_font_version
   tags: [fonts]

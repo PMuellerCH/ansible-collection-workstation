@@ -13,3 +13,10 @@
         base_hostname: molecule-base
         base_git_user_name: Molecule Test
         base_git_user_email: molecule@example.com
+        # base_http_proxy is intentionally left empty: the corporate-proxy path
+        # (CA cert install, Flatpak overrides, npmrc, dconf) installs a CA cert
+        # that collides with the /etc/ssl/certs/ca-certificates.crt:ro bind
+        # mount above (needed so other tasks can reach GitHub through a real
+        # corporate proxy in CI) — update-ca-certificates cannot replace a
+        # read-only-mounted file. Untested here; same gap as the rest of this
+        # collection.

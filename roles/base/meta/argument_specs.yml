@@ -180,6 +180,11 @@ argument_specs:
         required: false
         default: "0.11.28"
         description: uv version (github-releases astral-sh/uv).
+      base_python_uv_checksum:
+        type: str
+        required: false
+        default: "sha256:f02146b371c35c287d860f003ece7345c86e358a3fd70a9b63700cd141ee7fb4"
+        description: sha256 checksum of the uv release tarball, in get_url checksum format.
       base_python_build_essential_version:
         type: str
         required: false
@@ -210,3 +215,8 @@ argument_specs:
         required: false
         default: "3.4.0"
         description: Nerd Fonts release version (github-releases ryanoasis/nerd-fonts).
+      base_fonts_nerd_font_checksum:
+        type: str
+        required: false
+        default: "sha256:76f05ff3ace48a464a6ca57977998784ff7bdbb65a6d915d7e401cd3927c493c"
+        description: sha256 checksum of the JetBrainsMono Nerd Font zip, in get_url checksum format.
