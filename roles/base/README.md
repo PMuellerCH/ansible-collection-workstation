@@ -1,4 +1,4 @@
-# base
+# swisstopo.workstation.base
 
 Foundational workstation setup, applied first on every machine: base system packages,
 hostname, locale, corporate proxy, git, SSH, the Python toolchain, and fonts.
@@ -28,7 +28,7 @@ per-tool granularity is preserved via task tags (`base`, `git`, `ssh`, `python`,
 | `base_git_push_default` | `simple` | Value for git's global `push.default` |
 | `base_git_editor` | `vim` | Value for git's global `core.editor` |
 | `base_git_signing_enabled` | `true` | Configure SSH-based commit/tag signing |
-| `base_git_signing_key` | `~/.ssh/id_ed25519.pub` | Path to the SSH public key used as git's `user.signingkey` |
+| `base_git_signing_key` | `{{ HOME }}/.ssh/id_ed25519.pub` | Path to the SSH public key used as git's `user.signingkey` |
 | `base_ssh_extra_hosts` | `[]` | Extra SSH host blocks (`name`, `hostname`, `user`, optional `identity_file`) |
 | `base_python_uv_version` | see `defaults/main.yml` | `uv` version (github-releases `astral-sh/uv`) |
 | `base_python_uv_checksum` | see `defaults/main.yml` | sha256 checksum of the `uv` release tarball |
