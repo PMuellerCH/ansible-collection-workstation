@@ -8,7 +8,8 @@
     HTTP_PROXY: "{{ lookup('env', 'http_proxy') }}"
     HTTPS_PROXY: "{{ lookup('env', 'https_proxy') or lookup('env', 'http_proxy') }}"
   roles:
-    - role: swisstopo.workstation.git
+    - role: swisstopo.workstation.base
       vars:
-        git_user_name: Molecule Test
-        git_user_email: molecule@example.com
+        base_hostname: molecule-base
+        base_git_user_name: Molecule Test
+        base_git_user_email: molecule@example.com

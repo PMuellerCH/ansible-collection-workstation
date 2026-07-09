@@ -1,0 +1,64 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Gather package facts
+      ansible.builtin.package_facts:
+        manager: apt
+
+    - name: Assert base, git, python, and font packages are installed
+      ansible.builtin.assert:
+        that:
+          - "'curl' in ansible_facts.packages"
+          - "'git' in ansible_facts.packages"
+          - "'build-essential' in ansible_facts.packages"
+          - "'python3-pip' in ansible_facts.packages"
+          - "'fontconfig' in ansible_facts.packages"
+
+    - name: Read global git config
+      community.general.git_config_info:
+        name: user.name
+        scope: global
+      register: _base_git_user_name
+
+    - name: Assert user.name was configured
+      ansible.builtin.assert:
+        that: _base_git_user_name.config_value == "Molecule Test"
+
+    - name: Check uv is installed
+      ansible.builtin.stat:
+        path: /usr/local/bin/uv
+      register: _base_uv_binary
+
+    - name: Assert uv was installed
+      ansible.builtin.assert:
+        that: _base_uv_binary.stat.exists
+
+    - name: Check SSH config was deployed
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/ssh/config"
+      register: _base_ssh_config
+
+    - name: Assert SSH config exists
+      ansible.builtin.assert:
+        that: _base_ssh_config.stat.exists
+
+    - name: Check ~/.ssh/config symlink
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.ssh/config"
+      register: _base_ssh_config_symlink
+
+    - name: Assert ~/.ssh/config is a symlink
+      ansible.builtin.assert:
+        that: _base_ssh_config_symlink.stat.islnk
+
+    - name: Check JetBrains Mono Nerd Font was installed
+      ansible.builtin.find:
+        paths: "{{ ansible_facts['env']['HOME'] }}/.local/share/fonts"
+        patterns: "JetBrainsMono*Nerd*.ttf"
+      register: _base_nerd_font_files
+
+    - name: Assert Nerd Font files exist
+      ansible.builtin.assert:
+        that: _base_nerd_font_files.matched > 0

@@ -1,0 +1,646 @@
+---
+# ---- base ----
+- name: Install base packages
+  ansible.builtin.apt:
+    name:
+      - "curl={{ base_curl_version }}"
+      - "jq={{ base_jq_version }}"
+      - "yq={{ base_yq_version }}"
+      - "unzip={{ base_unzip_version }}"
+      - "dnsutils={{ base_dnsutils_version }}"
+      - "cifs-utils={{ base_cifs_utils_version }}"
+      - "pwgen={{ base_pwgen_version }}"
+      - "openssl={{ base_openssl_version }}"
+      - "direnv={{ base_direnv_version }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  tags: [base]
+
+- name: Hold base package versions
+  ansible.builtin.dpkg_selections:
+    name: "{{ item }}"
+    selection: hold
+  become: true
+  loop:
+    - curl
+    - jq
+    - yq
+    - unzip
+    - dnsutils
+    - cifs-utils
+    - pwgen
+    - openssl
+    - direnv
+  tags: [base]
+
+- name: Install open-vm-tools (VMware guest utilities)
+  ansible.builtin.apt:
+    name: "open-vm-tools={{ base_open_vm_tools_version }}"
+    state: present
+  become: true
+  when: ansible_virtualization_type == "VMware"
+  tags: [base]
+
+- name: Hold open-vm-tools package version
+  ansible.builtin.dpkg_selections:
+    name: open-vm-tools
+    selection: hold
+  become: true
+  when: ansible_virtualization_type == "VMware"
+  tags: [base]
+
+- name: Create autostart directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/autostart"
+    state: directory
+    mode: "0755"
+  become: false
+  when: ansible_virtualization_type == "VMware"
+  tags: [base]
+
+- name: Deploy vmware-user autostart entry (clipboard integration)
+  ansible.builtin.copy:
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/autostart/vmware-user.desktop"
+    mode: "0644"
+    content: |
+      [Desktop Entry]
+      Type=Application
+      Name=VMware User Agent
+      Exec=/usr/bin/vmware-user
+      X-GNOME-Autostart-enabled=true
+      NoDisplay=false
+  become: false
+  when: ansible_virtualization_type == "VMware"
+  tags: [base]
+
+- name: Remove update-notifier (suppresses GUI update popups)
+  ansible.builtin.apt:
+    name:
+      - update-notifier
+      - update-notifier-common
+    state: absent
+  become: true
+  tags: [base]
+
+- name: Disable apt periodic update checks
+  ansible.builtin.copy:
+    dest: /etc/apt/apt.conf.d/99disable-periodic
+    mode: "0644"
+    content: |
+      APT::Periodic::Update-Package-Lists "0";
+      APT::Periodic::Download-Upgradeable-Packages "0";
+      APT::Periodic::AutocleanInterval "0";
+      APT::Periodic::Unattended-Upgrade "0";
+  become: true
+  tags: [base]
+
+- name: Set hostname
+  ansible.builtin.hostname:
+    name: "{{ base_hostname }}"
+  become: true
+  tags: [base]
+
+- name: Install locale packages
+  ansible.builtin.apt:
+    name:
+      - "locales={{ base_locales_version }}"
+      - "hunspell-de-ch={{ base_hunspell_de_ch_version }}"
+      - "hunspell-en-us={{ base_hunspell_en_us_version }}"
+    state: present
+  become: true
+  tags: [base]
+
+- name: Hold locale package versions
+  ansible.builtin.dpkg_selections:
+    name: "{{ item }}"
+    selection: hold
+  become: true
+  loop:
+    - locales
+    - hunspell-de-ch
+    - hunspell-en-us
+  tags: [base]
+
+- name: Generate format locale
+  community.general.locale_gen:
+    name: "{{ base_locale_format }}"
+    state: present
+  become: true
+  tags: [base]
+
+- name: Generate UI locale
+  community.general.locale_gen:
+    name: "{{ base_locale_ui }}"
+    state: present
+  become: true
+  tags: [base]
+
+- name: Create zsh conf.d directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d"
+    state: directory
+    mode: "0755"
+  become: false
+  tags: [base]
+
+- name: Deploy locale ZSH snippet
+  ansible.builtin.copy:
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/locale.zsh"
+    mode: "0644"
+    content: |
+      export LANG="{{ base_locale_format }}"
+      export LC_TIME="{{ base_locale_format }}"
+      export LC_NUMERIC="{{ base_locale_format }}"
+      export LC_MONETARY="{{ base_locale_format }}"
+      export LC_PAPER="{{ base_locale_format }}"
+      export LC_MEASUREMENT="{{ base_locale_format }}"
+      export LANGUAGE="{{ base_locale_ui }}"
+      export LC_MESSAGES="{{ base_locale_ui }}"
+  become: false
+  tags: [base]
+
+- name: Deploy Vault ZSH snippet
+  ansible.builtin.copy:
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/vault.zsh"
+    mode: "0644"
+    content: |
+      export VAULT_ADDR="{{ base_vault_addr }}"
+  become: false
+  when: base_vault_addr != ''
+  tags: [base]
+
+- name: Create environment.d directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/environment.d"
+    state: directory
+    mode: "0755"
+  become: false
+  tags: [base]
+
+- name: Deploy locale environment.d config (GUI apps via systemd user session)
+  ansible.builtin.copy:
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/environment.d/locale.conf"
+    mode: "0644"
+    content: |
+      LANG={{ base_locale_format }}
+      LC_TIME={{ base_locale_format }}
+      LC_NUMERIC={{ base_locale_format }}
+      LC_MONETARY={{ base_locale_format }}
+      LC_PAPER={{ base_locale_format }}
+      LC_MEASUREMENT={{ base_locale_format }}
+      LANGUAGE={{ base_locale_ui }}
+      LC_MESSAGES={{ base_locale_ui }}
+  become: false
+  tags: [base]
+
+# ---- Corporate proxy ----
+# Deploys proxy env vars to the systemd user session (picked up by all GUI apps,
+# including Electron apps like Slack) and to the Flatpak sandbox global override
+# (picked up by Flatpak-sandboxed apps like Spotify).
+# Only runs when base_http_proxy is set for the machine.
+
+- name: Deploy proxy environment.d config (for all GNOME session apps)
+  ansible.builtin.copy:
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/environment.d/proxy.conf"
+    mode: "0644"
+    content: |
+      http_proxy={{ base_http_proxy }}
+      https_proxy={{ base_https_proxy }}
+      HTTP_PROXY={{ base_http_proxy }}
+      HTTPS_PROXY={{ base_https_proxy }}
+      no_proxy={{ base_no_proxy }}
+      NO_PROXY={{ base_no_proxy }}
+  become: false
+  when: base_http_proxy != ''
+  tags: [base]
+
+- name: Deploy proxy vars to /etc/environment (system-wide, PAM sessions)
+  ansible.builtin.blockinfile:
+    path: /etc/environment
+    create: true
+    mode: "0644"
+    block: |
+      http_proxy={{ base_http_proxy }}
+      https_proxy={{ base_https_proxy }}
+      HTTP_PROXY={{ base_http_proxy }}
+      HTTPS_PROXY={{ base_https_proxy }}
+      no_proxy={{ base_no_proxy }}
+      NO_PROXY={{ base_no_proxy }}
+  become: true
+  when: base_http_proxy != ''
+  tags: [base]
+
+# ---- Corporate CA certificate ----
+# The corporate proxy (BIT Proxy) performs TLS inspection and re-signs all
+# HTTPS traffic with its own CA. Without the CA in the trust store, all HTTPS
+# connections fail with "self-signed certificate" errors.
+# CA 06 C is the currently active intermediate CA (valid until Sep 2026);
+# the cert is bundled in the role's files/ directory and must be updated here
+# when the corporate IT rotates to a new CA generation.
+
+- name: Install corporate proxy CA certificate
+  ansible.builtin.copy:
+    src: BITProxyCA06C.crt
+    dest: /usr/local/share/ca-certificates/BITProxyCA06C.crt
+    mode: "0644"
+  become: true
+  when: base_http_proxy != ''
+  notify: Update CA certificates
+  tags: [base]
+
+- name: Flush handlers (rebuild CA bundle before syncing to Flatpak path)
+  ansible.builtin.meta: flush_handlers
+
+- name: Create Flatpak CA bundle directory
+  ansible.builtin.file:
+    path: /var/lib/ca-certificates
+    state: directory
+    mode: "0755"
+  become: true
+  when: base_http_proxy != ''
+  tags: [base]
+
+- name: Sync system CA bundle to Flatpak-accessible location
+  ansible.builtin.command:
+    cmd: install -m 0644 /etc/ssl/certs/ca-certificates.crt /var/lib/ca-certificates/ca-bundle.crt
+  become: true
+  when: base_http_proxy != ''
+  changed_when: true
+  # noqa: command-instead-of-module - copy remote_src=true triggers ansible-core _ansible_inject_invocation bug
+  tags: [base]
+
+- name: Set NODE_EXTRA_CA_CERTS to Flatpak-accessible CA bundle
+  ansible.builtin.lineinfile:
+    path: /etc/environment
+    regexp: '^NODE_EXTRA_CA_CERTS='
+    line: "NODE_EXTRA_CA_CERTS=/var/lib/ca-certificates/ca-bundle.crt"
+    create: true
+    mode: "0644"
+  become: true
+  when: base_http_proxy != ''
+  tags: [base]
+
+- name: Create Flatpak system overrides directory
+  ansible.builtin.file:
+    path: /var/lib/flatpak/overrides
+    state: directory
+    mode: "0755"
+  become: true
+  when: base_http_proxy != ''
+  tags: [base]
+
+- name: Deploy Flatpak system proxy override (for Flatpak-sandboxed apps)
+  ansible.builtin.copy:
+    dest: /var/lib/flatpak/overrides/global
+    mode: "0644"
+    content: |
+      [Context]
+      filesystems=/var/lib/ca-certificates:ro
+
+      [Environment]
+      http_proxy={{ base_http_proxy }}
+      https_proxy={{ base_https_proxy }}
+      HTTP_PROXY={{ base_http_proxy }}
+      HTTPS_PROXY={{ base_https_proxy }}
+      no_proxy={{ base_no_proxy }}
+      NO_PROXY={{ base_no_proxy }}
+      SSL_CERT_FILE=/var/lib/ca-certificates/ca-bundle.crt
+      NODE_EXTRA_CA_CERTS=/var/lib/ca-certificates/ca-bundle.crt
+  become: true
+  when: base_http_proxy != ''
+  tags: [base]
+
+- name: Deploy npm proxy configuration (~/.npmrc)
+  ansible.builtin.copy:
+    dest: "{{ ansible_facts['env']['HOME'] }}/.npmrc"
+    mode: "0600"
+    content: |
+      strict-ssl=false
+      proxy={{ base_http_proxy }}
+      https-proxy={{ base_http_proxy }}
+      fetch-retries=3
+      fetch-retry-mintimeout=5000
+      fetch-retry-maxtimeout=15000
+  become: false
+  when: base_http_proxy != ''
+  tags: [base]
+
+- name: Configure GNOME system proxy via dconf
+  community.general.dconf:
+    key: "{{ item.key }}"
+    value: "{{ item.value }}"
+  become: false
+  loop:
+    - key: /org/gnome/system/proxy/mode
+      value: "'manual'"
+    - key: /org/gnome/system/proxy/http/enabled
+      value: "true"
+    - key: /org/gnome/system/proxy/http/host
+      value: "'{{ base_http_proxy | regex_replace('^https?://', '') | split(':') | first }}'"
+    - key: /org/gnome/system/proxy/http/port
+      value: "{{ base_http_proxy | regex_replace('^.*:([0-9]+)$', '\\1') | int }}"
+    - key: /org/gnome/system/proxy/https/host
+      value: "'{{ base_https_proxy | regex_replace('^https?://', '') | split(':') | first }}'"
+    - key: /org/gnome/system/proxy/https/port
+      value: "{{ base_https_proxy | regex_replace('^.*:([0-9]+)$', '\\1') | int }}"
+    - key: /org/gnome/system/proxy/ignore-hosts
+      value: "['{{ base_no_proxy.split(',') | map('trim') | join(\"', '\") }}']"
+  when: base_http_proxy != '' and base_desktop_environment == 'gnome'
+  tags: [base]
+
+# ---- git ----
+- name: Install git
+  ansible.builtin.apt:
+    name: "git={{ base_git_version }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  tags: [git]
+
+- name: Hold git package version
+  ansible.builtin.dpkg_selections:
+    name: git
+    selection: hold
+  become: true
+  tags: [git]
+
+- name: Configure git user name
+  community.general.git_config:
+    name: user.name
+    value: "{{ base_git_user_name }}"
+    scope: global
+  become: false
+  tags: [git]
+
+- name: Configure git user email
+  community.general.git_config:
+    name: user.email
+    value: "{{ base_git_user_email }}"
+    scope: global
+  become: false
+  tags: [git]
+
+- name: Configure git default branch
+  community.general.git_config:
+    name: init.defaultBranch
+    value: "{{ base_git_default_branch }}"
+    scope: global
+  become: false
+  tags: [git]
+
+- name: Configure git pull strategy
+  community.general.git_config:
+    name: pull.rebase
+    value: "{{ base_git_pull_rebase | ternary('true', 'false') }}"
+    scope: global
+  become: false
+  tags: [git]
+
+- name: Configure git push default
+  community.general.git_config:
+    name: push.default
+    value: "{{ base_git_push_default }}"
+    scope: global
+  become: false
+  tags: [git]
+
+- name: Set core editor
+  community.general.git_config:
+    name: core.editor
+    value: "{{ base_git_editor }}"
+    scope: global
+  become: false
+  tags: [git]
+
+- name: Configure git gpg format to ssh
+  community.general.git_config:
+    name: gpg.format
+    value: ssh
+    scope: global
+  become: false
+  when: base_git_signing_enabled
+  tags: [git]
+
+- name: Configure git signing key
+  community.general.git_config:
+    name: user.signingkey
+    value: "{{ base_git_signing_key }}"
+    scope: global
+  become: false
+  when: base_git_signing_enabled
+  tags: [git]
+
+- name: Configure git commit auto-signing
+  community.general.git_config:
+    name: commit.gpgsign
+    value: "true"
+    scope: global
+  become: false
+  when: base_git_signing_enabled
+  tags: [git]
+
+- name: Configure git tag auto-signing
+  community.general.git_config:
+    name: tag.gpgSign
+    value: "true"
+    scope: global
+  become: false
+  when: base_git_signing_enabled
+  tags: [git]
+
+# ---- ssh ----
+- name: Create ~/.ssh directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.ssh"
+    state: directory
+    mode: "0700"
+  become: false
+  tags: [ssh]
+
+- name: Create ~/.config/ssh directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/ssh"
+    state: directory
+    mode: "0755"
+  become: false
+  tags: [ssh]
+
+- name: Deploy SSH config
+  ansible.builtin.copy:
+    src: ssh_config
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/ssh/config"
+    mode: "0600"
+    force: false
+  become: false
+  tags: [ssh]
+
+- name: Symlink ~/.ssh/config → ~/.config/ssh/config
+  ansible.builtin.file:
+    src: "{{ ansible_facts['env']['HOME'] }}/.config/ssh/config"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.ssh/config"
+    state: link
+    force: true
+  become: false
+  when: not ansible_check_mode
+  tags: [ssh]
+
+- name: Check if id_ed25519 key exists
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.ssh/id_ed25519"
+  register: base_ssh_id_ed25519_key
+  tags: [ssh]
+
+- name: Fix SSH private key permissions if key exists
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.ssh/id_ed25519"
+    mode: "0600"
+  become: false
+  when: base_ssh_id_ed25519_key.stat.exists
+  tags: [ssh]
+
+- name: Check if sysadmin_key exists
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.ssh/sysadmin_key"
+  register: base_ssh_sysadmin_key
+  tags: [ssh]
+
+- name: Fix sysadmin_key permissions
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.ssh/sysadmin_key"
+    mode: "0600"
+  become: false
+  when: base_ssh_sysadmin_key.stat.exists
+  tags: [ssh]
+
+- name: Add extra host entries to SSH config
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/ssh/config"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK {{ item.name }}"
+    block: |
+      Host {{ item.name }}
+            HostName {{ item.hostname }}
+            User {{ item.user }}
+            {% if item.identity_file is defined %}IdentityFile {{ item.identity_file }}
+            {% endif %}
+  become: false
+  loop: "{{ base_ssh_extra_hosts }}"
+  tags: [ssh]
+
+# ---- python ----
+- name: Install Python toolchain
+  ansible.builtin.apt:
+    name:
+      - "build-essential={{ base_python_build_essential_version }}"
+      - "python3-pip={{ base_python_pip_version }}"
+      - "python3-venv={{ base_python_venv_version }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  tags: [python]
+
+- name: Get installed uv version
+  ansible.builtin.command: uv --version
+  register: base_python_uv_installed_version
+  changed_when: false
+  failed_when: false
+  tags: [python]
+
+- name: Download uv archive
+  ansible.builtin.get_url:
+    url: "https://github.com/astral-sh/uv/releases/download/{{ base_python_uv_version }}/uv-x86_64-unknown-linux-musl.tar.gz"
+    dest: "/tmp/uv-{{ base_python_uv_version }}.tar.gz"
+    mode: "0644"
+  when: base_python_uv_installed_version.rc != 0 or base_python_uv_version not in base_python_uv_installed_version.stdout
+  tags: [python]
+
+- name: Install uv and uvx to /usr/local/bin
+  ansible.builtin.unarchive:
+    src: "/tmp/uv-{{ base_python_uv_version }}.tar.gz"
+    dest: /usr/local/bin/
+    include:
+      - "uv-x86_64-unknown-linux-musl/uv"
+      - "uv-x86_64-unknown-linux-musl/uvx"
+    extra_opts: ["--strip-components=1"]
+    remote_src: true
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and
+    (base_python_uv_installed_version.rc != 0 or base_python_uv_version not in base_python_uv_installed_version.stdout)
+  tags: [python]
+
+# ---- fonts ----
+- name: Install font dependencies
+  ansible.builtin.apt:
+    name:
+      - "fontconfig={{ base_fonts_fontconfig_version }}"
+      - "unzip={{ base_fonts_unzip_version }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  tags: [fonts]
+
+- name: Create user fonts directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.local/share/fonts"
+    state: directory
+    mode: "0755"
+  become: false
+  check_mode: false
+  tags: [fonts]
+
+- name: Check nerd fonts version stamp
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.local/share/fonts/.nerd-fonts-version"
+  register: base_fonts_version_stat
+  tags: [fonts]
+
+- name: Read nerd fonts version stamp
+  ansible.builtin.slurp:
+    src: "{{ ansible_facts['env']['HOME'] }}/.local/share/fonts/.nerd-fonts-version"
+  register: base_fonts_installed_version
+  when: base_fonts_version_stat.stat.exists
+  tags: [fonts]
+
+- name: Download JetBrainsMono Nerd Font
+  ansible.builtin.get_url:
+    url: "https://github.com/ryanoasis/nerd-fonts/releases/download/v{{ base_fonts_nerd_font_version }}/JetBrainsMono.zip"
+    dest: "/tmp/JetBrainsMono.zip"
+    mode: "0644"
+  when: not base_fonts_version_stat.stat.exists or (base_fonts_installed_version.content | b64decode | trim) != base_fonts_nerd_font_version
+  tags: [fonts]
+
+- name: Unarchive JetBrainsMono Nerd Font
+  ansible.builtin.unarchive:
+    src: "/tmp/JetBrainsMono.zip"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.local/share/fonts/"
+    remote_src: true
+  become: false
+  when: >-
+    not ansible_check_mode and
+    (not base_fonts_version_stat.stat.exists or (base_fonts_installed_version.content | b64decode | trim) != base_fonts_nerd_font_version)
+  tags: [fonts]
+
+- name: Write nerd fonts version stamp
+  ansible.builtin.copy:
+    content: "{{ base_fonts_nerd_font_version }}"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.local/share/fonts/.nerd-fonts-version"
+    mode: "0644"
+  become: false
+  when: >-
+    not ansible_check_mode and
+    (not base_fonts_version_stat.stat.exists or (base_fonts_installed_version.content | b64decode | trim) != base_fonts_nerd_font_version)
+  tags: [fonts]
+
+- name: Refresh font cache
+  ansible.builtin.command: fc-cache -fv
+  changed_when: true
+  when: >-
+    not ansible_check_mode and
+    (not base_fonts_version_stat.stat.exists or (base_fonts_installed_version.content | b64decode | trim) != base_fonts_nerd_font_version)
+  tags: [fonts]
