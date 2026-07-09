@@ -511,6 +511,7 @@
   ansible.builtin.stat:
     path: "{{ ansible_facts['env']['HOME'] }}/.ssh/id_ed25519"
   register: base_ssh_id_ed25519_key
+  become: false
   tags: [ssh]
 
 - name: Fix SSH private key permissions if key exists
@@ -525,6 +526,7 @@
   ansible.builtin.stat:
     path: "{{ ansible_facts['env']['HOME'] }}/.ssh/sysadmin_key"
   register: base_ssh_sysadmin_key
+  become: false
   tags: [ssh]
 
 - name: Fix sysadmin_key permissions
@@ -619,12 +621,14 @@
   ansible.builtin.stat:
     path: "{{ ansible_facts['env']['HOME'] }}/.local/share/fonts/.nerd-fonts-version"
   register: base_fonts_version_stat
+  become: false
   tags: [fonts]
 
 - name: Read nerd fonts version stamp
   ansible.builtin.slurp:
     src: "{{ ansible_facts['env']['HOME'] }}/.local/share/fonts/.nerd-fonts-version"
   register: base_fonts_installed_version
+  become: false
   when: base_fonts_version_stat.stat.exists
   tags: [fonts]
 
