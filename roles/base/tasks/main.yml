@@ -366,7 +366,7 @@
     - key: /org/gnome/system/proxy/https/port
       value: "{{ base_https_proxy | regex_replace('^.*:([0-9]+)$', '\\1') | int }}"
     - key: /org/gnome/system/proxy/ignore-hosts
-      value: "['{{ base_no_proxy.split(',') | map('trim') | join(\"', '\") }}']"
+      value: "{{ base_no_proxy.split(',') | map('trim') | reject('equalto', '') | list | to_json }}"
   when: base_http_proxy != '' and base_desktop_environment == 'gnome'
   tags: [base]
 
