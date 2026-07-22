@@ -351,6 +351,8 @@
     key: "{{ item.key }}"
     value: "{{ item.value }}"
   become: false
+  vars:
+    base_proxy_ignore_hosts_list: "{{ base_no_proxy.split(',') | map('trim') | reject('equalto', '') | list }}"
   loop:
     - key: /org/gnome/system/proxy/mode
       value: "'manual'"
@@ -365,7 +367,13 @@
     - key: /org/gnome/system/proxy/https/port
       value: "{{ base_https_proxy | urlsplit('port') }}"
     - key: /org/gnome/system/proxy/ignore-hosts
-      value: "{{ base_no_proxy.split(',') | map('trim') | reject('equalto', '') | list | to_json }}"
+      # GVariant can't infer a type for a bare empty array literal ("[]") —
+      # it needs the "@as" (array-of-strings) type annotation. Only matters
+      # when base_no_proxy is empty, which is the common single-proxy case.
+      value: >-
+        {{ '@as ' ~ (base_proxy_ignore_hosts_list | to_json)
+           if base_proxy_ignore_hosts_list | length == 0
+           else base_proxy_ignore_hosts_list | to_json }}
   when: base_http_proxy != '' and base_desktop_environment == 'gnome'
   tags: [base]
 

@@ -1,0 +1,41 @@
+---
+driver:
+  name: docker
+
+platforms:
+  - name: base-proxy-ubuntu2404
+    image: geerlingguy/docker-ubuntu2404-ansible:latest
+    # Matches converge.yml's base_hostname so ansible.builtin.hostname sees no
+    # change needed — actually changing /etc/hostname fails in Docker (EBUSY,
+    # it's a bind mount from the container runtime), even privileged.
+    hostname: molecule-base-proxy
+    pre_build_image: true
+    privileged: true
+    cgroupns_mode: host
+    override_command: false
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+    # No read-only CA bundle mount here (unlike the default scenario): this
+    # scenario sets base_http_proxy, so the role installs its own corporate
+    # CA and rebuilds /etc/ssl/certs/ca-certificates.crt itself. A read-only
+    # mount would make update-ca-certificates fail to write that file.
+
+provisioner:
+  name: ansible
+  config_options:
+    defaults:
+      interpreter_python: auto_silent
+
+verifier:
+  name: ansible
+
+scenario:
+  test_sequence:
+    - destroy
+    - syntax
+    - create
+    - prepare
+    - converge
+    - idempotence
+    - verify
+    - destroy

@@ -16,7 +16,7 @@ base_vault_addr: ""
 base_desktop_environment: gnome
 
 # renovate: datasource=deb depName=curl registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
-base_curl_version: "8.5.0-2ubuntu10.10"
+base_curl_version: "8.5.0-2ubuntu10.11"
 # renovate: datasource=deb depName=jq registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
 base_jq_version: "1.7.1-3ubuntu0.24.04.2"
 # renovate: datasource=deb depName=yq registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
@@ -26,7 +26,7 @@ base_unzip_version: "6.0-28ubuntu4.1"
 # renovate: datasource=deb depName=dnsutils registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
 base_dnsutils_version: "1:9.18.39-0ubuntu0.24.04.5"
 # renovate: datasource=deb depName=cifs-utils registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
-base_cifs_utils_version: "2:7.0-2ubuntu0.4"
+base_cifs_utils_version: "2:7.0-2ubuntu0.5"
 # renovate: datasource=deb depName=pwgen registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
 base_pwgen_version: "2.08-2build2"
 # renovate: datasource=deb depName=openssl registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
