@@ -30,7 +30,10 @@ argument_specs:
         type: str
         required: false
         default: ""
-        description: Corporate HTTPS proxy URL. Leave empty on machines without a proxy.
+        description: >-
+          Corporate HTTPS proxy URL. Defaults to base_http_proxy (see
+          defaults/main.yml) so a single proxy URL covers both protocols;
+          set explicitly only if HTTP and HTTPS use different proxies.
       base_no_proxy:
         type: str
         required: false
