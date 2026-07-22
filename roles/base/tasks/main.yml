@@ -337,7 +337,6 @@
     dest: "{{ ansible_facts['env']['HOME'] }}/.npmrc"
     mode: "0600"
     content: |
-      strict-ssl=false
       proxy={{ base_http_proxy }}
       https-proxy={{ base_https_proxy }}
       fetch-retries=3
