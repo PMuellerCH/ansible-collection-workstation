@@ -357,13 +357,13 @@
     - key: /org/gnome/system/proxy/http/enabled
       value: "true"
     - key: /org/gnome/system/proxy/http/host
-      value: "'{{ base_http_proxy | regex_replace('^https?://', '') | split(':') | first }}'"
+      value: "'{{ base_http_proxy | urlsplit('hostname') }}'"
     - key: /org/gnome/system/proxy/http/port
-      value: "{{ base_http_proxy | regex_replace('^.*:([0-9]+)$', '\\1') | int }}"
+      value: "{{ base_http_proxy | urlsplit('port') }}"
     - key: /org/gnome/system/proxy/https/host
-      value: "'{{ base_https_proxy | regex_replace('^https?://', '') | split(':') | first }}'"
+      value: "'{{ base_https_proxy | urlsplit('hostname') }}'"
     - key: /org/gnome/system/proxy/https/port
-      value: "{{ base_https_proxy | regex_replace('^.*:([0-9]+)$', '\\1') | int }}"
+      value: "{{ base_https_proxy | urlsplit('port') }}"
     - key: /org/gnome/system/proxy/ignore-hosts
       value: "{{ base_no_proxy.split(',') | map('trim') | reject('equalto', '') | list | to_json }}"
   when: base_http_proxy != '' and base_desktop_environment == 'gnome'
@@ -496,6 +496,13 @@
   become: false
   tags: [ssh]
 
+- name: Stat ~/.ssh/config
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.ssh/config"
+  register: base_ssh_config_stat
+  become: false
+  tags: [ssh]
+
 - name: Symlink ~/.ssh/config → ~/.config/ssh/config
   ansible.builtin.file:
     src: "{{ ansible_facts['env']['HOME'] }}/.config/ssh/config"
@@ -503,7 +510,9 @@
     state: link
     force: true
   become: false
-  when: not ansible_check_mode
+  when: >-
+    not ansible_check_mode and
+    (not base_ssh_config_stat.stat.exists or base_ssh_config_stat.stat.islnk)
   tags: [ssh]
 
 - name: Check if id_ed25519 key exists
