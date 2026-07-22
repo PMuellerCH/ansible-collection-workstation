@@ -1,5 +1,35 @@
 # Changelog
 
+## [0.1.6](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/0.1.5...0.1.6) (2026-07-22)
+
+
+### Features
+
+* add base role, absorb git/ssh/python/fonts ([b75c0c6](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/b75c0c6f02d653196fb32999b8b9f8d32ed9bcfa))
+* add base role, absorb git/ssh/python/fonts ([#30](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/30)) ([ae921a7](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/ae921a70833d93a29e7fa74899368760a401b247))
+
+
+### Bug Fixes
+
+* add missing become: false on SSH/fonts stat and slurp tasks ([a5e7e15](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/a5e7e154473c404c5bcc642ae1792fc243a489ac))
+* address Copilot review findings on base role ([78a596b](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/78a596ba62573e10e8604512220cf606b1050149))
+* default base_https_proxy to base_http_proxy, hold python/font apt pins ([10b5a0a](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/10b5a0a55f2c3dde18b5305ea893fb3d432e6322))
+* fourth round of Copilot findings on base role ([391bbab](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/391bbab4e6d53cb6896e628b42f41feec3a9e11a))
+* remove unnecessary strict-ssl=false from npm proxy config ([3ec2ee8](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/3ec2ee842d1e4b5c209aaf1a5c130256bb1f8a83))
+* robust proxy URL parsing, avoid clobbering existing ssh config ([43a3c76](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/43a3c7652b0b4c0d84c5271dd4720615779a26b4))
+* third round of Copilot findings on base role ([e1ab0e2](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/e1ab0e2eff499bb7a42afe3d9cea5916fa32b755))
+
+
+### Miscellaneous
+
+* **deps:** update dependency ansible-core to v2.21.1 [security] ([#32](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/32)) ([8543f4a](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/8543f4a543384bba9ba9a16ca0e71a625a526545))
+* **deps:** update dependency ansible-core to v2.21.2 ([#15](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/15)) ([3da55c3](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/3da55c31b9d3e30faff0b100898d12a8a44b7b83))
+* **deps:** update dependency ansible-lint to v26.6.0 ([#17](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/17)) ([72a2c5d](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/72a2c5d78c48baa465dc581f723797adfa113843))
+* **deps:** update dependency astral-sh/uv to v0.11.31 ([#35](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/35)) ([290208b](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/290208b715d564d281971517d84167e1b8a0e3d1))
+* **deps:** update dependency checkov to v3.3.8 ([#12](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/12)) ([0192133](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/0192133db4f8ce400efb69b0783b0163fc1240e5))
+* **deps:** update dependency community.general to v13.2.0 ([#31](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/31)) ([84527bd](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/84527bdb5aea2879e4af0d16eeeb7195b04fce7e))
+* **deps:** update dependency markdownlint-cli2 to v0.23.1 ([#33](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/33)) ([30838a8](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/30838a86ad8411d49c756b73898001bba339f20a))
+
 ## [0.1.5](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/v0.1.4...0.1.5) (2026-07-08)
 
 
