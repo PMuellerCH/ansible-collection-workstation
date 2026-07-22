@@ -1,0 +1,225 @@
+---
+argument_specs:
+  main:
+    short_description: >-
+      Foundational workstation setup: base packages, hostname, locale,
+      corporate proxy, git, SSH, Python toolchain, and fonts.
+    options:
+      base_hostname:
+        type: str
+        required: true
+        description: >-
+          Hostname to assign to the machine. No sensible generic default
+          exists — must be supplied by the consumer.
+      base_locale_format:
+        type: str
+        required: false
+        default: "de_CH.UTF-8"
+        description: Locale for date/time, number, currency, paper, and measurement formats.
+      base_locale_ui:
+        type: str
+        required: false
+        default: "en_US.UTF-8"
+        description: Locale for UI display language and error messages.
+      base_http_proxy:
+        type: str
+        required: false
+        default: ""
+        description: Corporate HTTP proxy URL. Leave empty on machines without a proxy.
+      base_https_proxy:
+        type: str
+        required: false
+        default: ""
+        description: >-
+          Corporate HTTPS proxy URL. Defaults to base_http_proxy (see
+          defaults/main.yml) so a single proxy URL covers both protocols;
+          set explicitly only if HTTP and HTTPS use different proxies.
+      base_no_proxy:
+        type: str
+        required: false
+        default: ""
+        description: Comma-separated list of hosts/CIDRs that bypass the proxy.
+      base_vault_addr:
+        type: str
+        required: false
+        default: ""
+        description: HashiCorp Vault address, exported as VAULT_ADDR. Leave empty without Vault access.
+      base_desktop_environment:
+        type: str
+        required: false
+        default: gnome
+        choices: [gnome, cosmic]
+        description: Desktop environment in use. Controls which proxy integration path is applied.
+      base_curl_version:
+        type: str
+        required: false
+        default: "8.5.0-2ubuntu10.10"
+        description: curl apt package version.
+      base_jq_version:
+        type: str
+        required: false
+        default: "1.7.1-3ubuntu0.24.04.2"
+        description: jq apt package version.
+      base_yq_version:
+        type: str
+        required: false
+        default: "3.1.0-3"
+        description: yq apt package version.
+      base_unzip_version:
+        type: str
+        required: false
+        default: "6.0-28ubuntu4.1"
+        description: unzip apt package version.
+      base_dnsutils_version:
+        type: str
+        required: false
+        default: "1:9.18.39-0ubuntu0.24.04.5"
+        description: dnsutils apt package version.
+      base_cifs_utils_version:
+        type: str
+        required: false
+        default: "2:7.0-2ubuntu0.4"
+        description: cifs-utils apt package version.
+      base_pwgen_version:
+        type: str
+        required: false
+        default: "2.08-2build2"
+        description: pwgen apt package version.
+      base_openssl_version:
+        type: str
+        required: false
+        default: "3.0.13-0ubuntu3.11"
+        description: openssl apt package version.
+      base_direnv_version:
+        type: str
+        required: false
+        default: "2.32.1-2ubuntu0.24.04.3"
+        description: direnv apt package version.
+      base_open_vm_tools_version:
+        type: str
+        required: false
+        default: "2:13.0.0-2~ubuntu0.24.04.1"
+        description: open-vm-tools apt package version (only installed when running under VMware).
+      base_locales_version:
+        type: str
+        required: false
+        default: "2.39-0ubuntu8.7"
+        description: locales apt package version.
+      base_hunspell_de_ch_version:
+        type: str
+        required: false
+        default: "20161207-12"
+        description: hunspell-de-ch apt package version.
+      base_hunspell_en_us_version:
+        type: str
+        required: false
+        default: "1:2020.12.07-2"
+        description: hunspell-en-us apt package version.
+      base_git_version:
+        type: str
+        required: false
+        default: "1:2.43.0-1ubuntu7.3"
+        description: Exact apt package version of git to install (held after install).
+      base_git_user_name:
+        type: str
+        required: true
+        description: >-
+          Value for git's global user.name. No sensible generic default
+          exists — must be supplied by the consumer.
+      base_git_user_email:
+        type: str
+        required: true
+        description: >-
+          Value for git's global user.email. No sensible generic default
+          exists — must be supplied by the consumer.
+      base_git_default_branch:
+        type: str
+        required: false
+        default: main
+        description: Value for git's global init.defaultBranch.
+      base_git_pull_rebase:
+        type: bool
+        required: false
+        default: true
+        description: Whether git pull rebases instead of merges (pull.rebase).
+      base_git_push_default:
+        type: str
+        required: false
+        default: simple
+        description: Value for git's global push.default.
+      base_git_editor:
+        type: str
+        required: false
+        default: vim
+        description: >-
+          Value for git's global core.editor. Defaults to vim (always present
+          on Debian/Ubuntu); override to your preferred editor.
+      base_git_signing_enabled:
+        type: bool
+        required: false
+        default: true
+        description: >-
+          Whether to configure SSH-based commit/tag signing (gpg.format=ssh,
+          user.signingkey, commit.gpgsign, tag.gpgSign). Disable if you don't
+          sign commits.
+      base_git_signing_key:
+        type: str
+        required: false
+        default: "{{ ansible_facts['env']['HOME'] }}/.ssh/id_ed25519.pub"
+        description: >-
+          Path to the SSH public key used as git's user.signingkey. Only
+          applied when base_git_signing_enabled is true.
+      base_ssh_extra_hosts:
+        type: list
+        elements: dict
+        required: false
+        default: []
+        description: >-
+          Extra SSH host blocks to inject into the config. Each entry
+          supports name (Host alias), hostname (IP/FQDN), user, and
+          optionally identity_file.
+      base_python_uv_version:
+        type: str
+        required: false
+        default: "0.11.28"
+        description: uv version (github-releases astral-sh/uv).
+      base_python_uv_checksum:
+        type: str
+        required: false
+        default: "sha256:f02146b371c35c287d860f003ece7345c86e358a3fd70a9b63700cd141ee7fb4"
+        description: sha256 checksum of the uv release tarball, in get_url checksum format.
+      base_python_build_essential_version:
+        type: str
+        required: false
+        default: "12.10ubuntu1"
+        description: build-essential apt package version.
+      base_python_pip_version:
+        type: str
+        required: false
+        default: "24.0+dfsg-1ubuntu1.3"
+        description: python3-pip apt package version.
+      base_python_venv_version:
+        type: str
+        required: false
+        default: "3.12.3-0ubuntu2.1"
+        description: python3-venv apt package version.
+      base_fonts_fontconfig_version:
+        type: str
+        required: false
+        default: "2.15.0-1.1ubuntu2"
+        description: fontconfig apt package version.
+      base_fonts_unzip_version:
+        type: str
+        required: false
+        default: "6.0-28ubuntu4.1"
+        description: unzip apt package version (installed independently of base_unzip_version so --tags fonts is self-sufficient).
+      base_fonts_nerd_font_version:
+        type: str
+        required: false
+        default: "3.4.0"
+        description: Nerd Fonts release version (github-releases ryanoasis/nerd-fonts).
+      base_fonts_nerd_font_checksum:
+        type: str
+        required: false
+        default: "sha256:76f05ff3ace48a464a6ca57977998784ff7bdbb65a6d915d7e401cd3927c493c"
+        description: sha256 checksum of the JetBrainsMono Nerd Font zip, in get_url checksum format.

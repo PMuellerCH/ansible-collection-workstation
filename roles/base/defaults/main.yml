@@ -1,0 +1,79 @@
+---
+# ---- base ----
+# base_hostname has no default — required, see meta/argument_specs.yml
+
+# Format locale: dates, numbers, currency, paper, measurement
+base_locale_format: "de_CH.UTF-8"
+# UI locale: display language, error messages, app text
+base_locale_ui: "en_US.UTF-8"
+# Corporate proxy — leave empty on machines without a proxy
+base_http_proxy: ""
+base_https_proxy: "{{ base_http_proxy }}"
+base_no_proxy: ""
+# HashiCorp Vault — leave empty on machines without Vault access
+base_vault_addr: ""
+# Desktop environment: gnome or cosmic. Shared across roles that touch DE settings.
+base_desktop_environment: gnome
+
+# renovate: datasource=deb depName=curl registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
+base_curl_version: "8.5.0-2ubuntu10.11"
+# renovate: datasource=deb depName=jq registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
+base_jq_version: "1.7.1-3ubuntu0.24.04.2"
+# renovate: datasource=deb depName=yq registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
+base_yq_version: "3.1.0-3"
+# renovate: datasource=deb depName=unzip registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
+base_unzip_version: "6.0-28ubuntu4.1"
+# renovate: datasource=deb depName=dnsutils registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
+base_dnsutils_version: "1:9.18.39-0ubuntu0.24.04.5"
+# renovate: datasource=deb depName=cifs-utils registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
+base_cifs_utils_version: "2:7.0-2ubuntu0.5"
+# renovate: datasource=deb depName=pwgen registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
+base_pwgen_version: "2.08-2build2"
+# renovate: datasource=deb depName=openssl registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
+base_openssl_version: "3.0.13-0ubuntu3.11"
+# renovate: datasource=deb depName=direnv registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
+base_direnv_version: "2.32.1-2ubuntu0.24.04.3"
+# renovate: datasource=deb depName=open-vm-tools registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
+base_open_vm_tools_version: "2:13.0.0-2~ubuntu0.24.04.1"
+# renovate: datasource=deb depName=locales registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
+base_locales_version: "2.39-0ubuntu8.7"
+# renovate: datasource=deb depName=hunspell-de-ch registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
+base_hunspell_de_ch_version: "20161207-12"
+# renovate: datasource=deb depName=hunspell-en-us registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
+base_hunspell_en_us_version: "1:2020.12.07-2"
+
+# ---- git ----
+# renovate: datasource=deb depName=git registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
+base_git_version: "1:2.43.0-1ubuntu7.3"
+
+# base_git_user_name and base_git_user_email have no default — required, see meta/argument_specs.yml
+
+base_git_default_branch: main
+base_git_pull_rebase: true
+base_git_push_default: simple
+base_git_editor: vim
+base_git_signing_enabled: true
+base_git_signing_key: "{{ ansible_facts['env']['HOME'] }}/.ssh/id_ed25519.pub"
+
+# ---- ssh ----
+base_ssh_extra_hosts: []
+
+# ---- python ----
+# renovate: datasource=github-releases depName=astral-sh/uv extractVersion=^(?<version>.*)$
+base_python_uv_version: "0.11.28"
+base_python_uv_checksum: "sha256:f02146b371c35c287d860f003ece7345c86e358a3fd70a9b63700cd141ee7fb4"
+# renovate: datasource=deb depName=build-essential registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
+base_python_build_essential_version: "12.10ubuntu1"
+# renovate: datasource=deb depName=python3-pip registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
+base_python_pip_version: "24.0+dfsg-1ubuntu1.3"
+# renovate: datasource=deb depName=python3-venv registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
+base_python_venv_version: "3.12.3-0ubuntu2.1"
+
+# ---- fonts ----
+# renovate: datasource=deb depName=fontconfig registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
+base_fonts_fontconfig_version: "2.15.0-1.1ubuntu2"
+# renovate: datasource=deb depName=unzip registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
+base_fonts_unzip_version: "6.0-28ubuntu4.1"
+# renovate: datasource=github-releases depName=ryanoasis/nerd-fonts extractVersion=^v(?<version>.*)$
+base_fonts_nerd_font_version: "3.4.0"
+base_fonts_nerd_font_checksum: "sha256:76f05ff3ace48a464a6ca57977998784ff7bdbb65a6d915d7e401cd3927c493c"
