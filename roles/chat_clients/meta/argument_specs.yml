@@ -1,0 +1,27 @@
+---
+argument_specs:
+  main:
+    short_description: >-
+      Install workplace chat clients: Slack (Flatpak) and Microsoft Teams
+      (teams-for-linux, .deb from GitHub releases) — each independently toggleable.
+    options:
+      chat_clients_slack_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install Slack (also gates the Flatpak/Flathub bootstrap).
+      chat_clients_teams_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install teams-for-linux.
+      chat_clients_teams_version:
+        type: str
+        required: false
+        default: "2.13.0"
+        description: teams-for-linux version (github-releases IsmaelMartinez/teams-for-linux).
+      chat_clients_teams_download_base:
+        type: str
+        required: false
+        default: "https://github.com/IsmaelMartinez/teams-for-linux/releases/download/v{{ chat_clients_teams_version }}"
+        description: Base URL the teams-for-linux .deb is downloaded from, before the filename.
