@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.8](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/0.1.7...0.1.8) (2026-08-03)
+
+
+### Bug Fixes
+
+* skip teams-for-linux checksum chain cleanly under --check ([#48](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/48)) ([bfc727b](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/bfc727b79c1334d9a6183522c5de13ba27b61c8d))
+
 ## [0.1.7](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/0.1.6...0.1.7) (2026-08-03)
 
 
