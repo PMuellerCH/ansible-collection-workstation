@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.1.7](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/0.1.6...0.1.7) (2026-08-03)
+
+
+### Features
+
+* add chat_clients role, merge slack + teams ([#38](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/38)) ([336fcc3](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/336fcc31ae1b284185f55782b6a048c93a5725ea))
+
+
+### Bug Fixes
+
+* use dynamic checksum verification for uv and nerd-fonts downloads ([#40](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/40)) ([224264e](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/224264e4974efd229ebd88a1041e2d10852a14ee))
+
+
+### Miscellaneous
+
+* **deps:** update dependency astral-sh/uv to v0.12.1 ([#41](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/41)) ([03d6622](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/03d6622266d995c3059ec525e983225146a53ed6))
+* **deps:** update dependency checkov to v3.3.9 ([#43](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/43)) ([b3ad50b](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/b3ad50b638bbc32a23b8436fca287f06c635c5e8))
+* **deps:** update dependency ismaelmartinez/teams-for-linux to v2.14.1 ([#46](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/46)) ([b2878c4](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/b2878c41f77299cf32da469bea4ad3a608d68372))
+* **deps:** update dependency markdownlint-cli2 to v0.23.2 ([#42](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/42)) ([5f96a77](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/5f96a7745a82634c99277b0216c1c347c05176a6))
+* **deps:** update dependency ryanoasis/nerd-fonts to v3.5.0 ([#44](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/44)) ([1db02c8](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/1db02c833f5b8bed38a9e85ded6c47ced8d4099d))
+
 ## [0.1.6](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/0.1.5...0.1.6) (2026-07-22)
 
 
