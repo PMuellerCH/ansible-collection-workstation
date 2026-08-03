@@ -602,7 +602,10 @@
   ansible.builtin.get_url:
     url: "https://github.com/astral-sh/uv/releases/download/{{ base_python_uv_version }}/uv-x86_64-unknown-linux-musl.tar.gz"
     dest: "/tmp/uv-{{ base_python_uv_version }}.tar.gz"
-    checksum: "{{ base_python_uv_checksum }}"
+    # uv publishes a matching .sha256 file per release asset — get_url fetches
+    # and verifies against it directly, so there's no static checksum to keep
+    # in sync by hand when Renovate bumps base_python_uv_version.
+    checksum: "sha256:https://github.com/astral-sh/uv/releases/download/{{ base_python_uv_version }}/uv-x86_64-unknown-linux-musl.tar.gz.sha256"
     mode: "0644"
   when: base_python_uv_installed_version.rc != 0 or base_python_uv_version not in base_python_uv_installed_version.stdout
   tags: [python]
@@ -672,7 +675,11 @@
   ansible.builtin.get_url:
     url: "https://github.com/ryanoasis/nerd-fonts/releases/download/v{{ base_fonts_nerd_font_version }}/JetBrainsMono.zip"
     dest: "/tmp/JetBrainsMono.zip"
-    checksum: "{{ base_fonts_nerd_font_checksum }}"
+    # nerd-fonts publishes an aggregate SHA-256.txt per release — get_url
+    # fetches it and matches the JetBrainsMono.zip entry directly, so there's
+    # no static checksum to keep in sync by hand when Renovate bumps
+    # base_fonts_nerd_font_version.
+    checksum: "sha256:https://github.com/ryanoasis/nerd-fonts/releases/download/v{{ base_fonts_nerd_font_version }}/SHA-256.txt"
     mode: "0644"
   when: not base_fonts_version_stat.stat.exists or (base_fonts_installed_version.content | b64decode | trim) != base_fonts_nerd_font_version
   tags: [fonts]
