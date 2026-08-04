@@ -1,0 +1,34 @@
+---
+code_quality_tools_trivy_enabled: true
+code_quality_tools_pre_commit_enabled: true
+code_quality_tools_detect_secrets_enabled: true
+code_quality_tools_yamllint_enabled: true
+code_quality_tools_checkov_enabled: true
+code_quality_tools_ansible_lint_enabled: true
+
+# renovate: datasource=github-releases depName=aquasecurity/trivy extractVersion=^v(?<version>.*)$
+code_quality_tools_trivy_version: "0.73.0"
+code_quality_tools_trivy_download_base: "https://github.com/aquasecurity/trivy/releases/download/v{{ code_quality_tools_trivy_version }}"
+
+# renovate: datasource=deb depName=pre-commit registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
+code_quality_tools_pre_commit_version: "3.6.2-1"
+
+# renovate: datasource=pypi depName=detect-secrets
+code_quality_tools_detect_secrets_version: "1.5.0"
+
+# renovate: datasource=pypi depName=yamllint
+code_quality_tools_yamllint_version: "1.38.0"
+
+# renovate: datasource=pypi depName=checkov
+code_quality_tools_checkov_version: "3.3.9"
+
+# renovate: datasource=pypi depName=ansible-lint
+code_quality_tools_ansible_lint_version: "26.6.0"
+
+# renovate: datasource=pypi depName=ansible-core
+code_quality_tools_ansible_core_version: "2.21.2"
+
+# Minimum pipx version community.general.pipx requires (Ubuntu 24.04's apt-provided
+# pipx is only 1.4.3 — see README "pipx bootstrap" section).
+# renovate: datasource=pypi depName=pipx
+code_quality_tools_pipx_min_version: "1.7.1"

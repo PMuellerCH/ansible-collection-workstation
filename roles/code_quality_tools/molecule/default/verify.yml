@@ -1,0 +1,95 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: true
+  vars:
+    _code_quality_tools_local_bin: "{{ ansible_facts['env']['HOME'] }}/.local/bin"
+  tasks:
+    - name: Gather package facts
+      ansible.builtin.package_facts:
+        manager: apt
+
+    - name: Assert apt-installed tools are present
+      ansible.builtin.assert:
+        that:
+          - "'trivy' in ansible_facts.packages"
+          - "'pre-commit' in ansible_facts.packages"
+
+    - name: Get dpkg selection for trivy
+      ansible.builtin.command: dpkg --get-selections trivy
+      register: _code_quality_tools_trivy_selection
+      changed_when: false
+
+    - name: Get dpkg selection for pre-commit
+      ansible.builtin.command: dpkg --get-selections pre-commit
+      register: _code_quality_tools_pre_commit_selection
+      changed_when: false
+
+    - name: Assert trivy and pre-commit package versions are held
+      ansible.builtin.assert:
+        that:
+          - "'hold' in _code_quality_tools_trivy_selection.stdout"
+          - "'hold' in _code_quality_tools_pre_commit_selection.stdout"
+
+    - name: Check trivy runs
+      ansible.builtin.command: trivy --version
+      register: _code_quality_tools_trivy_version
+      changed_when: false
+
+    - name: Assert trivy reports the pinned version
+      ansible.builtin.assert:
+        that: "'0.73.0' in _code_quality_tools_trivy_version.stdout"
+
+    - name: Check pipx bootstrap produced pipx >= 1.7.0
+      ansible.builtin.command: "{{ _code_quality_tools_local_bin }}/pipx --version"
+      register: _code_quality_tools_pipx_version
+      changed_when: false
+
+    - name: Assert bootstrapped pipx satisfies community.general.pipx's minimum
+      ansible.builtin.assert:
+        that: _code_quality_tools_pipx_version.stdout is version('1.7.0', '>=')
+
+    - name: Check detect-secrets is importable via its pipx-installed binary
+      ansible.builtin.command: "{{ _code_quality_tools_local_bin }}/detect-secrets --version"
+      register: _code_quality_tools_detect_secrets_version
+      changed_when: false
+
+    - name: Assert detect-secrets reports the pinned version
+      ansible.builtin.assert:
+        that: "'1.5.0' in _code_quality_tools_detect_secrets_version.stdout"
+
+    - name: Check yamllint is importable via its pipx-installed binary
+      ansible.builtin.command: "{{ _code_quality_tools_local_bin }}/yamllint --version"
+      register: _code_quality_tools_yamllint_version
+      changed_when: false
+
+    - name: Assert yamllint reports the pinned version
+      ansible.builtin.assert:
+        that: "'1.38.0' in _code_quality_tools_yamllint_version.stdout"
+
+    - name: Check checkov is importable via its pipx-installed binary
+      ansible.builtin.command: "{{ _code_quality_tools_local_bin }}/checkov --version"
+      register: _code_quality_tools_checkov_version
+      changed_when: false
+
+    - name: Assert checkov reports the pinned version
+      ansible.builtin.assert:
+        that: "'3.3.9' in _code_quality_tools_checkov_version.stdout"
+
+    - name: Check ansible-lint is importable via its pipx-installed binary
+      ansible.builtin.command: "{{ _code_quality_tools_local_bin }}/ansible-lint --version"
+      register: _code_quality_tools_ansible_lint_version
+      changed_when: false
+
+    - name: Assert ansible-lint reports the pinned version
+      ansible.builtin.assert:
+        that: "'26.6.0' in _code_quality_tools_ansible_lint_version.stdout"
+
+    - name: Inspect ansible-core injected into the ansible-lint pipx venv
+      ansible.builtin.command: "{{ _code_quality_tools_local_bin }}/pipx runpip ansible-lint show ansible-core"
+      register: _code_quality_tools_injected_ansible_core
+      changed_when: false
+
+    - name: Assert the injected ansible-core is the expected version
+      ansible.builtin.assert:
+        that: "'Version: 2.21.2' in _code_quality_tools_injected_ansible_core.stdout"

@@ -1,0 +1,9 @@
+---
+galaxy_info:
+  role_name: code_quality_tools
+  namespace: swisstopo
+  author: swisstopo
+  license: MIT
+  description: Install code-quality/security tooling (trivy, pre-commit, detect-secrets, yamllint, checkov, ansible-lint)
+  min_ansible_version: "2.17"
+dependencies: []
