@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.11](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/0.1.10...0.1.11) (2026-08-04)
+
+
+### Features
+
+* fold htop into modern_cli role ([#55](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/55)) ([da16cc8](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/da16cc8f85f015ad84ae15770863c37d9d75f1a6))
+
 ## [0.1.10](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/0.1.9...0.1.10) (2026-08-04)
 
 
