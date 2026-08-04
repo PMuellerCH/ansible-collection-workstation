@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.9](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/0.1.8...0.1.9) (2026-08-04)
+
+
+### Features
+
+* add desktop_customization role (merge gui-customization + flameshot) ([#51](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/51)) ([4a49ba4](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/4a49ba49c22880949cb80c1d6a75d72e3563627d))
+
 ## [0.1.8](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/0.1.7...0.1.8) (2026-08-03)
 
 
