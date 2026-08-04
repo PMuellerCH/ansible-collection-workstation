@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.10](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/0.1.9...0.1.10) (2026-08-04)
+
+
+### Features
+
+* add code_quality_tools role (trivy, pre-commit tool installs) ([#56](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/56)) ([889b1f0](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/889b1f0a951faaa9f793fc81ab0926990cf7ed07))
+
 ## [0.1.9](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/0.1.8...0.1.9) (2026-08-04)
 
 
