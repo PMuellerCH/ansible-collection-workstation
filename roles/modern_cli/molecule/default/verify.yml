@@ -14,8 +14,18 @@
           - "'btop' in ansible_facts.packages"
           - "'eza' in ansible_facts.packages"
           - "'fd-find' in ansible_facts.packages"
+          - "'htop' in ansible_facts.packages"
           - "'ripgrep' in ansible_facts.packages"
           - "'zoxide' in ansible_facts.packages"
+
+    - name: Get dpkg selection for htop
+      ansible.builtin.command: dpkg --get-selections htop
+      register: _modern_cli_htop_selection
+      changed_when: false
+
+    - name: Assert htop package version is held
+      ansible.builtin.assert:
+        that: "'hold' in _modern_cli_htop_selection.stdout"
 
     - name: Stat fd symlink
       ansible.builtin.stat:

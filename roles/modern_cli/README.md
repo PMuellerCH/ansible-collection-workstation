@@ -1,13 +1,15 @@
 # swisstopo.workstation.modern_cli
 
-Installs and Catppuccin-Mocha-themes a set of modern CLI tool replacements:
-`bat` (cat), `btop` (top), `eza` (ls), `fd`/`fd-find` (find), `ripgrep` (grep),
-`zoxide` (cd). Each tool is independently toggleable. This role merges what
-used to be four separate/duplicated implementations (`bat`, `btop`, and two
-tools bundled ad hoc inside a `cli-tools` role) into one parameterized role.
+Installs a set of modern CLI tool replacements: `bat` (cat), `btop` (top),
+`eza` (ls), `fd`/`fd-find` (find), `htop` (top), `ripgrep` (grep), `zoxide`
+(cd). Each tool is independently toggleable. This role merges what used to
+be several separate/duplicated implementations (`bat`, `btop`, and tools
+bundled ad hoc inside a `cli-tools` role) into one parameterized role.
 
-The Catppuccin Mocha theme is a fixed collection-wide convention, not a
-variable — every tool in this collection uses it.
+`bat` and `btop` are additionally Catppuccin-Mocha-themed — the fixed
+collection-wide theme convention, not a variable. The other tools (`eza`,
+`fd`, `htop`, `ripgrep`, `zoxide`) are installed only; they have no
+themeable config file of their own.
 
 ## Tagging (for backward-compatible selective runs)
 
@@ -20,6 +22,7 @@ even though it's one role:
 | bat | `bat`, `modern_cli` |
 | btop | `btop`, `modern_cli` |
 | eza, fd, ripgrep, zoxide | `cli-tools`, `modern_cli` |
+| htop | `htop`, `modern_cli` |
 | shell alias deployment | `bat`, `btop`, `cli-tools`, `modern_cli` |
 
 **Do not** put an outer `tags:` on the role invocation in your play — that
@@ -35,6 +38,7 @@ not per role.
 | `modern_cli_btop_enabled` | `true` | Install btop |
 | `modern_cli_eza_enabled` | `true` | Install eza |
 | `modern_cli_fd_enabled` | `true` | Install fd-find (symlinked to `fd`) |
+| `modern_cli_htop_enabled` | `true` | Install htop |
 | `modern_cli_ripgrep_enabled` | `true` | Install ripgrep |
 | `modern_cli_zoxide_enabled` | `true` | Install zoxide |
 | `modern_cli_bat_version` | `0.24.0-1build1` | Exact apt version of bat |
@@ -42,6 +46,7 @@ not per role.
 | `modern_cli_btop_catppuccin_version` | `1.0.0` | `catppuccin/btop` release tag for the theme archive |
 | `modern_cli_eza_version` | `0.18.2-1` | Exact apt version of eza |
 | `modern_cli_fd_version` | `9.0.0-1` | Exact apt version of fd-find |
+| `modern_cli_htop_version` | `3.3.0-4build1` | Exact apt version of htop |
 | `modern_cli_ripgrep_version` | `14.1.0-1` | Exact apt version of ripgrep |
 | `modern_cli_zoxide_version` | `0.9.3-1` | Exact apt version of zoxide |
 | `modern_cli_deploy_shell_aliases` | `true` | Deploy `~/.config/zsh/conf.d/modern_cli.zsh` with aliases for enabled tools |

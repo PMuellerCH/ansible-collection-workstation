@@ -3,6 +3,7 @@ modern_cli_bat_enabled: true
 modern_cli_btop_enabled: true
 modern_cli_eza_enabled: true
 modern_cli_fd_enabled: true
+modern_cli_htop_enabled: true
 modern_cli_ripgrep_enabled: true
 modern_cli_zoxide_enabled: true
 
@@ -25,6 +26,9 @@ modern_cli_eza_version: "0.18.2-1"
 
 # renovate: datasource=deb depName=fd-find registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
 modern_cli_fd_version: "9.0.0-1"
+
+# renovate: datasource=deb depName=htop registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
+modern_cli_htop_version: "3.3.0-4build1"
 
 # renovate: datasource=deb depName=ripgrep registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
 modern_cli_ripgrep_version: "14.1.0-1"

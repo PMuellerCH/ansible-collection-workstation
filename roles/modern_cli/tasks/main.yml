@@ -122,6 +122,25 @@
   when: modern_cli_btop_enabled
   tags: [btop, modern_cli]
 
+# htop
+- name: Install htop
+  ansible.builtin.apt:
+    name: "htop={{ modern_cli_htop_version }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: modern_cli_htop_enabled
+  tags: [htop, modern_cli]
+
+- name: Hold htop package version
+  ansible.builtin.dpkg_selections:
+    name: htop
+    selection: hold
+  become: true
+  when: modern_cli_htop_enabled
+  tags: [htop, modern_cli]
+
 # eza
 - name: Install eza
   ansible.builtin.apt:
