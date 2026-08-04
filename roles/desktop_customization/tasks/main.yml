@@ -1,0 +1,187 @@
+---
+# --- gui-customization: GNOME ---
+- name: Configure fixed workspaces in GNOME
+  community.general.dconf:
+    key: "{{ item.key }}"
+    value: "{{ item.value }}"
+  become: false
+  loop:
+    - key: /org/gnome/mutter/dynamic-workspaces
+      value: "false"
+    - key: /org/gnome/desktop/wm/preferences/num-workspaces
+      value: "9"
+  when: desktop_customization_desktop_environment == 'gnome'
+  tags: [gui-customization, desktop_customization]
+
+- name: Unbind Super+1-9 from GNOME dock app-switching
+  community.general.dconf:
+    key: "/org/gnome/shell/keybindings/switch-to-application-{{ item }}"
+    value: "@as []"
+  become: false
+  loop: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+  when: desktop_customization_desktop_environment == 'gnome'
+  tags: [gui-customization, desktop_customization]
+
+- name: Disable Dash-to-Dock hot-keys so Super+1-9 reaches workspace switching
+  community.general.dconf:
+    key: /org/gnome/shell/extensions/dash-to-dock/hot-keys
+    value: "false"
+  become: false
+  when: desktop_customization_desktop_environment == 'gnome'
+  # The Dash-to-Dock extension schema may not exist on every machine — this
+  # is not a check-mode-only concern (unlike other ignore_errors/skip guards
+  # in this collection), so it's unconditional. ansible-lint's production
+  # profile flags a literal `ignore_errors: true`; `failed_when: false`
+  # achieves the same "never fail this task" behavior without tripping it.
+  failed_when: false
+  tags: [gui-customization, desktop_customization]
+
+- name: Bind Super+1-9 to workspace switching in GNOME
+  community.general.dconf:
+    key: "/org/gnome/desktop/wm/keybindings/switch-to-workspace-{{ item }}"
+    value: "['<Super>{{ item }}']"
+  become: false
+  loop: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+  when: desktop_customization_desktop_environment == 'gnome'
+  tags: [gui-customization, desktop_customization]
+
+- name: Bind Super+Shift+1-9 to move active window to workspace in GNOME
+  community.general.dconf:
+    key: "/org/gnome/desktop/wm/keybindings/move-to-workspace-{{ item }}"
+    value: "['<Shift><Super>{{ item }}']"
+  become: false
+  loop: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+  when: desktop_customization_desktop_environment == 'gnome'
+  tags: [gui-customization, desktop_customization]
+
+# --- gui-customization: COSMIC ---
+# Must run before the flameshot COSMIC task below, which edits the file
+# created here. Also tagged `flameshot` (in addition to its own
+# `gui-customization` identity) so a consumer running with `--tags
+# flameshot` alone on COSMIC still gets this prerequisite — otherwise the
+# lineinfile task below would hard-fail on a fresh machine where the file
+# was never created.
+- name: Create COSMIC custom shortcuts config directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/cosmic/com.system76.CosmicSettings.Shortcuts/v1"
+    state: directory
+    mode: "0755"
+  become: false
+  when: desktop_customization_desktop_environment == 'cosmic'
+  tags: [gui-customization, flameshot, desktop_customization]
+
+- name: Initialise COSMIC custom shortcuts file (empty hashmap)
+  ansible.builtin.copy:
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/cosmic/com.system76.CosmicSettings.Shortcuts/v1/custom"
+    mode: "0644"
+    content: |
+      {
+      }
+    force: false
+  become: false
+  when: desktop_customization_desktop_environment == 'cosmic'
+  tags: [gui-customization, flameshot, desktop_customization]
+
+# --- flameshot: install ---
+- name: Install flameshot
+  ansible.builtin.apt:
+    name: "flameshot={{ desktop_customization_flameshot_version }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  tags: [flameshot, desktop_customization]
+
+- name: Hold flameshot package version
+  ansible.builtin.dpkg_selections:
+    name: flameshot
+    selection: hold
+  become: true
+  tags: [flameshot, desktop_customization]
+
+- name: Create autostart directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/autostart"
+    state: directory
+    mode: "0755"
+  become: false
+  tags: [flameshot, desktop_customization]
+
+- name: Autostart flameshot on login
+  ansible.builtin.copy:
+    src: flameshot.desktop
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/autostart/flameshot.desktop"
+    mode: "0644"
+  become: false
+  tags: [flameshot, desktop_customization]
+
+# --- flameshot: COSMIC keybinding ---
+- name: Bind Print key to flameshot in COSMIC custom shortcuts
+  ansible.builtin.lineinfile:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/cosmic/com.system76.CosmicSettings.Shortcuts/v1/custom"
+    line: '    (modifiers: [], key: "Print"): Spawn("env XDG_CURRENT_DESKTOP=sway flameshot gui"),'
+    # Anchored to our own exact (no-modifier) Print binding, not just the
+    # substring "Print" — a bare substring match would also hit (and
+    # silently replace) an unrelated binding like Shift+Print if the user
+    # has one configured. insertbefore tolerates a leading-whitespace
+    # closing brace in case anything ever reformats the file with
+    # indentation.
+    regexp: '\(modifiers: \[\], key: "Print"\):'
+    insertbefore: '^\s*}\s*$'
+  become: false
+  when: desktop_customization_desktop_environment == 'cosmic' and not ansible_check_mode
+  tags: [flameshot, desktop_customization]
+
+# --- flameshot: GNOME keybindings via dconf ---
+- name: Disable default GNOME Shell screenshot keybinding (Print)
+  community.general.dconf:
+    key: /org/gnome/shell/keybindings/screenshot
+    value: "@as []"
+  become: false
+  when: desktop_customization_desktop_environment == 'gnome'
+  tags: [flameshot, desktop_customization]
+
+- name: Configure flameshot custom keybinding in GNOME
+  community.general.dconf:
+    key: "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/flameshot/{{ item.key }}"
+    value: "{{ item.value }}"
+  become: false
+  loop:
+    - key: name
+      value: "'Flameshot'"
+    - key: command
+      value: "'flameshot gui'"
+    - key: binding
+      value: "'Print'"
+  when: desktop_customization_desktop_environment == 'gnome'
+  tags: [flameshot, desktop_customization]
+
+- name: Read existing GNOME custom keybindings list
+  community.general.dconf:
+    key: /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings
+    state: read
+  become: false
+  register: desktop_customization_gnome_existing_keybindings
+  when: desktop_customization_desktop_environment == 'gnome'
+  tags: [flameshot, desktop_customization]
+
+- name: Register flameshot keybinding path in GNOME custom keybindings list
+  community.general.dconf:
+    key: /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings
+    # Merge into whatever custom keybindings already exist instead of
+    # overwriting the whole list — a user may have other custom shortcuts
+    # configured (via GNOME Settings, or another role) that aren't ours to
+    # discard. dconf's read format ("['/a/', '/b/']", or "@as []"/null when
+    # unset) parses cleanly as YAML once the GVariant empty-array marker is
+    # normalised to a plain empty list.
+    value: >-
+      {{
+        (
+          (desktop_customization_gnome_existing_keybindings.value | default('[]', true) | replace('@as []', '[]'))
+          | from_yaml
+          + ['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/flameshot/']
+        ) | unique | list
+      }}
+  become: false
+  when: desktop_customization_desktop_environment == 'gnome'
+  tags: [flameshot, desktop_customization]

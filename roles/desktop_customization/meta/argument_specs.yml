@@ -1,0 +1,19 @@
+---
+argument_specs:
+  main:
+    short_description: >-
+      Desktop-environment customization (fixed workspaces, workspace
+      keybindings) and Flameshot screenshot tool (apt install, autostart,
+      Print-key keybinding) — for GNOME and COSMIC.
+    options:
+      desktop_customization_desktop_environment:
+        type: str
+        required: false
+        default: gnome
+        choices: [gnome, cosmic]
+        description: Desktop environment in use. Controls which task set is applied.
+      desktop_customization_flameshot_version:
+        type: str
+        required: false
+        default: "12.1.0-2build2"
+        description: flameshot apt package version (deb datasource, Ubuntu Noble).

@@ -1,0 +1,12 @@
+---
+galaxy_info:
+  role_name: desktop_customization
+  namespace: swisstopo
+  author: swisstopo
+  license: MIT
+  description: >-
+    Desktop-environment-level customization (fixed workspaces, workspace
+    keybindings) and Flameshot screenshot tool install + keybinding, for
+    GNOME and COSMIC.
+  min_ansible_version: "2.17"
+dependencies: []
