@@ -20,6 +20,17 @@ the `cli_dev_env` role's own neovim plugin management. Likewise `emoji-fzf`
 covers only the CLI/TUI emoji picker — the GUI picker (`smile`, via Flatpak)
 belongs to the `desktop_customization` role.
 
+The `nodejs`/`npm` apt install (pinned via `modern_cli_presenterm_nodejs_version`
+/ `_npm_version`, held afterward) only runs when no working `npm` is already
+on `$PATH` (checked via `npm --version`). mermaid-cli only needs *some*
+working Node/npm, not this exact version — if another role already provided
+one (e.g. a newer NodeSource install), pinning and holding our own older apt
+version would force an unwanted downgrade of a shared system runtime other
+tools may depend on at a specific major version. This is different from
+every other exact-pin-and-hold task in this role: those (bat, btop, eza,
+etc.) each own their package outright, so a downgrade there only affects
+that one tool.
+
 ## External runtime dependencies not provided by this role
 
 - `emoji-fzf`'s deployed `emoji` shell function pipes through `wl-copy`

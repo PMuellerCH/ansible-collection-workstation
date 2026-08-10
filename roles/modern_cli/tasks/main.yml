@@ -310,6 +310,28 @@
     (modern_cli_presenterm_current_version.rc != 0 or modern_cli_presenterm_version not in modern_cli_presenterm_current_version.stdout)
   tags: [presenterm, modern_cli]
 
+- name: Check if a working npm is already available
+  # mermaid-cli only needs *some* working Node/npm, not this exact pinned
+  # version — if another role already provided one (e.g. a newer NodeSource
+  # install), pinning/holding our own older apt version below would force
+  # an unwanted downgrade of a shared system runtime other tools may
+  # depend on at a specific major version.
+  #
+  # become: true here matters: the later "Install mermaid-cli globally via
+  # npm" task also runs with become: true, and sudo does not preserve the
+  # invoking user's $PATH. Checking as the unprivileged user could find a
+  # user-local npm (e.g. via nvm) that root can't see, skip the apt
+  # install below, and then fail downstream once mermaid-cli's install
+  # runs as root. Checking with the same privilege keeps this guard
+  # consistent with what actually runs later.
+  ansible.builtin.command: npm --version
+  register: modern_cli_npm_check
+  become: true
+  changed_when: false
+  failed_when: false
+  when: modern_cli_presenterm_enabled
+  tags: [presenterm, modern_cli]
+
 - name: Install nodejs and npm (required for mermaid-cli)
   # Ubuntu's nodejs apt package does not depend on or provide npm — it's a
   # separate package. Without it, community.general.npm below fails with
@@ -323,7 +345,7 @@
     update_cache: true
     cache_valid_time: 3600
   become: true
-  when: modern_cli_presenterm_enabled
+  when: modern_cli_presenterm_enabled and modern_cli_npm_check.rc != 0
   tags: [presenterm, modern_cli]
 
 - name: Hold nodejs and npm package versions
@@ -334,7 +356,7 @@
     - nodejs
     - npm
   become: true
-  when: modern_cli_presenterm_enabled
+  when: modern_cli_presenterm_enabled and modern_cli_npm_check.rc != 0
   tags: [presenterm, modern_cli]
 
 - name: Install mermaid-cli globally via npm
