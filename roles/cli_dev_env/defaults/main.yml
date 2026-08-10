@@ -1,0 +1,22 @@
+---
+cli_dev_env_lazygit_enabled: true
+cli_dev_env_neovim_enabled: true
+
+# Deploys ~/.config/nvim/lua/plugins/presenterm.lua for the presenterm.nvim
+# LazyVim plugin. The presenterm *binary* this plugin needs lives in the
+# modern_cli role (modern_cli_presenterm_enabled) — keep the two in sync in
+# whatever play wires both roles together, see README.
+cli_dev_env_neovim_presenterm_plugin_enabled: true
+
+# renovate: datasource=github-releases depName=jesseduffield/lazygit extractVersion=^v(?<version>.*)$
+cli_dev_env_lazygit_version: "0.64.0"
+cli_dev_env_lazygit_download_base: "https://github.com/jesseduffield/lazygit/releases/download/v{{ cli_dev_env_lazygit_version }}"
+
+# renovate: datasource=github-releases depName=neovim/neovim extractVersion=^v(?<version>.*)$
+cli_dev_env_neovim_version: "0.12.4"
+# No per-release checksum file is published by neovim/neovim (unlike lazygit's
+# checksums.txt or nerd-fonts' SHA-256.txt) — this is the "fall back to a
+# static pinned checksum" case in this collection's checksum conventions.
+# Staleness on a Renovate version bump is deliberate friction (forces a
+# manual review of the new release before the bump lands), not a bug.
+cli_dev_env_neovim_checksum: "sha256:012bf3fcac5ade43914df3f174668bf64d05e049a4f032a388c027b1ebd78628"

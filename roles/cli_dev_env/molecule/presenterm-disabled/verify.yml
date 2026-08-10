@@ -1,0 +1,31 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Check neovim runs
+      ansible.builtin.command: nvim --version
+      register: _cli_dev_env_neovim_version
+      changed_when: false
+
+    - name: Assert neovim reports the pinned version
+      ansible.builtin.assert:
+        that: "'NVIM v0.12.4' in _cli_dev_env_neovim_version.stdout"
+
+    - name: Stat nvim plugins directory
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lua/plugins"
+      register: _cli_dev_env_plugins_dir
+
+    - name: Assert nvim plugins directory still exists (created by neovim's own tasks)
+      ansible.builtin.assert:
+        that: _cli_dev_env_plugins_dir.stat.exists
+
+    - name: Stat presenterm.nvim plugin config
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lua/plugins/presenterm.lua"
+      register: _cli_dev_env_presenterm_plugin
+
+    - name: Assert presenterm.nvim plugin config was NOT deployed
+      ansible.builtin.assert:
+        that: not _cli_dev_env_presenterm_plugin.stat.exists

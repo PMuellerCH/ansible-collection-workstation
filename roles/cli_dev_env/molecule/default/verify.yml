@@ -1,0 +1,117 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: true
+  tasks:
+    # lazygit
+    - name: Check lazygit runs
+      ansible.builtin.command: lazygit --version
+      register: _cli_dev_env_lazygit_version
+      changed_when: false
+
+    - name: Assert lazygit reports the pinned version
+      ansible.builtin.assert:
+        that: "'0.64.0' in _cli_dev_env_lazygit_version.stdout"
+
+    - name: Stat lazygit config
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/lazygit/config.yml"
+      register: _cli_dev_env_lazygit_config
+
+    - name: Assert lazygit config was deployed
+      ansible.builtin.assert:
+        that: _cli_dev_env_lazygit_config.stat.exists
+
+    # neovim
+    - name: Check neovim runs
+      ansible.builtin.command: nvim --version
+      register: _cli_dev_env_neovim_version
+      changed_when: false
+
+    - name: Assert neovim reports the pinned version
+      ansible.builtin.assert:
+        that: "'NVIM v0.12.4' in _cli_dev_env_neovim_version.stdout"
+
+    - name: Stat neovim symlink
+      ansible.builtin.stat:
+        path: /usr/local/bin/nvim
+      register: _cli_dev_env_neovim_symlink
+
+    - name: Assert neovim symlink exists and is a symlink
+      ansible.builtin.assert:
+        that:
+          - _cli_dev_env_neovim_symlink.stat.exists
+          - _cli_dev_env_neovim_symlink.stat.islnk
+
+    - name: Stat LazyVim init.lua
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/init.lua"
+      register: _cli_dev_env_lazyvim_init
+
+    - name: Assert LazyVim starter was cloned
+      ansible.builtin.assert:
+        that: _cli_dev_env_lazyvim_init.stat.exists
+
+    - name: Stat LazyVim starter .git directory
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/.git"
+      register: _cli_dev_env_lazyvim_git
+
+    - name: Assert LazyVim starter .git directory was removed
+      ansible.builtin.assert:
+        that: not _cli_dev_env_lazyvim_git.stat.exists
+
+    - name: Stat lazyvim.json extras config
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lazyvim.json"
+      register: _cli_dev_env_lazyvim_json
+
+    - name: Assert lazyvim.json was deployed
+      ansible.builtin.assert:
+        that: _cli_dev_env_lazyvim_json.stat.exists
+
+    - name: Stat catppuccin colorscheme plugin config
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lua/plugins/colorscheme.lua"
+      register: _cli_dev_env_colorscheme
+
+    - name: Assert colorscheme plugin config was deployed
+      ansible.builtin.assert:
+        that: _cli_dev_env_colorscheme.stat.exists
+
+    - name: Stat vim-tmux-navigator plugin config
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lua/plugins/tmux-navigator.lua"
+      register: _cli_dev_env_tmux_navigator
+
+    - name: Assert tmux-navigator plugin config was deployed
+      ansible.builtin.assert:
+        that: _cli_dev_env_tmux_navigator.stat.exists
+
+    - name: Stat keymaps config
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lua/config/keymaps.lua"
+      register: _cli_dev_env_keymaps
+
+    - name: Assert keymaps config was deployed
+      ansible.builtin.assert:
+        that: _cli_dev_env_keymaps.stat.exists
+
+    - name: Stat neovim zsh snippet
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/neovim.zsh"
+      register: _cli_dev_env_zsh_snippet
+
+    - name: Assert neovim zsh snippet was deployed
+      ansible.builtin.assert:
+        that: _cli_dev_env_zsh_snippet.stat.exists
+
+    # presenterm.nvim plugin config (toggle default-enabled in this scenario)
+    - name: Stat presenterm.nvim plugin config
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lua/plugins/presenterm.lua"
+      register: _cli_dev_env_presenterm_plugin
+
+    - name: Assert presenterm.nvim plugin config was deployed
+      ansible.builtin.assert:
+        that: _cli_dev_env_presenterm_plugin.stat.exists

@@ -1,0 +1,272 @@
+---
+# ---- lazygit ----
+- name: Create lazygit config directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/lazygit"
+    state: directory
+    mode: "0755"
+  become: false
+  when: cli_dev_env_lazygit_enabled
+  tags: [lazygit, cli_dev_env]
+
+- name: Deploy lazygit config with Catppuccin Mocha theme
+  ansible.builtin.copy:
+    src: config.yml
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/lazygit/config.yml"
+    mode: "0644"
+    force: false
+  become: false
+  when: cli_dev_env_lazygit_enabled
+  tags: [lazygit, cli_dev_env]
+
+- name: Get installed lazygit version
+  ansible.builtin.command: lazygit --version
+  register: cli_dev_env_lazygit_current_version
+  changed_when: false
+  failed_when: false
+  when: cli_dev_env_lazygit_enabled
+  tags: [lazygit, cli_dev_env]
+
+- name: Download lazygit archive
+  ansible.builtin.get_url:
+    url: "{{ cli_dev_env_lazygit_download_base }}/lazygit_{{ cli_dev_env_lazygit_version }}_linux_x86_64.tar.gz"
+    dest: "/tmp/lazygit_{{ cli_dev_env_lazygit_version }}_linux_x86_64.tar.gz"
+    # jesseduffield/lazygit publishes an aggregate checksums.txt per release —
+    # get_url fetches it and matches the entry by the destination's basename,
+    # so there's no static checksum to keep in sync by hand when Renovate
+    # bumps cli_dev_env_lazygit_version.
+    checksum: "sha256:{{ cli_dev_env_lazygit_download_base }}/checksums.txt"
+    mode: "0644"
+  when: >-
+    cli_dev_env_lazygit_enabled and
+    (cli_dev_env_lazygit_current_version.rc != 0 or
+     cli_dev_env_lazygit_version not in cli_dev_env_lazygit_current_version.stdout)
+  tags: [lazygit, cli_dev_env]
+
+- name: Install lazygit binary to /usr/local/bin
+  ansible.builtin.unarchive:
+    src: "/tmp/lazygit_{{ cli_dev_env_lazygit_version }}_linux_x86_64.tar.gz"
+    dest: /usr/local/bin/
+    include:
+      - lazygit
+    remote_src: true
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and
+    cli_dev_env_lazygit_enabled and
+    (cli_dev_env_lazygit_current_version.rc != 0 or
+     cli_dev_env_lazygit_version not in cli_dev_env_lazygit_current_version.stdout)
+  tags: [lazygit, cli_dev_env]
+
+# ---- neovim ----
+- name: Get installed neovim version
+  ansible.builtin.command: nvim --version
+  register: cli_dev_env_neovim_current_version
+  changed_when: false
+  failed_when: false
+  when: cli_dev_env_neovim_enabled
+  tags: [neovim, cli_dev_env]
+
+- name: Download neovim archive
+  ansible.builtin.get_url:
+    url: "https://github.com/neovim/neovim/releases/download/v{{ cli_dev_env_neovim_version }}/nvim-linux-x86_64.tar.gz"
+    dest: "/tmp/nvim-linux-x86_64-{{ cli_dev_env_neovim_version }}.tar.gz"
+    checksum: "{{ cli_dev_env_neovim_checksum }}"
+    mode: "0644"
+  when: >-
+    cli_dev_env_neovim_enabled and
+    (cli_dev_env_neovim_current_version.rc != 0 or
+     cli_dev_env_neovim_version not in cli_dev_env_neovim_current_version.stdout)
+  tags: [neovim, cli_dev_env]
+
+- name: Extract neovim to /opt
+  ansible.builtin.unarchive:
+    src: "/tmp/nvim-linux-x86_64-{{ cli_dev_env_neovim_version }}.tar.gz"
+    dest: /opt/
+    remote_src: true
+  become: true
+  when: >-
+    not ansible_check_mode and
+    cli_dev_env_neovim_enabled and
+    (cli_dev_env_neovim_current_version.rc != 0 or
+     cli_dev_env_neovim_version not in cli_dev_env_neovim_current_version.stdout)
+  tags: [neovim, cli_dev_env]
+
+- name: Create neovim symlink
+  ansible.builtin.file:
+    src: /opt/nvim-linux-x86_64/bin/nvim
+    dest: /usr/local/bin/nvim
+    state: link
+  become: true
+  when: >-
+    not ansible_check_mode and
+    cli_dev_env_neovim_enabled and
+    (cli_dev_env_neovim_current_version.rc != 0 or
+     cli_dev_env_neovim_version not in cli_dev_env_neovim_current_version.stdout)
+  tags: [neovim, cli_dev_env]
+
+- name: Check if LazyVim config is already present
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/init.lua"
+  register: cli_dev_env_neovim_lazyvim_stat
+  become: false
+  when: cli_dev_env_neovim_enabled
+  tags: [neovim, cli_dev_env]
+
+- name: Clone LazyVim starter
+  # LazyVim/starter has no release tags — it is a template meant to be
+  # cloned once and immediately customized/committed by the user, not a
+  # versioned artifact tracked for updates, so cloning the default branch is
+  # deliberate here (unlike get_url downloads elsewhere in this collection,
+  # which always pin to an immutable ref). This only ever runs once per
+  # machine, guarded by the init.lua stat check above.
+  ansible.builtin.git:
+    repo: https://github.com/LazyVim/starter.git
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/nvim"
+    version: main
+    update: false
+  become: false
+  when: >-
+    cli_dev_env_neovim_enabled and
+    not cli_dev_env_neovim_lazyvim_stat.stat.exists
+  tags: [neovim, cli_dev_env]
+
+- name: Remove LazyVim starter .git directory (fresh config)
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/.git"
+    state: absent
+  become: false
+  when: >-
+    not ansible_check_mode and
+    cli_dev_env_neovim_enabled and
+    not cli_dev_env_neovim_lazyvim_stat.stat.exists
+  tags: [neovim, cli_dev_env]
+
+- name: Ensure plugins directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lua/plugins"
+    state: directory
+    mode: "0755"
+  become: false
+  when: >-
+    not ansible_check_mode and
+    cli_dev_env_neovim_enabled
+  tags: [neovim, cli_dev_env]
+
+- name: Deploy lazyvim.json extras config
+  ansible.builtin.copy:
+    src: lazyvim.json
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lazyvim.json"
+    mode: "0644"
+  become: false
+  when: >-
+    not ansible_check_mode and
+    cli_dev_env_neovim_enabled
+  tags: [neovim, cli_dev_env]
+
+- name: Deploy catppuccin colorscheme plugin config
+  ansible.builtin.copy:
+    src: plugins/colorscheme.lua
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lua/plugins/colorscheme.lua"
+    mode: "0644"
+  become: false
+  when: >-
+    not ansible_check_mode and
+    cli_dev_env_neovim_enabled
+  tags: [neovim, cli_dev_env]
+
+- name: Deploy vim-tmux-navigator plugin config
+  ansible.builtin.copy:
+    src: plugins/tmux-navigator.lua
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lua/plugins/tmux-navigator.lua"
+    mode: "0644"
+  become: false
+  when: >-
+    not ansible_check_mode and
+    cli_dev_env_neovim_enabled
+  tags: [neovim, cli_dev_env]
+
+- name: Ensure nvim config directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lua/config"
+    state: directory
+    mode: "0755"
+  become: false
+  when: >-
+    not ansible_check_mode and
+    cli_dev_env_neovim_enabled
+  tags: [neovim, cli_dev_env]
+
+- name: Deploy keymaps config (jk escape, buffer navigation)
+  ansible.builtin.copy:
+    src: config/keymaps.lua
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lua/config/keymaps.lua"
+    mode: "0644"
+  become: false
+  when: >-
+    not ansible_check_mode and
+    cli_dev_env_neovim_enabled
+  tags: [neovim, cli_dev_env]
+
+- name: Create zsh conf.d directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d"
+    state: directory
+    mode: "0755"
+  become: false
+  when: >-
+    not ansible_check_mode and
+    cli_dev_env_neovim_enabled
+  tags: [neovim, cli_dev_env]
+
+- name: Deploy neovim shell integration snippet
+  ansible.builtin.copy:
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/neovim.zsh"
+    mode: "0644"
+    content: |
+      # Preferred editor
+      export EDITOR='nvim'
+      export VISUAL='nvim'
+      alias vi='nvim'
+      alias vim='nvim'
+  become: false
+  when: >-
+    not ansible_check_mode and
+    cli_dev_env_neovim_enabled
+  tags: [neovim, cli_dev_env]
+
+# ---- presenterm (neovim plugin config only — the presenterm binary,
+# mermaid-cli and zsh snippet live in the modern_cli role instead) ----
+- name: Ensure nvim plugins directory exists (presenterm.nvim)
+  # Deliberately kept self-contained (duplicates the neovim "Ensure plugins
+  # directory exists" task above) so `--tags presenterm` alone is
+  # self-sufficient and does not implicitly depend on the neovim tag having
+  # also run in the same invocation — same redundancy the source
+  # computer-setup roles already had, for the same reason.
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lua/plugins"
+    state: directory
+    mode: "0755"
+  become: false
+  when: >-
+    not ansible_check_mode and
+    cli_dev_env_neovim_enabled and
+    cli_dev_env_neovim_presenterm_plugin_enabled
+  tags: [presenterm, cli_dev_env]
+
+- name: Deploy presenterm.nvim plugin config
+  # Gated on cli_dev_env_neovim_presenterm_plugin_enabled: the presenterm
+  # binary this plugin needs now lives in a different, independently
+  # installable role (modern_cli). See README for why this toggle exists and
+  # how it must be kept in sync with modern_cli_presenterm_enabled.
+  ansible.builtin.copy:
+    src: plugins/presenterm.lua
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lua/plugins/presenterm.lua"
+    mode: "0644"
+  become: false
+  when: >-
+    not ansible_check_mode and
+    cli_dev_env_neovim_enabled and
+    cli_dev_env_neovim_presenterm_plugin_enabled
+  tags: [presenterm, cli_dev_env]

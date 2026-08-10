@@ -1,0 +1,55 @@
+---
+argument_specs:
+  main:
+    short_description: >-
+      Install CLI developer environment tools: lazygit and neovim/LazyVim —
+      each independently toggleable — plus presenterm.nvim's plugin config
+      (independently toggleable, depends on the presenterm binary installed
+      by the modern_cli role).
+    options:
+      cli_dev_env_lazygit_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install lazygit.
+      cli_dev_env_neovim_enabled:
+        type: bool
+        required: false
+        default: true
+        description: >-
+          Whether to install neovim and bootstrap the LazyVim configuration.
+          Also gates the presenterm.nvim plugin config below.
+      cli_dev_env_neovim_presenterm_plugin_enabled:
+        type: bool
+        required: false
+        default: true
+        description: >-
+          Whether to deploy the presenterm.nvim plugin config
+          (~/.config/nvim/lua/plugins/presenterm.lua). The presenterm binary
+          this plugin needs lives in the modern_cli role
+          (modern_cli_presenterm_enabled) — keep the two in sync. Only
+          applies when cli_dev_env_neovim_enabled is true.
+      cli_dev_env_lazygit_version:
+        type: str
+        required: false
+        default: "0.64.0"
+        description: lazygit version (github-releases jesseduffield/lazygit), installed from a checksum-verified archive.
+      cli_dev_env_lazygit_download_base:
+        type: str
+        required: false
+        default: "https://github.com/jesseduffield/lazygit/releases/download/v{{ cli_dev_env_lazygit_version }}"
+        description: Base URL the lazygit archive and its checksums.txt are downloaded from, before the filename.
+      cli_dev_env_neovim_version:
+        type: str
+        required: false
+        default: "0.12.4"
+        description: Neovim version (github-releases neovim/neovim), installed from a checksum-verified archive.
+      cli_dev_env_neovim_checksum:
+        type: str
+        required: false
+        default: "sha256:012bf3fcac5ade43914df3f174668bf64d05e049a4f032a388c027b1ebd78628"
+        description: >-
+          sha256 checksum for the pinned cli_dev_env_neovim_version's
+          nvim-linux-x86_64.tar.gz. Static (neovim/neovim publishes no
+          per-release checksum file) — deliberately goes stale on a
+          Renovate version bump until manually updated, as a review gate.

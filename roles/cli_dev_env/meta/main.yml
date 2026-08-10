@@ -1,0 +1,9 @@
+---
+galaxy_info:
+  role_name: cli_dev_env
+  namespace: swisstopo
+  author: swisstopo
+  license: MIT
+  description: Install CLI development environment tools (lazygit, neovim/LazyVim) and presenterm.nvim's plugin config
+  min_ansible_version: "2.17"
+dependencies: []
