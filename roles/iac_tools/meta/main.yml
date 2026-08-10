@@ -1,0 +1,9 @@
+---
+galaxy_info:
+  role_name: iac_tools
+  namespace: swisstopo
+  author: swisstopo
+  license: MIT
+  description: Install infra/cloud CLI tooling (ansible-core, Docker, AWS CLI, Terraform/Vault, Kubernetes tools)
+  min_ansible_version: "2.17"
+dependencies: []

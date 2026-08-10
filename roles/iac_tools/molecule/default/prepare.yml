@@ -1,0 +1,23 @@
+---
+- name: Prepare
+  hosts: all
+  gather_facts: false
+  environment:
+    http_proxy: "{{ lookup('env', 'http_proxy') }}"
+    https_proxy: "{{ lookup('env', 'https_proxy') or lookup('env', 'http_proxy') }}"
+    HTTP_PROXY: "{{ lookup('env', 'http_proxy') }}"
+    HTTPS_PROXY: "{{ lookup('env', 'https_proxy') or lookup('env', 'http_proxy') }}"
+  tasks:
+    # A pristine container has never had `apt-get update` run for real, and
+    # ansible.builtin.apt's own update_cache never runs the actual cache
+    # refresh under --check (by design — see apt.py: `if not
+    # module.check_mode: cache.update()`). Without this, any --check run
+    # against a fresh container fails package lookups on an empty cache
+    # regardless of role logic — a test-environment artifact, not something
+    # a real target machine (which already has a populated cache from
+    # normal use) would ever hit. Populate it for real here so the
+    # subsequent --check converge pass exercises actual role logic.
+    - name: Update apt cache for real
+      ansible.builtin.apt:
+        update_cache: true
+      become: true

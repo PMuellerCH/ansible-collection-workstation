@@ -1,0 +1,90 @@
+# Catppuccin Mocha skin for k9s
+k9s:
+  body:
+    fgColor: "#cdd6f4"
+    bgColor: "#1e1e2e"
+    logoColor: "#cba6f7"
+  prompt:
+    fgColor: "#cdd6f4"
+    bgColor: "#1e1e2e"
+    suggestColor: "#313244"
+  info:
+    fgColor: "#f38ba8"
+    sectionColor: "#cdd6f4"
+  dialog:
+    fgColor: "#cdd6f4"
+    bgColor: "#181825"
+    buttonFgColor: "#cdd6f4"
+    buttonBgColor: "#45475a"
+    buttonFocusFgColor: "#1e1e2e"
+    buttonFocusBgColor: "#cba6f7"
+    labelFgColor: "#f9e2af"
+    fieldFgColor: "#cdd6f4"
+  frame:
+    border:
+      fgColor: "#45475a"
+      focusColor: "#b4befe"
+    menu:
+      fgColor: "#cdd6f4"
+      keyColor: "#f38ba8"
+      numKeyColor: "#cba6f7"
+    crumbs:
+      fgColor: "#1e1e2e"
+      bgColor: "#cba6f7"
+      activeColor: "#b4befe"
+    status:
+      newColor: "#a6e3a1"
+      modifyColor: "#89b4fa"
+      addColor: "#a6e3a1"
+      pendingColor: "#f9e2af"
+      errorColor: "#f38ba8"
+      highlightColor: "#f5c2e7"
+      killColor: "#f38ba8"
+      completedColor: "#6c7086"
+    title:
+      fgColor: "#cdd6f4"
+      bgColor: "#1e1e2e"
+      highlightColor: "#cba6f7"
+      counterColor: "#89b4fa"
+      filterColor: "#a6e3a1"
+  views:
+    charts:
+      bgColor: default
+      defaultDialColors:
+        - "#89b4fa"
+        - "#f38ba8"
+      defaultChartColors:
+        - "#89b4fa"
+        - "#f38ba8"
+    table:
+      fgColor: "#cdd6f4"
+      bgColor: "#1e1e2e"
+      markColor: "#f5c2e7"
+      header:
+        fgColor: "#f38ba8"
+        bgColor: "#1e1e2e"
+        sorterColor: "#f9e2af"
+    xray:
+      fgColor: "#cdd6f4"
+      bgColor: "#1e1e2e"
+      cursorColor: "#45475a"
+      graphicColor: "#89b4fa"
+      showIcons: false
+    yaml:
+      keyColor: "#f38ba8"
+      colonColor: "#6c7086"
+      valueColor: "#cdd6f4"
+    logs:
+      fgColor: "#cdd6f4"
+      bgColor: "#1e1e2e"
+      indicator:
+        fgColor: "#cdd6f4"
+        bgColor: "#cba6f7"
+        toggleOnColor: "#a6e3a1"
+        toggleOffColor: "#f38ba8"
+    help:
+      fgColor: "#cdd6f4"
+      bgColor: "#1e1e2e"
+      keyColor: "#f38ba8"
+      numKeyColor: "#cba6f7"
+      sectionColor: "#a6e3a1"

@@ -1,0 +1,264 @@
+---
+argument_specs:
+  main:
+    short_description: >-
+      Install infra/cloud CLI tooling: ansible-core, Docker CE, AWS CLI v2,
+      Terraform/Vault, and Kubernetes tools — each sub-role independently
+      toggleable.
+    options:
+      iac_tools_ansible_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install ansible-core (pipx) and Galaxy collections.
+      iac_tools_docker_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install Docker CE.
+      iac_tools_aws_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install AWS CLI v2 and session-manager-plugin.
+      iac_tools_terraform_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install Terraform, Vault, tfswitch, tflint, terraform-docs.
+      iac_tools_kubernetes_tools_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install kubectl, k9s, helm, kubectx/kubens, stern, krew, kubeconform, kube-linter.
+      iac_tools_http_proxy:
+        type: str
+        required: false
+        default: ""
+        description: Corporate HTTP proxy URL. Leave empty on machines without a proxy.
+      iac_tools_https_proxy:
+        type: str
+        required: false
+        default: "{{ iac_tools_http_proxy }}"
+        description: >-
+          Corporate HTTPS proxy URL. Defaults to iac_tools_http_proxy (see
+          defaults/main.yml) so a single proxy URL covers both protocols; set
+          explicitly only if HTTP and HTTPS use different proxies.
+      iac_tools_no_proxy:
+        type: str
+        required: false
+        default: ""
+        description: Comma-separated list of hosts/CIDRs that bypass the proxy.
+      iac_tools_vault_addr:
+        type: str
+        required: false
+        default: ""
+        description: HashiCorp Vault server address. Leave empty to skip Vault shell integration.
+      iac_tools_pipx_min_version:
+        type: str
+        required: false
+        default: "1.7.1"
+        description: >-
+          pipx version (pypi) bootstrapped via `pip install --user` to satisfy
+          community.general.pipx's >= 1.7.0 requirement, since Ubuntu 24.04's
+          apt-provided pipx is only 1.4.3.
+      iac_tools_ansible_core_version:
+        type: str
+        required: false
+        default: "2.21.2"
+        description: ansible-core version (pypi), installed via pipx.
+      iac_tools_ansible_molecule_version:
+        type: str
+        required: false
+        default: "26.6.0"
+        description: molecule version (pypi), injected into the ansible-core pipx venv.
+      iac_tools_ansible_molecule_plugins_version:
+        type: str
+        required: false
+        default: "26.7.15"
+        description: molecule-plugins[docker] version (pypi), injected into the ansible-core pipx venv.
+      iac_tools_hvac_version:
+        type: str
+        required: false
+        default: "2.4.0"
+        description: >-
+          hvac version (pypi), injected into the ansible-core pipx venv by
+          both the ansible and kubernetes_tools sub-roles (shared version to
+          avoid two tasks disagreeing on what's installed in the same venv).
+      iac_tools_docker_version:
+        type: str
+        required: false
+        default: "29.7.1"
+        description: Docker CE version (github-releases moby/moby), installed from the official apt repo.
+      iac_tools_aws_cli_version:
+        type: str
+        required: false
+        default: "2.36.16"
+        description: AWS CLI v2 version (github-tags aws/aws-cli), installed from the official installer.
+      iac_tools_aws_boto3_version:
+        type: str
+        required: false
+        default: "1.43.27"
+        description: boto3 version (pypi), injected into the ansible-core pipx venv.
+      iac_tools_aws_session_manager_plugin_version:
+        type: str
+        required: false
+        default: "1.2.814.0"
+        description: session-manager-plugin version (github-releases aws/session-manager-plugin), installed from a .deb.
+      iac_tools_aws_profiles:
+        type: list
+        elements: dict
+        required: false
+        default: []
+        description: >-
+          AWS SSO profiles rendered into ~/.aws/config. Empty by default — no
+          file is deployed until a consumer supplies real profile data. See
+          README for the exact dict shape.
+      iac_tools_terraform_version:
+        type: str
+        required: false
+        default: "1.15.8-1"
+        description: Terraform apt package version (deb datasource, HashiCorp apt repo).
+      iac_tools_vault_version:
+        type: str
+        required: false
+        default: "2.0.4-1"
+        description: Vault apt package version (deb datasource, HashiCorp apt repo).
+      iac_tools_tflint_version:
+        type: str
+        required: false
+        default: "0.64.0"
+        description: tflint binary version (github-releases terraform-linters/tflint).
+      iac_tools_terraform_docs_version:
+        type: str
+        required: false
+        default: "0.24.0"
+        description: terraform-docs binary version (github-releases terraform-docs/terraform-docs).
+      iac_tools_terraform_docs_archive:
+        type: str
+        required: false
+        default: "terraform-docs-v{{ iac_tools_terraform_docs_version }}-linux-amd64.tar.gz"
+        description: Archive filename terraform-docs is downloaded as, before extraction.
+      iac_tools_tfswitch_version:
+        type: str
+        required: false
+        default: "1.19.0"
+        description: tfswitch binary version (github-releases warrensbox/terraform-switcher), installed from a checksum-verified archive.
+      iac_tools_tfswitch_archive:
+        type: str
+        required: false
+        default: "terraform-switcher_v{{ iac_tools_tfswitch_version }}_linux_amd64.tar.gz"
+        description: Archive filename tfswitch is downloaded as, before extraction.
+      iac_tools_tfswitch_download_base:
+        type: str
+        required: false
+        default: "https://github.com/warrensbox/terraform-switcher/releases/download/v{{ iac_tools_tfswitch_version }}"
+        description: Base URL the tfswitch archive and its checksums file are downloaded from, before the filename.
+      iac_tools_terraform_cloud_token:
+        type: str
+        required: false
+        default: ""
+        description: >-
+          Terraform Cloud API token (from the consumer's own secret store,
+          e.g. Ansible Vault). Empty by default — the credentials block is
+          omitted from terraformrc when unset.
+      iac_tools_terraform_vault_github_token:
+        type: str
+        required: false
+        default: ""
+        description: >-
+          GitHub PAT used for `vault login --method=github` (from the
+          consumer's own secret store). Empty by default — the credential
+          file is not deployed when unset.
+      iac_tools_kubectl_version:
+        type: str
+        required: false
+        default: "1.36.3"
+        description: kubectl version (github-releases kubernetes/kubernetes), checksum-verified against dl.k8s.io.
+      iac_tools_kubectl_url:
+        type: str
+        required: false
+        default: "https://dl.k8s.io/release/v{{ iac_tools_kubectl_version }}/bin/linux/amd64/kubectl"
+        description: Download URL for the kubectl binary.
+      iac_tools_kubectl_checksum_url:
+        type: str
+        required: false
+        default: "https://dl.k8s.io/release/v{{ iac_tools_kubectl_version }}/bin/linux/amd64/kubectl.sha256"
+        description: URL of kubectl's published sha256 checksum.
+      iac_tools_k9s_version:
+        type: str
+        required: false
+        default: "0.50.18"
+        description: k9s version (github-releases derailed/k9s).
+      iac_tools_helm_version:
+        type: str
+        required: false
+        default: "4.2.3"
+        description: helm version (github-releases helm/helm).
+      iac_tools_kubectx_version:
+        type: str
+        required: false
+        default: "0.11.0"
+        description: kubectx/kubens version (github-releases ahmetb/kubectx).
+      iac_tools_kubectx_archive:
+        type: str
+        required: false
+        default: "kubectx_v{{ iac_tools_kubectx_version }}_linux_x86_64.tar.gz"
+        description: Archive filename kubectx is downloaded as.
+      iac_tools_kubens_archive:
+        type: str
+        required: false
+        default: "kubens_v{{ iac_tools_kubectx_version }}_linux_x86_64.tar.gz"
+        description: Archive filename kubens is downloaded as.
+      iac_tools_stern_version:
+        type: str
+        required: false
+        default: "1.34.0"
+        description: stern version (github-releases stern/stern).
+      iac_tools_krew_version:
+        type: str
+        required: false
+        default: "0.5.0"
+        description: krew version (github-releases kubernetes-sigs/krew).
+      iac_tools_kubeconform_version:
+        type: str
+        required: false
+        default: "0.8.0"
+        description: kubeconform version (github-releases yannh/kubeconform).
+      iac_tools_kube_linter_version:
+        type: str
+        required: false
+        default: "0.8.3"
+        description: kube-linter version (github-releases stackrox/kube-linter).
+      iac_tools_kubernetes_pip_kubernetes_version:
+        type: str
+        required: false
+        default: "36.0.3"
+        description: Python `kubernetes` library version (pypi), for non-Ubuntu targets only.
+      iac_tools_kubernetes_pip_jsonpatch_version:
+        type: str
+        required: false
+        default: "1.33"
+        description: Python `jsonpatch` library version (pypi), for non-Ubuntu targets only.
+      iac_tools_kubernetes_pip_pyhcl_version:
+        type: str
+        required: false
+        default: "0.4.5"
+        description: Python `pyhcl` library version (pypi), for non-Ubuntu targets only.
+      iac_tools_kubernetes_clusters:
+        type: list
+        elements: dict
+        required: false
+        default: []
+        description: >-
+          EKS clusters rendered into ~/.kube/config. Empty by default — no
+          file is deployed until a consumer supplies real cluster data. See
+          README for the exact dict shape.
+      iac_tools_kubernetes_current_context:
+        type: str
+        required: false
+        default: ""
+        description: >-
+          kubeconfig current-context. Defaults to the first entry in
+          iac_tools_kubernetes_clusters when left empty and the list is
+          non-empty.

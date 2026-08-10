@@ -23,7 +23,8 @@
       "customType": "regex",
       "description": "Update Ansible Galaxy collection versions in requirements.yml",
       "managerFilePatterns": [
-        "/^requirements\\.yml$/"
+        "/^requirements\\.yml$/",
+        "/^roles/.+/files/requirements\\.yml$/"
       ],
       "matchStrings": [
         "# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>[^\\s]+)\\n  - name: [^\\n]+\\n    version: \"(?<currentValue>[^\"]+)\""

@@ -1,0 +1,15 @@
+# HashiCorp Vault
+export VAULT_ADDR="{{ iac_tools_vault_addr }}"
+export VAULT_NAMESPACE=admin
+
+vault-login() {
+  local token_file="${HOME}/.config/vault/github_token"
+  if [[ ! -s "${token_file}" ]]; then
+    echo "error: vault GitHub token not found at ${token_file}" >&2
+    return 1
+  fi
+  # token=@file (not $(cat ...)) so the token itself never appears as a CLI
+  # argument — Vault's K=V parser reads the value from the file directly,
+  # avoiding exposure via `ps`/`/proc/<pid>/cmdline` to other local users.
+  vault login --method=github "token=@${token_file}"
+}
