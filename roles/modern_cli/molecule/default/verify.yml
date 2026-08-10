@@ -2,6 +2,8 @@
 - name: Verify
   hosts: all
   gather_facts: true
+  vars:
+    _modern_cli_local_bin: "{{ ansible_facts['env']['HOME'] }}/.local/bin"
   tasks:
     - name: Gather package facts
       ansible.builtin.package_facts:
@@ -62,3 +64,57 @@
     - name: Assert zsh alias snippet was deployed
       ansible.builtin.assert:
         that: _modern_cli_zsh_snippet.stat.exists
+
+    - name: Check fzf runs
+      ansible.builtin.command: fzf --version
+      register: _modern_cli_fzf_version
+      changed_when: false
+
+    - name: Assert fzf reports the pinned version
+      ansible.builtin.assert:
+        that: "'0.74.2' in _modern_cli_fzf_version.stdout"
+
+    - name: Check presenterm runs
+      ansible.builtin.command: presenterm --version
+      register: _modern_cli_presenterm_version
+      changed_when: false
+
+    - name: Assert presenterm reports the pinned version
+      ansible.builtin.assert:
+        that: "'0.16.1' in _modern_cli_presenterm_version.stdout"
+
+    - name: Check mermaid-cli (mmdc) runs
+      ansible.builtin.command: mmdc --version
+      register: _modern_cli_mmdc_version
+      changed_when: false
+
+    - name: Assert mermaid-cli reports the pinned version
+      ansible.builtin.assert:
+        that: "'11.16.0' in _modern_cli_mmdc_version.stdout"
+
+    - name: Stat puppeteer config for mermaid-cli
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/mermaid/puppeteer-config.json"
+      register: _modern_cli_puppeteer_config
+
+    - name: Assert puppeteer config was deployed
+      ansible.builtin.assert:
+        that: _modern_cli_puppeteer_config.stat.exists
+
+    - name: Check pipx bootstrap produced pipx >= 1.7.0
+      ansible.builtin.command: "{{ _modern_cli_local_bin }}/pipx --version"
+      register: _modern_cli_pipx_version
+      changed_when: false
+
+    - name: Assert bootstrapped pipx satisfies community.general.pipx's minimum
+      ansible.builtin.assert:
+        that: _modern_cli_pipx_version.stdout is version('1.7.0', '>=')
+
+    - name: Check emoji-fzf is importable via its pipx-installed binary
+      ansible.builtin.command: "{{ _modern_cli_local_bin }}/emoji-fzf --version"
+      register: _modern_cli_emoji_fzf_version
+      changed_when: false
+
+    - name: Assert emoji-fzf reports the pinned version
+      ansible.builtin.assert:
+        that: "'0.12.0' in _modern_cli_emoji_fzf_version.stdout"

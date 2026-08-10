@@ -228,6 +228,180 @@
   when: modern_cli_zoxide_enabled
   tags: [cli-tools, modern_cli]
 
+# fzf
+- name: Get installed fzf version
+  ansible.builtin.command: fzf --version
+  register: modern_cli_fzf_current_version
+  changed_when: false
+  failed_when: false
+  when: modern_cli_fzf_enabled
+  tags: [fzf, modern_cli]
+
+- name: Download fzf archive
+  ansible.builtin.get_url:
+    url: "https://github.com/junegunn/fzf/releases/download/v{{ modern_cli_fzf_version }}/fzf-{{ modern_cli_fzf_version }}-linux_amd64.tar.gz"
+    dest: "/tmp/fzf-{{ modern_cli_fzf_version }}-linux_amd64.tar.gz"
+    # junegunn/fzf publishes a plain sha256sum-format checksums file per
+    # release; get_url fetches and matches against it by the source URL's
+    # basename, so there's no static checksum to keep in sync by hand when
+    # Renovate bumps modern_cli_fzf_version.
+    checksum: "sha256:https://github.com/junegunn/fzf/releases/download/v{{ modern_cli_fzf_version }}/fzf_{{ modern_cli_fzf_version }}_checksums.txt"
+    mode: "0644"
+  when: >-
+    modern_cli_fzf_enabled and
+    (modern_cli_fzf_current_version.rc != 0 or modern_cli_fzf_version not in modern_cli_fzf_current_version.stdout)
+  tags: [fzf, modern_cli]
+
+- name: Install fzf binary to /usr/local/bin
+  ansible.builtin.unarchive:
+    src: "/tmp/fzf-{{ modern_cli_fzf_version }}-linux_amd64.tar.gz"
+    dest: /usr/local/bin/
+    include:
+      - fzf
+    remote_src: true
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and
+    modern_cli_fzf_enabled and
+    (modern_cli_fzf_current_version.rc != 0 or modern_cli_fzf_version not in modern_cli_fzf_current_version.stdout)
+  tags: [fzf, modern_cli]
+
+# presenterm (binary + mermaid-cli only — the neovim plugin config is not
+# deployed here; that belongs to the cli_dev_env role's own neovim plugin
+# management, not modern_cli)
+- name: Get installed presenterm version
+  ansible.builtin.command: presenterm --version
+  register: modern_cli_presenterm_current_version
+  changed_when: false
+  failed_when: false
+  when: modern_cli_presenterm_enabled
+  tags: [presenterm, modern_cli]
+
+- name: Download presenterm archive
+  ansible.builtin.get_url:
+    url: "{{ modern_cli_presenterm_download_base }}/{{ modern_cli_presenterm_archive }}"
+    dest: "/tmp/{{ modern_cli_presenterm_archive }}"
+    # mfontanini/presenterm publishes a matching .sha512 file per release
+    # asset — get_url fetches and verifies against it directly (matched by
+    # the source URL's basename), so there's no static checksum to keep in
+    # sync by hand when Renovate bumps modern_cli_presenterm_version.
+    checksum: "sha512:{{ modern_cli_presenterm_download_base }}/{{ modern_cli_presenterm_archive }}.sha512"
+    mode: "0644"
+  when: >-
+    modern_cli_presenterm_enabled and
+    (modern_cli_presenterm_current_version.rc != 0 or modern_cli_presenterm_version not in modern_cli_presenterm_current_version.stdout)
+  tags: [presenterm, modern_cli]
+
+- name: Install presenterm binary to /usr/local/bin
+  ansible.builtin.unarchive:
+    src: "/tmp/{{ modern_cli_presenterm_archive }}"
+    dest: /usr/local/bin/
+    include:
+      - "presenterm-{{ modern_cli_presenterm_version }}/presenterm"
+    extra_opts:
+      - --strip-components=1
+    remote_src: true
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and
+    modern_cli_presenterm_enabled and
+    (modern_cli_presenterm_current_version.rc != 0 or modern_cli_presenterm_version not in modern_cli_presenterm_current_version.stdout)
+  tags: [presenterm, modern_cli]
+
+- name: Install nodejs and npm (required for mermaid-cli)
+  # Ubuntu's nodejs apt package does not depend on or provide npm — it's a
+  # separate package. Without it, community.general.npm below fails with
+  # "Failed to find required executable npm" on a host where no other role
+  # already installed npm (e.g. via NodeSource).
+  ansible.builtin.apt:
+    name:
+      - "nodejs={{ modern_cli_presenterm_nodejs_version }}"
+      - "npm={{ modern_cli_presenterm_npm_version }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: modern_cli_presenterm_enabled
+  tags: [presenterm, modern_cli]
+
+- name: Hold nodejs and npm package versions
+  ansible.builtin.dpkg_selections:
+    name: "{{ item }}"
+    selection: hold
+  loop:
+    - nodejs
+    - npm
+  become: true
+  when: modern_cli_presenterm_enabled
+  tags: [presenterm, modern_cli]
+
+- name: Install mermaid-cli globally via npm
+  community.general.npm:
+    name: "@mermaid-js/mermaid-cli"
+    version: "{{ modern_cli_presenterm_mermaid_cli_version }}"
+    global: true
+    state: present
+  become: true
+  environment:
+    PUPPETEER_SKIP_DOWNLOAD: "true"
+  when: modern_cli_presenterm_enabled
+  tags: [presenterm, modern_cli]
+
+- name: Ensure mermaid config directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/mermaid"
+    state: directory
+    mode: "0755"
+  become: false
+  when: modern_cli_presenterm_enabled
+  tags: [presenterm, modern_cli]
+
+- name: Deploy puppeteer config for mermaid-cli
+  ansible.builtin.copy:
+    src: puppeteer-config.json
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/mermaid/puppeteer-config.json"
+    mode: "0644"
+    force: false
+  become: false
+  when: modern_cli_presenterm_enabled
+  tags: [presenterm, modern_cli]
+
+# emoji-fzf (CLI half of emoji-picker; the GUI half, smile, belongs to
+# desktop_customization). Installed via pipx — this is the first pipx-based
+# tool in modern_cli, so it bootstraps its own adequate pipx, self-contained,
+# same pattern as the code_quality_tools role: community.general.pipx
+# requires pipx >= 1.7.0, but Ubuntu 24.04's apt-provided pipx is only 1.4.3.
+- name: Install python3-pip and python3-venv (required to bootstrap a newer pipx and its managed venvs)
+  ansible.builtin.apt:
+    name:
+      - python3-pip
+      - python3-venv
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: modern_cli_emoji_fzf_enabled
+  tags: [emoji_fzf, modern_cli]
+
+- name: Ensure pipx >= minimum version is importable via `python -m pipx`
+  ansible.builtin.pip:
+    name: "pipx=={{ modern_cli_pipx_min_version }}"
+    extra_args: "--user --break-system-packages"
+    executable: pip3
+  become: false
+  when: modern_cli_emoji_fzf_enabled
+  tags: [emoji_fzf, modern_cli]
+
+- name: Install emoji-fzf via pipx
+  community.general.pipx:
+    name: "emoji-fzf=={{ modern_cli_emoji_fzf_version }}"
+    state: present
+  become: false
+  when: not ansible_check_mode and modern_cli_emoji_fzf_enabled
+  tags: [emoji_fzf, modern_cli]
+
 # shell integration
 - name: Create zsh conf.d directory
   ansible.builtin.file:
@@ -236,7 +410,7 @@
     mode: "0755"
   become: false
   when: modern_cli_deploy_shell_aliases
-  tags: [bat, btop, cli-tools, modern_cli]
+  tags: [bat, btop, cli-tools, emoji_fzf, fzf, presenterm, modern_cli]
 
 - name: Deploy modern_cli shell aliases
   ansible.builtin.template:
@@ -245,4 +419,4 @@
     mode: "0644"
   become: false
   when: modern_cli_deploy_shell_aliases
-  tags: [bat, btop, cli-tools, modern_cli]
+  tags: [bat, btop, cli-tools, emoji_fzf, fzf, presenterm, modern_cli]

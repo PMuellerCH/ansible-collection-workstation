@@ -2,9 +2,10 @@
 argument_specs:
   main:
     short_description: >-
-      Install a set of modern CLI tool replacements: bat, btop, eza, fd, htop,
-      ripgrep, zoxide — each independently toggleable. Catppuccin Mocha theming
-      is applied to bat and btop only; the other tools have no themeable config.
+      Install a set of modern CLI tool replacements: bat, btop, emoji-fzf, eza,
+      fd, fzf, htop, presenterm, ripgrep, zoxide — each independently
+      toggleable. Catppuccin Mocha theming is applied to bat, btop, and fzf;
+      the other tools have no themeable config.
     options:
       modern_cli_bat_enabled:
         type: bool
@@ -16,6 +17,14 @@ argument_specs:
         required: false
         default: true
         description: Whether to install btop.
+      modern_cli_emoji_fzf_enabled:
+        type: bool
+        required: false
+        default: true
+        description: >-
+          Whether to install emoji-fzf via pipx (also gates the pipx bootstrap).
+          Requires fzf and wl-copy (desktop-utils role, not part of this
+          collection) at runtime for the deployed `emoji` shell function.
       modern_cli_eza_enabled:
         type: bool
         required: false
@@ -26,11 +35,23 @@ argument_specs:
         required: false
         default: true
         description: Whether to install fd-find (and symlink it to fd).
+      modern_cli_fzf_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install fzf.
       modern_cli_htop_enabled:
         type: bool
         required: false
         default: true
         description: Whether to install htop.
+      modern_cli_presenterm_enabled:
+        type: bool
+        required: false
+        default: true
+        description: >-
+          Whether to install presenterm (binary + mermaid-cli only; no
+          neovim plugin integration — that's owned by the cli_dev_env role).
       modern_cli_ripgrep_enabled:
         type: bool
         required: false
@@ -96,6 +117,54 @@ argument_specs:
         required: false
         default: "0.9.3-1"
         description: Exact apt package version of zoxide to install (held after install).
+      modern_cli_fzf_version:
+        type: str
+        required: false
+        default: "0.74.2"
+        description: fzf version (github-releases junegunn/fzf), installed from a checksum-verified binary tarball.
+      modern_cli_presenterm_version:
+        type: str
+        required: false
+        default: "0.16.1"
+        description: presenterm version (github-releases mfontanini/presenterm), installed from a checksum-verified binary tarball.
+      modern_cli_presenterm_download_base:
+        type: str
+        required: false
+        default: "https://github.com/mfontanini/presenterm/releases/download/v{{ modern_cli_presenterm_version }}"
+        description: Base URL the presenterm archive and its .sha512 checksum file are downloaded from, before the filename.
+      modern_cli_presenterm_archive:
+        type: str
+        required: false
+        default: "presenterm-{{ modern_cli_presenterm_version }}-x86_64-unknown-linux-gnu.tar.gz"
+        description: Filename of the presenterm release archive to download.
+      modern_cli_presenterm_mermaid_cli_version:
+        type: str
+        required: false
+        default: "11.16.0"
+        description: "@mermaid-js/mermaid-cli npm version, installed globally for presenterm's mermaid diagram rendering."
+      modern_cli_presenterm_nodejs_version:
+        type: str
+        required: false
+        default: "18.19.1+dfsg-6ubuntu5"
+        description: Exact apt package version of nodejs to install (held after install), required for mermaid-cli.
+      modern_cli_presenterm_npm_version:
+        type: str
+        required: false
+        default: "9.2.0~ds1-2"
+        description: Exact apt package version of npm to install (held after install); not pulled in automatically by nodejs (only a Suggests, not a Depends).
+      modern_cli_emoji_fzf_version:
+        type: str
+        required: false
+        default: "0.12.0"
+        description: emoji-fzf version (pypi), installed via pipx.
+      modern_cli_pipx_min_version:
+        type: str
+        required: false
+        default: "1.7.1"
+        description: >-
+          pipx version (pypi) installed via pip --user to satisfy
+          community.general.pipx's >= 1.7.0 requirement, since Ubuntu 24.04's
+          apt-provided pipx is only 1.4.3. Only used when modern_cli_emoji_fzf_enabled.
       modern_cli_deploy_shell_aliases:
         type: bool
         required: false

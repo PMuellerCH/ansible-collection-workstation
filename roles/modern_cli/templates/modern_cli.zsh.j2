@@ -30,3 +30,31 @@ if command -v zoxide &>/dev/null; then
   alias cd='z'
 fi
 {% endif %}
+{% if modern_cli_fzf_enabled %}
+
+# fzf — Catppuccin Mocha theme
+export FZF_DEFAULT_OPTS=" \
+--color=bg+:#313244,bg:#1E1E2E,spinner:#F5E0DC,hl:#F38BA8 \
+--color=fg:#CDD6F4,header:#F38BA8,info:#CBA6F7,pointer:#F5E0DC \
+--color=marker:#B4BEFE,fg+:#CDD6F4,prompt:#CBA6F7,hl+:#F38BA8 \
+--color=selected-bg:#45475A \
+--color=border:#6C7086,label:#CDD6F4"
+command -v fzf &>/dev/null && eval "$(fzf --zsh)"
+{% endif %}
+{% if modern_cli_presenterm_enabled %}
+
+# presenterm — wrap mmdc to use system Chrome via puppeteer config (no bundled chrome-headless-shell)
+mmdc() {
+  command mmdc --puppeteerConfigFile "${HOME}/.config/mermaid/puppeteer-config.json" "$@"
+}
+{% endif %}
+{% if modern_cli_emoji_fzf_enabled %}
+
+# emoji-fzf — requires fzf (modern_cli_fzf) and wl-copy (desktop-utils role, external dependency)
+if command -v emoji-fzf &>/dev/null && command -v fzf &>/dev/null && command -v wl-copy &>/dev/null; then
+  emoji() {
+    emoji-fzf preview | fzf --preview "emoji-fzf get --name {1}" \
+      | cut -d " " -f 1 | emoji-fzf get | tr -d '\n' | wl-copy
+  }
+fi
+{% endif %}
