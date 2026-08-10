@@ -1,0 +1,9 @@
+---
+galaxy_info:
+  role_name: terminal_env
+  namespace: swisstopo
+  author: swisstopo
+  license: MIT
+  description: Install and configure the daily terminal environment (zsh, tmux, kitty), Catppuccin Mocha themed
+  min_ansible_version: "2.17"
+dependencies: []

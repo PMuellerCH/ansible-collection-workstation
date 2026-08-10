@@ -1,0 +1,434 @@
+---
+# --- zsh ---
+# Runs first: establishes ~/.config/zsh/conf.d/ and the .zshrc sourcing
+# mechanism that the tmux section's auto-start snippet plugs into.
+- name: Install zsh
+  ansible.builtin.apt:
+    name: "zsh={{ terminal_env_zsh_version }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+    # A machine may already have a newer zsh than the currently pinned
+    # version (e.g. stock Ubuntu point-release updates applied before this
+    # role ever ran); apt refuses to downgrade by default.
+    allow_downgrade: true
+  become: true
+  tags: [zsh, terminal_env]
+
+- name: Hold zsh package version
+  ansible.builtin.dpkg_selections:
+    name: zsh
+    selection: hold
+  become: true
+  when: not ansible_check_mode
+  tags: [zsh, terminal_env]
+
+- name: Check if oh-my-zsh is already installed
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.oh-my-zsh"
+  become: false
+  register: terminal_env_zsh_omz_stat
+  tags: [zsh, terminal_env]
+
+- name: Install oh-my-zsh
+  ansible.builtin.shell: >
+    set -o pipefail &&
+    curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/{{ terminal_env_zsh_omz_commit }}/tools/install.sh |
+    RUNZSH=no CHSH=no sh
+  args:
+    executable: /bin/bash
+  become: false
+  when: not terminal_env_zsh_omz_stat.stat.exists
+  changed_when: true
+  # noqa: command-instead-of-module - oh-my-zsh only supports shell script installation
+  tags: [zsh, terminal_env]
+
+- name: Check powerlevel10k installed version
+  ansible.builtin.command:
+    cmd: git -C "{{ ansible_facts['env']['HOME'] }}/.oh-my-zsh/custom/themes/powerlevel10k" tag --points-at HEAD
+  become: false
+  register: terminal_env_zsh_p10k_installed_version
+  changed_when: false
+  failed_when: false
+  # Pure read, no side effects — force it to run for real even under
+  # --check. Otherwise command tasks are skipped under check mode by
+  # default, leaving .rc/.stdout undefined, which makes the version-mismatch
+  # `when:` below on the removal/clone tasks spuriously evaluate true.
+  check_mode: false
+  # noqa: command-instead-of-module - ansible.builtin.git cannot query the current tag; no module alternative exists
+  tags: [zsh, terminal_env]
+
+- name: Remove powerlevel10k clone to allow re-clone at the pinned version
+  # update: false on a depth=1 (shallow) clone can't reliably fetch/switch to
+  # a new tag when the pinned version changes — a fetch would need the new
+  # tag's objects, which a shallow clone doesn't have. Since the `when:`
+  # above already detects a version mismatch, remove-and-reclone is simpler
+  # and more reliable than teaching the clone task to update in place.
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.oh-my-zsh/custom/themes/powerlevel10k"
+    state: absent
+  become: false
+  when: >-
+    terminal_env_zsh_p10k_installed_version.rc != 0 or
+    ('v' + terminal_env_zsh_powerlevel10k_version) not in terminal_env_zsh_p10k_installed_version.stdout
+  tags: [zsh, terminal_env]
+
+- name: Clone powerlevel10k theme
+  ansible.builtin.git:
+    repo: https://github.com/romkatv/powerlevel10k.git
+    dest: "{{ ansible_facts['env']['HOME'] }}/.oh-my-zsh/custom/themes/powerlevel10k"
+    version: "v{{ terminal_env_zsh_powerlevel10k_version }}"
+    depth: 1
+    update: false
+  become: false
+  when: >-
+    terminal_env_zsh_p10k_installed_version.rc != 0 or
+    ('v' + terminal_env_zsh_powerlevel10k_version) not in terminal_env_zsh_p10k_installed_version.stdout
+  tags: [zsh, terminal_env]
+
+- name: Check fzf-tab installed version
+  ansible.builtin.command:
+    cmd: git -C "{{ ansible_facts['env']['HOME'] }}/.oh-my-zsh/custom/plugins/fzf-tab" tag --points-at HEAD
+  become: false
+  register: terminal_env_zsh_fzf_tab_installed_version
+  changed_when: false
+  failed_when: false
+  # See the powerlevel10k version-check task above for why this needs
+  # check_mode: false.
+  check_mode: false
+  # noqa: command-instead-of-module - ansible.builtin.git cannot query the current tag; no module alternative exists
+  tags: [zsh, terminal_env]
+
+- name: Remove fzf-tab clone to allow re-clone at the pinned version
+  # See the powerlevel10k removal task above for why this is needed instead
+  # of relying on update: true against a shallow clone.
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.oh-my-zsh/custom/plugins/fzf-tab"
+    state: absent
+  become: false
+  when: >-
+    terminal_env_zsh_fzf_tab_installed_version.rc != 0 or
+    ('v' + terminal_env_zsh_fzf_tab_version) not in terminal_env_zsh_fzf_tab_installed_version.stdout
+  tags: [zsh, terminal_env]
+
+- name: Clone fzf-tab plugin
+  ansible.builtin.git:
+    repo: https://github.com/Aloxaf/fzf-tab.git
+    dest: "{{ ansible_facts['env']['HOME'] }}/.oh-my-zsh/custom/plugins/fzf-tab"
+    version: "v{{ terminal_env_zsh_fzf_tab_version }}"
+    depth: 1
+    update: false
+  become: false
+  when: >-
+    terminal_env_zsh_fzf_tab_installed_version.rc != 0 or
+    ('v' + terminal_env_zsh_fzf_tab_version) not in terminal_env_zsh_fzf_tab_installed_version.stdout
+  tags: [zsh, terminal_env]
+
+- name: Check zsh-autosuggestions installed version
+  ansible.builtin.command:
+    cmd: git -C "{{ ansible_facts['env']['HOME'] }}/.oh-my-zsh/custom/plugins/zsh-autosuggestions" tag --points-at HEAD
+  become: false
+  register: terminal_env_zsh_autosuggestions_installed_version
+  changed_when: false
+  failed_when: false
+  # See the powerlevel10k version-check task above for why this needs
+  # check_mode: false.
+  check_mode: false
+  # noqa: command-instead-of-module - ansible.builtin.git cannot query the current tag; no module alternative exists
+  tags: [zsh, terminal_env]
+
+- name: Remove zsh-autosuggestions clone to allow re-clone at the pinned version
+  # See the powerlevel10k removal task above for why this is needed instead
+  # of relying on update: true against a shallow clone.
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
+    state: absent
+  become: false
+  when: >-
+    terminal_env_zsh_autosuggestions_installed_version.rc != 0 or
+    ('v' + terminal_env_zsh_autosuggestions_version) not in terminal_env_zsh_autosuggestions_installed_version.stdout
+  tags: [zsh, terminal_env]
+
+- name: Clone zsh-autosuggestions plugin
+  ansible.builtin.git:
+    repo: https://github.com/zsh-users/zsh-autosuggestions.git
+    dest: "{{ ansible_facts['env']['HOME'] }}/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
+    version: "v{{ terminal_env_zsh_autosuggestions_version }}"
+    depth: 1
+    update: false
+  become: false
+  when: >-
+    terminal_env_zsh_autosuggestions_installed_version.rc != 0 or
+    ('v' + terminal_env_zsh_autosuggestions_version) not in terminal_env_zsh_autosuggestions_installed_version.stdout
+  tags: [zsh, terminal_env]
+
+- name: Check zsh-syntax-highlighting installed version
+  ansible.builtin.command:
+    cmd: git -C "{{ ansible_facts['env']['HOME'] }}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting" tag --points-at HEAD
+  become: false
+  register: terminal_env_zsh_syntax_highlighting_installed_version
+  changed_when: false
+  failed_when: false
+  # See the powerlevel10k version-check task above for why this needs
+  # check_mode: false.
+  check_mode: false
+  # noqa: command-instead-of-module - ansible.builtin.git cannot query the current tag; no module alternative exists
+  tags: [zsh, terminal_env]
+
+- name: Remove zsh-syntax-highlighting clone to allow re-clone at the pinned version
+  # See the powerlevel10k removal task above for why this is needed instead
+  # of relying on update: true against a shallow clone.
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
+    state: absent
+  become: false
+  when: >-
+    terminal_env_zsh_syntax_highlighting_installed_version.rc != 0 or
+    terminal_env_zsh_syntax_highlighting_version not in terminal_env_zsh_syntax_highlighting_installed_version.stdout
+  tags: [zsh, terminal_env]
+
+- name: Clone zsh-syntax-highlighting plugin
+  ansible.builtin.git:
+    repo: https://github.com/zsh-users/zsh-syntax-highlighting.git
+    dest: "{{ ansible_facts['env']['HOME'] }}/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
+    version: "{{ terminal_env_zsh_syntax_highlighting_version }}"
+    depth: 1
+    update: false
+  become: false
+  when: >-
+    terminal_env_zsh_syntax_highlighting_installed_version.rc != 0 or
+    terminal_env_zsh_syntax_highlighting_version not in terminal_env_zsh_syntax_highlighting_installed_version.stdout
+  tags: [zsh, terminal_env]
+
+- name: Clone Catppuccin Mocha theme for zsh-syntax-highlighting
+  ansible.builtin.git:
+    repo: https://github.com/catppuccin/zsh-syntax-highlighting.git
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/catppuccin-zsh-syntax-highlighting"
+    update: false
+  become: false
+  # No version tags available — pinned to initial clone; update manually by deleting the directory
+  # noqa: latest[git] - no version tags published upstream, see comment above
+  tags: [zsh, terminal_env]
+
+- name: Set ZDOTDIR in /etc/zsh/zshenv so zsh reads config from ~/.config/zsh/
+  ansible.builtin.lineinfile:
+    path: /etc/zsh/zshenv
+    line: 'export ZDOTDIR="$HOME/.config/zsh"'
+    create: true
+    mode: "0644"
+  become: true
+  tags: [zsh, terminal_env]
+
+- name: Create zsh config directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh"
+    state: directory
+    mode: "0755"
+  become: false
+  tags: [zsh, terminal_env]
+
+- name: Create zsh conf.d directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d"
+    state: directory
+    mode: "0755"
+  become: false
+  tags: [zsh, terminal_env]
+
+- name: Deploy .zshrc from template
+  ansible.builtin.template:
+    src: .zshrc.j2
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/.zshrc"
+    mode: "0644"
+    backup: true
+  become: false
+  tags: [zsh, terminal_env]
+
+- name: Create ~/.zshrc symlink to XDG config location
+  ansible.builtin.file:
+    src: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/.zshrc"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
+    state: link
+    force: true
+  become: false
+  tags: [zsh, terminal_env]
+
+- name: Deploy p10k config
+  ansible.builtin.copy:
+    src: .p10k.zsh
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/.p10k.zsh"
+    mode: "0644"
+    force: false
+  become: false
+  tags: [zsh, terminal_env]
+
+- name: Set zsh as default shell
+  ansible.builtin.user:
+    name: "{{ ansible_facts['user_id'] }}"
+    shell: /usr/bin/zsh
+  become: true
+  tags: [zsh, terminal_env]
+
+- name: Deploy direnv ZSH hook
+  ansible.builtin.copy:
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/direnv.zsh"
+    mode: "0644"
+    content: |
+      eval "$(direnv hook zsh)"
+  become: false
+  tags: [zsh, terminal_env]
+
+# --- kitty ---
+- name: Install kitty
+  ansible.builtin.apt:
+    name: "kitty={{ terminal_env_kitty_version }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+    allow_downgrade: true
+  become: true
+  tags: [kitty, terminal_env]
+
+- name: Hold kitty package version
+  ansible.builtin.dpkg_selections:
+    name: kitty
+    selection: hold
+  become: true
+  when: not ansible_check_mode
+  tags: [kitty, terminal_env]
+
+- name: Create kitty config directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/kitty"
+    state: directory
+    mode: "0755"
+  become: false
+  tags: [kitty, terminal_env]
+
+- name: Copy kitty.conf
+  ansible.builtin.copy:
+    src: kitty.conf
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/kitty/kitty.conf"
+    mode: "0644"
+    force: false
+  become: false
+  tags: [kitty, terminal_env]
+
+# --- tmux ---
+- name: Install tmux
+  ansible.builtin.apt:
+    name: "tmux={{ terminal_env_tmux_version }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+    allow_downgrade: true
+  become: true
+  tags: [tmux, terminal_env]
+
+- name: Hold tmux package version
+  ansible.builtin.dpkg_selections:
+    name: tmux
+    selection: hold
+  become: true
+  when: not ansible_check_mode
+  tags: [tmux, terminal_env]
+
+- name: Check if tpm is already installed
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.tmux/plugins/tpm"
+  become: false
+  register: terminal_env_tmux_tpm_stat
+  tags: [tmux, terminal_env]
+
+- name: Clone tpm (Tmux Plugin Manager)
+  ansible.builtin.git:
+    repo: https://github.com/tmux-plugins/tpm.git
+    dest: "{{ ansible_facts['env']['HOME'] }}/.tmux/plugins/tpm"
+    depth: 1
+  become: false
+  when: not terminal_env_tmux_tpm_stat.stat.exists
+  # TPM has no meaningful version tags to pin to — it's a thin plugin-manager
+  # shim, cloned once and never auto-updated (updates happen via `prefix + U`
+  # inside tmux, a manual user action).
+  # noqa: latest[git]
+  tags: [tmux, terminal_env]
+
+- name: Create tmux config directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/tmux"
+    state: directory
+    mode: "0755"
+  become: false
+  tags: [tmux, terminal_env]
+
+- name: Check Catppuccin tmux installed version
+  ansible.builtin.command:
+    cmd: git -C "{{ ansible_facts['env']['HOME'] }}/.config/tmux/plugins/catppuccin/tmux" tag --points-at HEAD
+  become: false
+  register: terminal_env_tmux_catppuccin_installed_version
+  changed_when: false
+  failed_when: false
+  # See the powerlevel10k version-check task (zsh section) above for why
+  # this needs check_mode: false.
+  check_mode: false
+  # noqa: command-instead-of-module - ansible.builtin.git cannot query the current tag; no module alternative exists
+  tags: [tmux, terminal_env]
+
+- name: Remove Catppuccin tmux plugin clone to allow re-clone at the pinned version
+  # See the powerlevel10k removal task above (zsh section) for why this is
+  # needed instead of relying on update: true against a shallow clone.
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/tmux/plugins/catppuccin/tmux"
+    state: absent
+  become: false
+  when: >-
+    terminal_env_tmux_catppuccin_installed_version.rc != 0 or
+    ('v' + terminal_env_tmux_catppuccin_version) not in terminal_env_tmux_catppuccin_installed_version.stdout
+  tags: [tmux, terminal_env]
+
+- name: Clone Catppuccin tmux plugin (manual install — recommended over TPM due to name conflicts)
+  ansible.builtin.git:
+    repo: https://github.com/catppuccin/tmux.git
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/tmux/plugins/catppuccin/tmux"
+    version: "v{{ terminal_env_tmux_catppuccin_version }}"
+    depth: 1
+    update: false
+  become: false
+  when: >-
+    terminal_env_tmux_catppuccin_installed_version.rc != 0 or
+    ('v' + terminal_env_tmux_catppuccin_version) not in terminal_env_tmux_catppuccin_installed_version.stdout
+  tags: [tmux, terminal_env]
+
+- name: Copy tmux.conf
+  ansible.builtin.copy:
+    src: tmux.conf
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/tmux/tmux.conf"
+    mode: "0644"
+    backup: true
+  become: false
+  tags: [tmux, terminal_env]
+
+- name: Create zsh conf.d directory (tmux integration)
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d"
+    state: directory
+    mode: "0755"
+  become: false
+  tags: [tmux, terminal_env]
+
+- name: Deploy tmux shell integration snippet
+  ansible.builtin.copy:
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/tmux.zsh"
+    mode: "0644"
+    content: |
+      # Auto-start tmux (interactive terminal sessions only)
+      # First window gets the named "main" session; subsequent windows get independent sessions.
+      if [[ -o interactive ]] && [[ -t 0 ]] && [[ -z "$TMUX" ]]; then
+        if tmux has-session -t main 2>/dev/null; then
+          exec tmux new-session
+        else
+          exec tmux new-session -s main
+        fi
+      fi
+  become: false
+  tags: [tmux, terminal_env]
