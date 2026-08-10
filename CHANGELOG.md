@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.13](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/0.1.12...0.1.13) (2026-08-10)
+
+
+### Bug Fixes
+
+* skip modern_cli's pinned nodejs/npm install if npm already works ([#78](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/78)) ([befe235](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/befe2350646bf652021db3602332b1dcdafca40b))
+
 ## [0.1.12](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/0.1.11...0.1.12) (2026-08-10)
 
 
