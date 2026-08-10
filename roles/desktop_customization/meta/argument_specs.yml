@@ -3,8 +3,9 @@ argument_specs:
   main:
     short_description: >-
       Desktop-environment customization (fixed workspaces, workspace
-      keybindings) and Flameshot screenshot tool (apt install, autostart,
-      Print-key keybinding) — for GNOME and COSMIC.
+      keybindings), Flameshot screenshot tool (apt install, autostart,
+      Print-key keybinding), and the smile emoji picker (Flatpak) — for
+      GNOME and COSMIC.
     options:
       desktop_customization_desktop_environment:
         type: str
@@ -17,3 +18,8 @@ argument_specs:
         required: false
         default: "12.1.0-2build2"
         description: flameshot apt package version (deb datasource, Ubuntu Noble).
+      desktop_customization_smile_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install the smile emoji picker (also gates the Flatpak/Flathub bootstrap).

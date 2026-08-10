@@ -95,3 +95,22 @@
     - name: Assert default GNOME screenshot keybinding was disabled
       ansible.builtin.assert:
         that: _desktop_customization_default_screenshot_kb.value == "@as []"
+
+    - name: Check Flathub remote is configured
+      ansible.builtin.command: flatpak remotes --system
+      register: _desktop_customization_flatpak_remotes
+      changed_when: false
+
+    - name: Assert Flathub remote is present
+      ansible.builtin.assert:
+        that: "'flathub' in _desktop_customization_flatpak_remotes.stdout"
+
+    - name: Check smile is installed via Flatpak
+      ansible.builtin.command: flatpak info --system it.mijorus.smile
+      register: _desktop_customization_smile_flatpak
+      changed_when: false
+      failed_when: false
+
+    - name: Assert smile Flatpak is installed
+      ansible.builtin.assert:
+        that: _desktop_customization_smile_flatpak.rc == 0
