@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.1.12](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/0.1.11...0.1.12) (2026-08-10)
+
+
+### Features
+
+* add cli_dev_env role (merge lazygit + neovim, absorb presenterm plugin config) ([#68](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/68)) ([9a54b6b](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/9a54b6bf9a9f698d47d65e18cb11b2d29ba62a28))
+* add emoji-picker (smile Flatpak) to desktop_customization role ([#67](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/67)) ([a95e938](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/a95e9380cf36936d76687ff71fa8d3bb30d4bd7e)), closes [#62](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/62)
+* add iac_tools role (ansible, docker, aws, terraform, kubernetes_tools) ([#72](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/72)) ([9981436](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/9981436663c91a2ac55743d4ccd72fdb2a6b9eb7))
+* add terminal_env role (merge zsh + tmux + kitty) ([#71](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/71)) ([2b016b1](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/2b016b170b21ccbf6a3b849bb23dd0571e0a7719))
+* extend modern_cli with fzf, presenterm, and emoji-fzf ([#70](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/70)) ([54364f0](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/54364f0948ab4508bea59c12374f55d4a4b53a1e))
+
+
+### Miscellaneous
+
+* **deps:** update dependency astral-sh/uv to v0.12.3 ([#69](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/69)) ([831c82a](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/831c82a4f47dd452a2bb4f83cd4ca3ce6dfea0df))
+
 ## [0.1.11](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/0.1.10...0.1.11) (2026-08-04)
 
 
