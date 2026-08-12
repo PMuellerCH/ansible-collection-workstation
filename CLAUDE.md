@@ -27,6 +27,9 @@ checkov --framework ansible --directory . --quiet
 
 # Markdown lint
 npx --prefix .github markdownlint --config .markdownlint.yml '**/*.md'
+
+# Molecule test a single role (needs Docker)
+cd roles/<name> && molecule test
 ```
 
 The collection must be installed locally (`ansible-galaxy collection install . --force`)
@@ -43,7 +46,27 @@ roles/<name>/
   files/                    # Static config files
   templates/                # Jinja2 templates
   meta/main.yml             # Role metadata (platforms, dependencies)
+  molecule/default/         # Optional: molecule scenario (see Testing below)
 ```
+
+## Testing
+
+Mirrors the pattern used in `swisstopo/infra-ansible-collection-postgres`, inlined
+because this repo has no access to swisstopo's private `infra-github-shared-actions`.
+
+- **Lint** (`ci.yml`) runs yamllint, ansible-lint, markdownlint, checkov on every push
+  and PR to `main`. Fast, always on.
+- **Molecule** (`molecule.yml`) auto-discovers any role with a `roles/<name>/molecule/default/`
+  scenario and runs `molecule test` for it as a matrix job. It only fires on the
+  release-please PR (`head_ref` starting with `release-please--`) or manual
+  `workflow_dispatch` — not on every feature PR, since a full molecule run is too slow
+  to gate ordinary iteration. This means **a release is never cut without molecule
+  passing** on the release-please PR — merge it only once that check is green.
+- A role only gets tested once it has a `molecule/default/` scenario; adding one is
+  opt-in per role, not mandatory. Not every workstation role is a good fit for Docker
+  (e.g. anything depending on the COSMIC desktop, X11, or a systemd user session) —
+  add a scenario where it adds real signal (idempotency, package installs, file
+  templating), skip it where a container can't meaningfully exercise the role.
 
 ## Key conventions
 
@@ -51,7 +74,8 @@ roles/<name>/
 
 Every version string must be pinned to an exact version and covered by a Renovate manager:
 
-- **apt packages**: version variable in `defaults/main.yml` with `# renovate: datasource=deb` comment; `dpkg_selections: hold` applied after install to prevent `apt upgrade` from overriding
+- **apt packages**: version variable in `defaults/main.yml` with `# renovate: datasource=deb` comment;
+  `dpkg_selections: hold` applied after install to prevent `apt upgrade` from overriding
 - **GitHub releases / pipx / npm**: version variable in `defaults/main.yml` with appropriate Renovate datasource comment
 - **Python CI tools** (`.github/requirements.txt`): exact pin, tracked by `pip_requirements` manager
 - **Node CI tools** (`.github/package.json`): exact pin, tracked by npm manager

@@ -5,7 +5,7 @@ An Ansible Galaxy collection for provisioning personal/home workstation tools on
 ## Roles
 
 | Role | Description |
-|---|---|
+| --- | --- |
 | `bitwarden` | Bitwarden password manager desktop app |
 | `synology` | Synology Drive client |
 | `thunderbird` | Thunderbird email client |
@@ -38,6 +38,20 @@ ansible-galaxy collection install -r requirements.yml
     - pmuellerch.workstation.thunderbird
     - pmuellerch.workstation.bitwarden
 ```
+
+## Development
+
+```bash
+# Lint
+yamllint --config-file .yamllint.yml .
+ansible-lint
+
+# Molecule test a role (requires Docker)
+cd roles/<name> && molecule test
+```
+
+CI lints every push/PR to `main`. Molecule only runs on the release-please PR (or via
+manual `workflow_dispatch`), so a release is never cut without molecule passing.
 
 ## License
 
