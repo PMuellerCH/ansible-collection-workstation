@@ -2,10 +2,10 @@
 argument_specs:
   main:
     short_description: >-
-      Install CLI developer environment tools: lazygit and neovim/LazyVim —
-      each independently toggleable — plus presenterm.nvim's plugin config
-      (independently toggleable, depends on the presenterm binary installed
-      by the modern_cli role).
+      Install CLI developer environment tools: lazygit, neovim/LazyVim, and
+      the Claude Code CLI — each independently toggleable — plus
+      presenterm.nvim's plugin config (independently toggleable, depends on
+      the presenterm binary installed by the modern_cli role).
     options:
       cli_dev_env_lazygit_enabled:
         type: bool
@@ -19,6 +19,13 @@ argument_specs:
         description: >-
           Whether to install neovim and bootstrap the LazyVim configuration.
           Also gates the presenterm.nvim plugin config below.
+      cli_dev_env_claude_code_enabled:
+        type: bool
+        required: false
+        default: true
+        description: >-
+          Whether to install the Claude Code CLI, its NodeSource-sourced
+          Node.js dependency, and configure its MCP servers.
       cli_dev_env_neovim_presenterm_plugin_enabled:
         type: bool
         required: false
@@ -53,3 +60,48 @@ argument_specs:
           nvim-linux-x86_64.tar.gz. Static (neovim/neovim publishes no
           per-release checksum file) — deliberately goes stale on a
           Renovate version bump until manually updated, as a review gate.
+      cli_dev_env_claude_code_nodejs_major_version:
+        type: str
+        required: false
+        default: "24"
+        description: >-
+          Node.js LTS major version installed from NodeSource for the
+          Claude Code CLI. Not Renovate-managed — see
+          cli_dev_env_claude_code_nodejs_version.
+      cli_dev_env_claude_code_nodejs_version:
+        type: str
+        required: false
+        default: "24.18.0-1nodesource1"
+        description: >-
+          Exact NodeSource nodejs apt package version pinned alongside
+          cli_dev_env_claude_code_nodejs_major_version. Not
+          Renovate-managed — NodeSource version strings are incompatible
+          with the deb datasource; update manually when upgrading Node.js.
+      cli_dev_env_claude_code_build_essential_version:
+        type: str
+        required: false
+        default: "12.10ubuntu1"
+        description: build-essential apt package version (deb datasource), required to build native npm dependencies.
+      cli_dev_env_claude_code_version:
+        type: str
+        required: false
+        default: "2.1.227"
+        description: "@anthropic-ai/claude-code npm package version (npm datasource)."
+      cli_dev_env_claude_code_aws_profile:
+        type: str
+        required: false
+        default: "default"
+        description: AWS_PROFILE passed to the awslabs.core MCP server.
+      cli_dev_env_claude_code_aws_region:
+        type: str
+        required: false
+        default: "eu-central-1"
+        description: AWS_REGION passed to the awslabs.core MCP server.
+      cli_dev_env_claude_code_github_token:
+        type: str
+        required: false
+        default: ""
+        description: >-
+          GitHub PAT passed as GITHUB_PERSONAL_ACCESS_TOKEN to the github
+          MCP server (from the consumer's own secret store, e.g. Ansible
+          Vault). Empty by default.

@@ -1,6 +1,7 @@
 ---
 cli_dev_env_lazygit_enabled: true
 cli_dev_env_neovim_enabled: true
+cli_dev_env_claude_code_enabled: true
 
 # Deploys ~/.config/nvim/lua/plugins/presenterm.lua for the presenterm.nvim
 # LazyVim plugin. The presenterm *binary* this plugin needs lives in the
@@ -20,3 +21,16 @@ cli_dev_env_neovim_version: "0.12.4"
 # Staleness on a Renovate version bump is deliberate friction (forces a
 # manual review of the new release before the bump lands), not a bug.
 cli_dev_env_neovim_checksum: "sha256:012bf3fcac5ade43914df3f174668bf64d05e049a4f032a388c027b1ebd78628"
+
+# Renovate cannot auto-update these — NodeSource version strings are
+# incompatible with the deb datasource. Update manually when upgrading
+# Node.js.
+cli_dev_env_claude_code_nodejs_major_version: "24"
+cli_dev_env_claude_code_nodejs_version: "24.18.0-1nodesource1"
+# renovate: datasource=deb depName=build-essential registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
+cli_dev_env_claude_code_build_essential_version: "12.10ubuntu1"
+# renovate: datasource=npm depName=@anthropic-ai/claude-code
+cli_dev_env_claude_code_version: "2.1.227"
+cli_dev_env_claude_code_aws_profile: "default"
+cli_dev_env_claude_code_aws_region: "eu-central-1"
+cli_dev_env_claude_code_github_token: ""

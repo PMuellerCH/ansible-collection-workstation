@@ -1,18 +1,21 @@
 # swisstopo.workstation.cli_dev_env
 
 Installs core CLI developer-environment tools: `lazygit` (git TUI, GitHub
-release binary) and `neovim` (GitHub release binary, bootstrapped into a
-[LazyVim](https://www.lazyvim.org/) configuration). Also deploys the
+release binary), `neovim` (GitHub release binary, bootstrapped into a
+[LazyVim](https://www.lazyvim.org/) configuration), and the
+[Claude Code](https://docs.claude.com/en/docs/claude-code) CLI (npm, with
+Node.js sourced from NodeSource). Also deploys the
 [presenterm.nvim](https://github.com/Piotr1215/presenterm.nvim) LazyVim
 plugin config — the neovim-plugin half of what used to be a separate
 `presenterm` role; the presenterm *binary* itself, plus its mermaid-cli
 dependency and zsh snippet, live in the `modern_cli` role instead (see
 "presenterm.nvim toggle" below for why this split needs a toggle).
 
-`lazygit` and `neovim` are bundled here because both are CLI-first tools a
-developer reaches for directly in the terminal for the same core workflow
-(editing code, managing git), unlike e.g. Slack/Teams (chat) or trivy/checkov
-(scanning) which got their own merged roles for their own category.
+`lazygit`, `neovim` and Claude Code are bundled here because all three are
+CLI-first tools a developer reaches for directly in the terminal for the same
+core workflow (editing code, managing git, working with an AI coding agent),
+unlike e.g. Slack/Teams (chat) or trivy/checkov (scanning) which got their
+own merged roles for their own category.
 
 ## Tagging (for backward-compatible selective runs)
 
@@ -25,6 +28,7 @@ identity even though it's one role:
 | lazygit | `lazygit`, `cli_dev_env` |
 | neovim (+ LazyVim bootstrap) | `neovim`, `cli_dev_env` |
 | presenterm.nvim plugin config | `presenterm`, `cli_dev_env` |
+| Claude Code CLI (+ NodeSource Node.js) | `claude-code`, `cli_dev_env` |
 
 **Do not** put an outer `tags:` on the role invocation in your play — that
 tag cascades to every task in the role and defeats this per-tool filtering.
@@ -44,10 +48,18 @@ the `neovim` tag having also run in the same invocation.
 | `cli_dev_env_lazygit_enabled` | `true` | Install lazygit |
 | `cli_dev_env_neovim_enabled` | `true` | Install neovim and bootstrap LazyVim. Also gates the presenterm.nvim plugin config below |
 | `cli_dev_env_neovim_presenterm_plugin_enabled` | `true` | Deploy the presenterm.nvim plugin config (see below) |
+| `cli_dev_env_claude_code_enabled` | `true` | Install the Claude Code CLI, its NodeSource Node.js dependency, and configure its MCP servers |
 | `cli_dev_env_lazygit_version` | `0.64.0` | lazygit version (github-releases: `jesseduffield/lazygit`) |
 | `cli_dev_env_lazygit_download_base` | see `defaults/main.yml` | Base URL the lazygit archive and its `checksums.txt` are downloaded from |
 | `cli_dev_env_neovim_version` | `0.12.4` | Neovim version (github-releases: `neovim/neovim`) |
 | `cli_dev_env_neovim_checksum` | see `defaults/main.yml` | Static sha256 checksum for the pinned neovim archive (see below) |
+| `cli_dev_env_claude_code_nodejs_major_version` | `"24"` | Node.js LTS major version installed from NodeSource. Not Renovate-managed (see below) |
+| `cli_dev_env_claude_code_nodejs_version` | `24.18.0-1nodesource1` | Exact NodeSource `nodejs` apt package version. Not Renovate-managed (see below) |
+| `cli_dev_env_claude_code_build_essential_version` | `12.10ubuntu1` | `build-essential` apt package version (deb datasource) |
+| `cli_dev_env_claude_code_version` | `2.1.227` | `@anthropic-ai/claude-code` npm package version (npm datasource) |
+| `cli_dev_env_claude_code_aws_profile` | `default` | `AWS_PROFILE` passed to the `awslabs.core` MCP server |
+| `cli_dev_env_claude_code_aws_region` | `eu-central-1` | `AWS_REGION` passed to the `awslabs.core` MCP server |
+| `cli_dev_env_claude_code_github_token` | `""` | GitHub PAT passed as `GITHUB_PERSONAL_ACCESS_TOKEN` to the `github` MCP server (from the consumer's own secret store) |
 
 ## Notes
 
@@ -151,6 +163,72 @@ If Mason's own toolchain ever turns out to meaningfully conflict with a
 system-installed `terraform`/`ansible` from `iac_tools` (e.g. version
 skew causing confusing LSP behaviour), revisit this — but as shipped, no
 toggle is added.
+
+### Claude Code
+
+Installs the [Claude Code](https://docs.claude.com/en/docs/claude-code) CLI
+globally via npm, plus the Node.js runtime it needs.
+
+**Requires a [Claude Pro (or higher) subscription](https://claude.com/pricing)
+and running `claude login` interactively after install** — this role only
+installs and configures the CLI; it does not (and cannot) authenticate it.
+
+#### Node.js management
+
+Node.js is sourced from [NodeSource](https://github.com/nodesource/distributions)
+rather than Ubuntu's apt repository, to track a current LTS major version:
+
+- Prerequisites (`ca-certificates`, `curl`, `gnupg`) are installed, the
+  NodeSource GPG key is fetched to `/etc/apt/keyrings/nodesource.asc`, and the
+  repository is registered via `ansible.builtin.deb822_repository` for
+  `cli_dev_env_claude_code_nodejs_major_version` (LTS major, e.g. `"24"`).
+  Any legacy `/etc/apt/sources.list.d/nodesource.list` (the pre-`deb822`
+  NodeSource setup format) is removed first.
+- The installed `node --version` is checked; if a different major version is
+  already installed, `nodejs` is removed before reinstalling at the pinned
+  `cli_dev_env_claude_code_nodejs_version` — this guards against a stale
+  major version surviving a `cli_dev_env_claude_code_nodejs_major_version`
+  bump. `build-essential` is installed alongside it (native npm dependency
+  builds).
+- **Not Renovate-managed**: `cli_dev_env_claude_code_nodejs_major_version`
+  and `cli_dev_env_claude_code_nodejs_version` carry no `# renovate:` comment
+  and must be updated by hand. NodeSource's version string format
+  (`24.18.0-1nodesource1`) is incompatible with Renovate's `deb` datasource,
+  which expects standard Debian/Ubuntu archive versioning — there is no
+  datasource that can track NodeSource releases automatically.
+- **Out of scope for this role**: the `modern_cli` role also installs
+  `nodejs`/`npm` from Ubuntu's apt repository (for `mermaid-cli`, guarded by
+  its own "skip if npm already works" check). This role's NodeSource install
+  and `modern_cli`'s apt install are independent and not coordinated here —
+  a consuming playbook that runs both roles must order `cli_dev_env` before
+  `modern_cli` so `modern_cli`'s guard sees a working NodeSource `npm` and
+  skips its own (older) apt install, rather than downgrading Node.js. That
+  ordering is the consuming playbook's responsibility, not this role's.
+
+#### MCP servers
+
+The Claude Code CLI's global config (`~/.claude.json`) has its `mcpServers`
+key merged with the following servers on every run — other keys in the file
+are left untouched (`ansible.builtin.combine` over the parsed JSON, not a
+full overwrite):
+
+| Server | Command | Purpose |
+| --- | --- | --- |
+| `ansible` | `npx -y @ansible/ansible-mcp-server --stdio` | Ansible module/collection lookup |
+| `awslabs.aws-documentation` | `uvx awslabs.aws-documentation-mcp-server@latest` | AWS documentation search |
+| `awslabs.core` | `uvx awslabs.core-mcp-server@latest` | AWS MCP server discovery/routing (uses `cli_dev_env_claude_code_aws_profile`/`_aws_region`) |
+| `terraform` | `npx -y terraform-mcp-server` | Terraform registry/provider lookup |
+| `github` | `npx -y @modelcontextprotocol/server-github` | GitHub API access (uses `cli_dev_env_claude_code_github_token`) |
+| `renovate` | `npx -y renovate-mcp` | Renovate config lookup |
+
+A stray `mcpServers` key in `~/.claude/settings.json` (the *project/user
+settings* file, distinct from `~/.claude.json`) is removed if present — MCP
+servers belong exclusively in `~/.claude.json`, and an older Claude Code
+version or manual edit may have left one there.
+
+Both JSON-writing tasks run **without `become`** (as the invoking user, not
+root) since they write into `$HOME` — same posture as the neovim/LazyVim
+config tasks above.
 
 ## Dependencies
 

@@ -115,3 +115,39 @@
     - name: Assert presenterm.nvim plugin config was deployed
       ansible.builtin.assert:
         that: _cli_dev_env_presenterm_plugin.stat.exists
+
+    # claude-code
+    - name: Check Node.js version
+      ansible.builtin.command: node --version
+      register: _cli_dev_env_claude_code_node_version
+      changed_when: false
+
+    - name: Assert Node.js major version matches the configured NodeSource LTS
+      ansible.builtin.assert:
+        that: "_cli_dev_env_claude_code_node_version.stdout.startswith('v24.')"
+
+    - name: Check Claude Code CLI runs
+      ansible.builtin.command: claude --version
+      register: _cli_dev_env_claude_code_version
+      changed_when: false
+
+    - name: Assert Claude Code CLI reports the pinned version
+      ansible.builtin.assert:
+        that: "'2.1.227' in _cli_dev_env_claude_code_version.stdout"
+
+    - name: Read Claude Code global config
+      ansible.builtin.slurp:
+        src: "{{ ansible_facts['env']['HOME'] }}/.claude.json"
+      register: _cli_dev_env_claude_code_global_raw
+
+    - name: Assert MCP servers were configured in ~/.claude.json
+      vars:
+        _cli_dev_env_claude_code_global: "{{ _cli_dev_env_claude_code_global_raw.content | b64decode | from_json }}"
+      ansible.builtin.assert:
+        that:
+          - "'ansible' in _cli_dev_env_claude_code_global.mcpServers"
+          - "'awslabs.aws-documentation' in _cli_dev_env_claude_code_global.mcpServers"
+          - "'awslabs.core' in _cli_dev_env_claude_code_global.mcpServers"
+          - "'terraform' in _cli_dev_env_claude_code_global.mcpServers"
+          - "'github' in _cli_dev_env_claude_code_global.mcpServers"
+          - "'renovate' in _cli_dev_env_claude_code_global.mcpServers"

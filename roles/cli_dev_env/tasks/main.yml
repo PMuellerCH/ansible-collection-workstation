@@ -270,3 +270,255 @@
     cli_dev_env_neovim_enabled and
     cli_dev_env_neovim_presenterm_plugin_enabled
   tags: [presenterm, cli_dev_env]
+
+# ---- claude-code (Claude Code CLI via npm, Node.js sourced from
+# NodeSource — this role's own Node.js install, independent of modern_cli's
+# mermaid-cli one; see README "Node.js management" for why the two don't
+# share logic in this PR) ----
+- name: Install prerequisites for NodeSource apt setup
+  # python3-debian is required by the ansible.builtin.deb822_repository
+  # module used below (it is not present by default on a minimal Ubuntu
+  # image) — added to this same prerequisites task rather than a separate
+  # one, alongside the other NodeSource-setup prerequisites.
+  ansible.builtin.apt:
+    name: [ca-certificates, curl, gnupg, python3-debian]
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: cli_dev_env_claude_code_enabled
+  tags: [claude-code, cli_dev_env]
+
+- name: Create /etc/apt/keyrings directory
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+  become: true
+  when: cli_dev_env_claude_code_enabled
+  tags: [claude-code, cli_dev_env]
+
+- name: Download NodeSource GPG key
+  ansible.builtin.get_url:
+    url: https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key
+    dest: /etc/apt/keyrings/nodesource.asc
+    mode: "0644"
+  become: true
+  when: cli_dev_env_claude_code_enabled
+  tags: [claude-code, cli_dev_env]
+
+- name: Remove legacy NodeSource apt sources list
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/nodesource.list
+    state: absent
+  become: true
+  when: cli_dev_env_claude_code_enabled
+  tags: [claude-code, cli_dev_env]
+
+- name: Add NodeSource apt repository for Node.js LTS {{ cli_dev_env_claude_code_nodejs_major_version }}
+  # python3-debian is only installed for real on a real (non-check) run —
+  # see the task above. Under --check it would still be missing at this
+  # point (a normal apt task never installs anything for real in check
+  # mode), and deb822_repository hard-fails under check mode if the library
+  # isn't importable — so this task (and everything that depends on the
+  # repo it adds) is skipped in check mode too, matching this collection's
+  # general pattern for resources that would only exist after a real run.
+  ansible.builtin.deb822_repository:
+    name: nodesource
+    types: deb
+    uris: "https://deb.nodesource.com/node_{{ cli_dev_env_claude_code_nodejs_major_version }}.x"
+    suites: nodistro
+    components: main
+    signed_by: /etc/apt/keyrings/nodesource.asc
+    state: present
+  become: true
+  when: cli_dev_env_claude_code_enabled and not ansible_check_mode
+  tags: [claude-code, cli_dev_env]
+
+- name: Check installed Node.js major version
+  ansible.builtin.command: node --version
+  register: cli_dev_env_claude_code_node_installed_version
+  changed_when: false
+  failed_when: false
+  when: cli_dev_env_claude_code_enabled
+  tags: [claude-code, cli_dev_env]
+
+- name: Remove Node.js if installed major version does not match configured LTS
+  ansible.builtin.apt:
+    name: nodejs
+    state: absent
+  become: true
+  when: >-
+    cli_dev_env_claude_code_enabled and
+    cli_dev_env_claude_code_node_installed_version.rc == 0 and
+    not cli_dev_env_claude_code_node_installed_version.stdout.startswith('v' + cli_dev_env_claude_code_nodejs_major_version | string + '.')
+  tags: [claude-code, cli_dev_env]
+
+- name: Install Node.js and build tools
+  ansible.builtin.apt:
+    name:
+      - "nodejs={{ cli_dev_env_claude_code_nodejs_version }}"
+      - "build-essential={{ cli_dev_env_claude_code_build_essential_version }}"
+    state: present
+    update_cache: true
+  become: true
+  when: >-
+    not ansible_check_mode and
+    cli_dev_env_claude_code_enabled
+  tags: [claude-code, cli_dev_env]
+
+- name: Hold nodejs and build-essential package versions
+  # Same pattern as every other version-pinned apt package in this
+  # collection (e.g. modern_cli's nodejs/npm, iac_tools' docker-ce,
+  # code_quality_tools' trivy): without a hold, a plain `apt upgrade` on the
+  # host could silently drift these past the pinned version. Guarded by
+  # not ansible_check_mode for the same reason as code_quality_tools' trivy
+  # hold task — dpkg_selections hard-fails if the package isn't actually
+  # present in dpkg's database yet, which is the case under --check since
+  # the install task above is itself skipped in check mode.
+  ansible.builtin.dpkg_selections:
+    name: "{{ item }}"
+    selection: hold
+  loop:
+    - nodejs
+    - build-essential
+  become: true
+  when: cli_dev_env_claude_code_enabled and not ansible_check_mode
+  tags: [claude-code, cli_dev_env]
+
+- name: Install Claude Code CLI globally via npm
+  community.general.npm:
+    name: "@anthropic-ai/claude-code"
+    version: "{{ cli_dev_env_claude_code_version }}"
+    global: true
+    state: present
+  become: true
+  when: cli_dev_env_claude_code_enabled and not ansible_check_mode
+  tags: [claude-code, cli_dev_env]
+
+- name: Stat ~/.claude/settings.json
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.claude/settings.json"
+  register: cli_dev_env_claude_code_settings_stat
+  become: false
+  when: cli_dev_env_claude_code_enabled
+  tags: [claude-code, cli_dev_env]
+
+- name: Read ~/.claude/settings.json
+  # A remote read (slurp), not lookup('file', ...): lookup() runs on the
+  # controller, not the target host, so it silently reads (or misses) the
+  # wrong machine's file whenever controller != target (e.g. over SSH) —
+  # this collection cannot assume connection: local, unlike computer-setup.
+  # Gated on the stat above rather than unconditionally, since slurp
+  # hard-fails on a missing file — true here on a fresh install before
+  # ~/.claude/ has been created by the CLI itself.
+  ansible.builtin.slurp:
+    src: "{{ ansible_facts['env']['HOME'] }}/.claude/settings.json"
+  register: cli_dev_env_claude_code_settings_raw
+  become: false
+  when: >-
+    not ansible_check_mode and
+    cli_dev_env_claude_code_enabled and
+    cli_dev_env_claude_code_settings_stat.stat.exists
+  tags: [claude-code, cli_dev_env]
+
+- name: Remove mcpServers from ~/.claude/settings.json if present (belongs in ~/.claude.json)
+  vars:
+    # The "if stat.exists else {}" ternary short-circuits (Jinja evaluates
+    # only the taken branch), so the undefined/skipped slurp result is never
+    # touched when the file doesn't exist.
+    _cli_dev_env_claude_code_settings_current: >-
+      {{ (cli_dev_env_claude_code_settings_raw.content | b64decode | from_json)
+         if cli_dev_env_claude_code_settings_stat.stat.exists else {} }}
+  ansible.builtin.copy:
+    content: "{{ _cli_dev_env_claude_code_settings_current | dict2items | selectattr('key', '!=', 'mcpServers') | items2dict | to_nice_json }}\n"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.claude/settings.json"
+    mode: "0600"
+  become: false
+  when: >-
+    not ansible_check_mode and
+    cli_dev_env_claude_code_enabled and
+    (_cli_dev_env_claude_code_settings_current.mcpServers | default(none)) is not none
+  tags: [claude-code, cli_dev_env]
+
+- name: Stat ~/.claude.json
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.claude.json"
+  register: cli_dev_env_claude_code_global_stat
+  become: false
+  when: cli_dev_env_claude_code_enabled
+  tags: [claude-code, cli_dev_env]
+
+- name: Read current Claude Code global config
+  # Not ansible.builtin.slurp unconditionally, and not lookup('file', ...)
+  # — same two reasons as ~/.claude/settings.json above: lookup() reads the
+  # controller's filesystem, not the target's, and ~/.claude.json does not
+  # exist yet on a fresh install (created by the CLI on first run/login,
+  # not by the npm install above).
+  ansible.builtin.slurp:
+    src: "{{ ansible_facts['env']['HOME'] }}/.claude.json"
+  register: cli_dev_env_claude_code_global_raw
+  become: false
+  when: >-
+    not ansible_check_mode and
+    cli_dev_env_claude_code_enabled and
+    cli_dev_env_claude_code_global_stat.stat.exists
+  tags: [claude-code, cli_dev_env]
+
+- name: Configure MCP servers in Claude Code global config
+  vars:
+    _cli_dev_env_claude_code_current_global: >-
+      {{ (cli_dev_env_claude_code_global_raw.content | b64decode | from_json)
+         if cli_dev_env_claude_code_global_stat.stat.exists else {} }}
+    _cli_dev_env_claude_code_desired_mcp_servers:
+      ansible:
+        type: stdio
+        command: npx
+        args: ["-y", "@ansible/ansible-mcp-server", "--stdio"]
+        env: {}
+      awslabs.aws-documentation:
+        type: stdio
+        command: uvx
+        args: ["awslabs.aws-documentation-mcp-server@latest"]
+        env:
+          FASTMCP_LOG_LEVEL: ERROR
+          UV_SYSTEM_CERTS: "true"
+      awslabs.core:
+        type: stdio
+        command: uvx
+        args: ["awslabs.core-mcp-server@latest"]
+        env:
+          AWS_PROFILE: "{{ cli_dev_env_claude_code_aws_profile }}"
+          AWS_REGION: "{{ cli_dev_env_claude_code_aws_region }}"
+          FASTMCP_LOG_LEVEL: ERROR
+          UV_SYSTEM_CERTS: "true"
+      terraform:
+        type: stdio
+        command: npx
+        args: ["-y", "terraform-mcp-server"]
+        env: {}
+      github:
+        type: stdio
+        command: npx
+        args: ["-y", "@modelcontextprotocol/server-github"]
+        env:
+          GITHUB_PERSONAL_ACCESS_TOKEN: "{{ cli_dev_env_claude_code_github_token }}"
+      renovate:
+        type: stdio
+        command: npx
+        args: ["-y", "renovate-mcp"]
+        env: {}
+  ansible.builtin.copy:
+    content: "{{ _cli_dev_env_claude_code_current_global | combine({'mcpServers': _cli_dev_env_claude_code_desired_mcp_servers}) | to_nice_json }}\n"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.claude.json"
+    mode: "0600"
+  become: false
+  # The rendered content embeds cli_dev_env_claude_code_github_token — keep
+  # it out of -v/-vvv output the same way iac_tools' vault github_token
+  # credential file write does.
+  no_log: true
+  when: >-
+    not ansible_check_mode and
+    cli_dev_env_claude_code_enabled and
+    (_cli_dev_env_claude_code_current_global.mcpServers | default({})) != _cli_dev_env_claude_code_desired_mcp_servers
+  tags: [claude-code, cli_dev_env]
