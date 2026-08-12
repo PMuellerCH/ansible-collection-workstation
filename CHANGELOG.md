@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.14](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/0.1.13...0.1.14) (2026-08-12)
+
+
+### Features
+
+* add clipboard_tools role (wl-clipboard, cliphist, clipse) ([#85](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/85)) ([ca721ef](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/ca721efbc0cc406bb9081331d141049c0a4937c9))
+* add desktop_apps role (onlyoffice + firefox) ([#87](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/87)) ([603ea55](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/603ea556528ae8ca45dc49312772f40b84ac6a36))
+* extend cli_dev_env with Claude Code CLI (npm, NodeSource Node.js) ([#88](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/88)) ([0a9f230](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/0a9f230e8ec3d78803bb45a7a16176e6e217e3d1))
+
 ## [0.1.13](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/0.1.12...0.1.13) (2026-08-10)
 
 
