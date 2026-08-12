@@ -1,0 +1,60 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: true
+  # Load the role's own defaults so the pinned version asserted below tracks
+  # desktop_apps_onlyoffice_version as its single source of truth, rather
+  # than a second hardcoded literal that would silently go stale whenever
+  # Renovate bumps defaults/main.yml.
+  vars_files:
+    - ../../defaults/main.yml
+  tasks:
+    - name: Gather package facts
+      ansible.builtin.package_facts:
+        manager: apt
+
+    - name: Assert onlyoffice-desktopeditors is installed at the pinned version
+      ansible.builtin.assert:
+        that:
+          - "'onlyoffice-desktopeditors' in ansible_facts.packages"
+          - "ansible_facts.packages['onlyoffice-desktopeditors'][0].version == desktop_apps_onlyoffice_version"
+
+    - name: Get dpkg selection for onlyoffice-desktopeditors
+      ansible.builtin.command: dpkg --get-selections onlyoffice-desktopeditors
+      register: _desktop_apps_onlyoffice_selection
+      changed_when: false
+
+    - name: Assert onlyoffice-desktopeditors package version is held
+      ansible.builtin.assert:
+        that: "'hold' in _desktop_apps_onlyoffice_selection.stdout"
+
+    - name: Stat Firefox policies file
+      ansible.builtin.stat:
+        path: /etc/firefox/policies/policies.json
+      register: _desktop_apps_firefox_policies_stat
+
+    - name: Assert Firefox policies file exists with expected ownership/mode
+      ansible.builtin.assert:
+        that:
+          - _desktop_apps_firefox_policies_stat.stat.exists
+          - _desktop_apps_firefox_policies_stat.stat.pw_name == 'root'
+          - _desktop_apps_firefox_policies_stat.stat.gr_name == 'root'
+          - _desktop_apps_firefox_policies_stat.stat.mode == '0644'
+
+    - name: Slurp Firefox policies file
+      ansible.builtin.slurp:
+        path: /etc/firefox/policies/policies.json
+      register: _desktop_apps_firefox_policies_raw
+
+    - name: Parse Firefox policies file
+      ansible.builtin.set_fact:
+        _desktop_apps_firefox_policies: "{{ _desktop_apps_firefox_policies_raw.content | b64decode | from_json }}"
+
+    - name: Assert Firefox policies content is as expected
+      ansible.builtin.assert:
+        that:
+          - _desktop_apps_firefox_policies.policies.PasswordManagerEnabled == false
+          - _desktop_apps_firefox_policies.policies.Preferences['spellchecker.dictionary'].Value == 'de-CH'
+          - "'{446900e4-71c2-419f-a6a7-df9c091e268b}' in _desktop_apps_firefox_policies.policies.ExtensionSettings"
+          - _desktop_apps_firefox_policies.policies.ExtensionSettings['{446900e4-71c2-419f-a6a7-df9c091e268b}'].installation_mode == 'force_installed'
+          - "'de-CH@dictionaries.addons.mozilla.org' in _desktop_apps_firefox_policies.policies.ExtensionSettings"

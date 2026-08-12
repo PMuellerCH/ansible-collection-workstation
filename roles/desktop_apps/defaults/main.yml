@@ -1,0 +1,6 @@
+---
+desktop_apps_onlyoffice_enabled: true
+desktop_apps_firefox_enabled: true
+
+# renovate: datasource=deb depName=onlyoffice-desktopeditors registryUrl=https://download.onlyoffice.com/repo/debian?suite=squeeze&components=main&binaryArch=amd64
+desktop_apps_onlyoffice_version: "9.4.0-129"

@@ -1,0 +1,25 @@
+---
+argument_specs:
+  main:
+    short_description: >-
+      Install standard/mainstream desktop applications: OnlyOffice Desktop
+      Editors, Firefox policies — each independently toggleable.
+    options:
+      desktop_apps_onlyoffice_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install OnlyOffice Desktop Editors.
+      desktop_apps_firefox_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to deploy system-wide Firefox policies.
+      desktop_apps_onlyoffice_version:
+        type: str
+        required: false
+        default: "9.4.0-129"
+        description: >-
+          onlyoffice-desktopeditors apt package version (deb datasource:
+          OnlyOffice's own apt repository), installed from OnlyOffice's
+          official apt repository.
