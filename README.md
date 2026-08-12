@@ -53,6 +53,9 @@ cd roles/<name> && molecule test
 CI lints every push/PR to `main`. Molecule only runs on the release-please PR (or via
 manual `workflow_dispatch`), so a release is never cut without molecule passing.
 
+New roles should include a `README.md` following
+[`roles/ROLE_README_TEMPLATE.md`](roles/ROLE_README_TEMPLATE.md).
+
 ## License
 
 Apache-2.0

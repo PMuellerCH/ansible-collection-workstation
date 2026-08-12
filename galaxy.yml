@@ -30,3 +30,4 @@ build_ignore:
   - ".secrets.baseline"
   - ".pre-commit-config.yaml"
   - "molecule"
+  - "roles/ROLE_README_TEMPLATE.md"

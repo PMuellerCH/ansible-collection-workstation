@@ -40,12 +40,14 @@ before running `ansible-lint`.
 ```text
 galaxy.yml                  # Collection metadata (namespace, name, version)
 meta/runtime.yml            # Minimum ansible-core version requirement
+roles/ROLE_README_TEMPLATE.md  # Copy this for every new role's README.md (build_ignore'd)
 roles/<name>/
   tasks/main.yml
   defaults/main.yml         # Version pins with Renovate comments
   files/                    # Static config files
   templates/                # Jinja2 templates
   meta/main.yml             # Role metadata (platforms, dependencies)
+  README.md                 # Follows roles/ROLE_README_TEMPLATE.md
   molecule/default/         # Optional: molecule scenario (see Testing below)
 ```
 
