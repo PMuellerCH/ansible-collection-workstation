@@ -23,8 +23,9 @@ argument_specs:
         default: true
         description: >-
           Whether to install emoji-fzf via pipx (also gates the pipx bootstrap).
-          Requires fzf and wl-copy (desktop-utils role, not part of this
-          collection) at runtime for the deployed `emoji` shell function.
+          Requires fzf and wl-copy (this collection's clipboard_tools role,
+          clipboard_tools_wl_clipboard_enabled) at runtime for the deployed
+          `emoji` shell function.
       modern_cli_eza_enabled:
         type: bool
         required: false

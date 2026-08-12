@@ -34,8 +34,11 @@ that one tool.
 ## External runtime dependencies not provided by this role
 
 - `emoji-fzf`'s deployed `emoji` shell function pipes through `wl-copy`
-  (from the `desktop-utils` role, not part of this collection) to copy the
-  selected emoji to the clipboard. Without it, `emoji-fzf`/`fzf` still work
+  (from this collection's `clipboard_tools` role — specifically
+  `clipboard_tools_wl_clipboard_enabled`) to copy the selected emoji to the
+  clipboard. This is a two-way soft coupling: `clipboard_tools`' own README
+  documents its `ch` shell function's dependency on this role's `fzf` in the
+  other direction. Without wl-copy, `emoji-fzf`/`fzf` still work
   interactively but the result won't be copied automatically.
 - `presenterm`'s mermaid diagram rendering (`mmdc`) expects
   `/usr/bin/google-chrome` per the deployed puppeteer config — install

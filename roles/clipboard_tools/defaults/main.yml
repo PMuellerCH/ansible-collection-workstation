@@ -1,0 +1,24 @@
+---
+clipboard_tools_wl_clipboard_enabled: true
+clipboard_tools_cliphist_enabled: true
+clipboard_tools_clipse_enabled: true
+
+# renovate: datasource=deb depName=wl-clipboard registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
+clipboard_tools_wl_clipboard_version: "2.2.1-1build1"
+
+# renovate: datasource=github-releases depName=sentriz/cliphist extractVersion=^v(?<version>.*)$
+clipboard_tools_cliphist_version: "0.7.0"
+# sentriz/cliphist publishes only raw platform binaries per release (e.g.
+# v0.7.0-linux-amd64) — no checksums.txt, .sha256, or similar sidecar of any
+# kind. This is the collection's documented "fall back to a static pinned
+# checksum" case (same as cli_dev_env's neovim). Staleness on a Renovate
+# version bump is deliberate friction (forces a human to look at the new
+# release and update the checksum before the bump can land), not a bug.
+clipboard_tools_cliphist_checksum: "sha256:d21ca6846bd25f7bd2dabb157912e2e07226db76be32885bc53d7f27db98d08a"
+
+# renovate: datasource=github-releases depName=savedra1/clipse extractVersion=^v(?<version>.*)$
+clipboard_tools_clipse_version: "1.2.1"
+clipboard_tools_clipse_archive: "clipse_v{{ clipboard_tools_clipse_version }}_linux_wayland_amd64.tar.gz"
+clipboard_tools_clipse_download_base: "https://github.com/savedra1/clipse/releases/download/v{{ clipboard_tools_clipse_version }}"
+
+clipboard_tools_deploy_shell_aliases: true
