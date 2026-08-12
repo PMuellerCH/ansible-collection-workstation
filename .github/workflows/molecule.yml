@@ -16,6 +16,9 @@ name: Molecule
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   discover-roles:
     name: Discover roles
