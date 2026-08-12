@@ -1,0 +1,67 @@
+---
+# --- Bitwarden GUI ---
+
+- name: Get installed Bitwarden GUI version
+  ansible.builtin.command: dpkg-query -W -f='${Version}' bitwarden
+  register: bitwarden_current_version
+  changed_when: false
+  failed_when: false
+
+- name: Download Bitwarden .deb
+  ansible.builtin.get_url:
+    url: "https://github.com/bitwarden/clients/releases/download/desktop-v{{ bitwarden_version }}/Bitwarden-{{ bitwarden_version }}-amd64.deb"
+    dest: "/tmp/Bitwarden-{{ bitwarden_version }}-amd64.deb"
+    mode: "0644"
+  when: bitwarden_current_version.rc != 0 or bitwarden_version not in bitwarden_current_version.stdout
+
+- name: Install Bitwarden GUI
+  ansible.builtin.apt:
+    deb: "/tmp/Bitwarden-{{ bitwarden_version }}-amd64.deb"
+  become: true
+  when: >-
+    not ansible_check_mode and
+    (bitwarden_current_version.rc != 0 or bitwarden_version not in bitwarden_current_version.stdout)
+
+# --- rbw (Bitwarden TUI / CLI) ---
+
+- name: Get installed rbw version
+  ansible.builtin.command: rbw --version
+  register: bitwarden_rbw_current_version
+  changed_when: false
+  failed_when: false
+
+- name: Download rbw archive
+  ansible.builtin.get_url:
+    url: "https://github.com/doy/rbw/releases/download/{{ bitwarden_rbw_version }}/rbw_{{ bitwarden_rbw_version }}_linux_amd64.tar.gz"
+    dest: "/tmp/rbw_{{ bitwarden_rbw_version }}_linux_amd64.tar.gz"
+    mode: "0644"
+  when: bitwarden_rbw_current_version.rc != 0 or bitwarden_rbw_version not in bitwarden_rbw_current_version.stdout
+
+- name: Install rbw binary
+  ansible.builtin.unarchive:
+    src: "/tmp/rbw_{{ bitwarden_rbw_version }}_linux_amd64.tar.gz"
+    dest: /usr/local/bin/
+    include:
+      - rbw
+      - rbw-agent
+    remote_src: true
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and
+    (bitwarden_rbw_current_version.rc != 0 or bitwarden_rbw_version not in bitwarden_rbw_current_version.stdout)
+
+# --- rbw config (bitwarden.eu server) ---
+
+- name: Create rbw config directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/rbw"
+    state: directory
+    mode: "0700"
+
+- name: Configure rbw for bitwarden.eu
+  ansible.builtin.template:
+    src: rbw_config.json.j2
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/rbw/config.json"
+    mode: "0600"
+    force: false

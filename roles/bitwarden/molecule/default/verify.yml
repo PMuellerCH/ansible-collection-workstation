@@ -1,0 +1,28 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: true
+
+  tasks:
+    - name: Check Bitwarden GUI package is installed
+      ansible.builtin.command: dpkg-query -W -f='${Version}' bitwarden
+      register: bitwarden_check
+      changed_when: false
+
+    - name: Check rbw binary is installed
+      ansible.builtin.command: rbw --version
+      register: bitwarden_rbw_check
+      changed_when: false
+
+    - name: Check rbw config was rendered
+      ansible.builtin.slurp:
+        src: "{{ ansible_facts['env']['HOME'] }}/.config/rbw/config.json"
+      register: bitwarden_rbw_config
+
+    - name: Assert everything installed and configured correctly
+      ansible.builtin.assert:
+        that:
+          - bitwarden_check.rc == 0
+          - bitwarden_rbw_check.rc == 0
+          - (bitwarden_rbw_config.content | b64decode | from_json).email == "molecule@example.com"
+          - (bitwarden_rbw_config.content | b64decode | from_json).base_url == "https://vault.bitwarden.eu"

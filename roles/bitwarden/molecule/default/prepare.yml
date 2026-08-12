@@ -1,0 +1,14 @@
+---
+- name: Prepare
+  hosts: all
+  gather_facts: false
+
+  vars:
+    prepare_http_proxy: "{{ lookup('env', 'http_proxy') or lookup('env', 'HTTP_PROXY') }}"
+
+  tasks:
+    - name: Bootstrap Python and sudo
+      ansible.builtin.raw: >-
+        export http_proxy="{{ prepare_http_proxy }}" https_proxy="{{ prepare_http_proxy }}";
+        apt-get update && apt-get install -y python3 sudo
+      changed_when: true

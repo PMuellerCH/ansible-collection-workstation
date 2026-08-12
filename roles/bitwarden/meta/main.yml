@@ -1,0 +1,17 @@
+---
+galaxy_info:
+  role_name: bitwarden
+  author: Philipp Müller
+  description: Installs the Bitwarden GUI desktop app and the rbw CLI client
+  license: Apache-2.0
+  min_ansible_version: "2.17"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - noble
+  galaxy_tags:
+    - workstation
+    - passwordmanager
+    - bitwarden
+
+dependencies: []
