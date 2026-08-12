@@ -9,6 +9,8 @@ license:
 authors:
   - Philipp Müller <philipp@mueller-vu.ch>
 tags:
+  - linux
+  - tools
   - workstation
   - personal
   - ubuntu
