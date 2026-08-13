@@ -1,0 +1,21 @@
+---
+- name: Converge
+  hosts: all
+  gather_facts: true
+  # sudo (become) resets the environment by default, stripping any proxy vars set on
+  # the container itself. Setting them here applies them to the module's exec
+  # environment directly, after become — same pattern computer-setup's site.yml uses.
+  environment:
+    http_proxy: "{{ lookup('env', 'http_proxy') or lookup('env', 'HTTP_PROXY') }}"
+    https_proxy: "{{ lookup('env', 'https_proxy') or lookup('env', 'HTTPS_PROXY') }}"
+    no_proxy: "{{ lookup('env', 'no_proxy') or lookup('env', 'NO_PROXY') }}"
+
+  tasks:
+    - name: Include pmuellerch.workstation.synology
+      ansible.builtin.include_role:
+        name: pmuellerch.workstation.synology
+      vars:
+        synology_drive_server: "nas.molecule.example.com"
+        synology_drive_hostname: "molecule-nas"
+        synology_drive_username: "molecule"
+        synology_drive_ssl_signature: "00:11:22:33:44:55:66:77:88:99:aa:bb:cc:dd:ee:ff"

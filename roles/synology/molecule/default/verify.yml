@@ -1,0 +1,44 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: true
+
+  tasks:
+    - name: Check Synology Drive Client is installed
+      ansible.builtin.command: dpkg-query -W -f='${Version}' synology-drive
+      register: synology_drive_check
+      changed_when: false
+
+    - name: Check Synology Chat Client is installed
+      ansible.builtin.command: dpkg-query -W -f='${Version}' chat
+      register: synology_chat_check
+      changed_when: false
+
+    - name: Check Synology Note Station Client is installed
+      ansible.builtin.command: dpkg-query -W -f='${Version}' synology-note-station
+      register: synology_note_station_check
+      changed_when: false
+
+    - name: Check sync-folder directories were created
+      ansible.builtin.stat:
+        path: "{{ item }}"
+      loop:
+        - "{{ ansible_facts['env']['HOME'] }}/Documents/SynologyDrive/private"
+        - "{{ ansible_facts['env']['HOME'] }}/Documents/SynologyDrive/shared"
+      register: synology_sync_dirs
+
+    - name: Check pre-seeded connection details
+      ansible.builtin.command: >-
+        sqlite3 {{ ansible_facts['env']['HOME'] }}/.SynologyDrive/data/db/sys.sqlite
+        "SELECT server_name || '|' || username || '|' || host_name FROM connection_table"
+      register: synology_db_check
+      changed_when: false
+
+    - name: Assert everything installed and configured correctly
+      ansible.builtin.assert:
+        that:
+          - synology_drive_check.rc == 0
+          - synology_chat_check.rc == 0
+          - synology_note_station_check.rc == 0
+          - synology_sync_dirs.results | map(attribute='stat.exists') | list == [true, true]
+          - synology_db_check.stdout == "nas.molecule.example.com|molecule|molecule-nas"

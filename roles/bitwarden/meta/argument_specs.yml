@@ -14,5 +14,4 @@ argument_specs:
       bitwarden_email:
         type: str
         required: false
-        default: ""
-        description: Email address written into rbw's config.json for bitwarden.eu login
+        description: Email address written into rbw's config.json for bitwarden.eu login, see defaults/main.yml
