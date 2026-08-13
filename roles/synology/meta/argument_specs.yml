@@ -1,0 +1,45 @@
+---
+argument_specs:
+  main:
+    short_description: Install Synology Drive, Chat, and Note Station clients, with pre-seeded Drive sync config
+    options:
+      synology_drive_version:
+        type: str
+        required: false
+        description: Synology Drive Client version (no Renovate datasource, see defaults/main.yml)
+      synology_chat_version:
+        type: str
+        required: false
+        description: Synology Chat Client version (no Renovate datasource, see defaults/main.yml)
+      synology_note_station_version:
+        type: str
+        required: false
+        description: Synology Note Station Client version (no Renovate datasource, see defaults/main.yml)
+      synology_drive_server:
+        type: str
+        required: false
+        description: NAS hostname/domain used for the pre-seeded Drive connection, see defaults/main.yml
+      synology_drive_hostname:
+        type: str
+        required: false
+        description: Display name for the pre-seeded Drive connection, see defaults/main.yml
+      synology_drive_port:
+        type: int
+        required: false
+        description: NAS Drive port, see defaults/main.yml
+      synology_drive_username:
+        type: str
+        required: false
+        description: Drive account username for the pre-seeded connection, see defaults/main.yml
+      synology_drive_ssl_signature:
+        type: str
+        required: false
+        description: NAS SSL certificate fingerprint, must be updated if the certificate is renewed, see defaults/main.yml
+      synology_drive_private_local:
+        type: str
+        required: false
+        description: Local path for the private sync folder, see defaults/main.yml
+      synology_drive_shared_local:
+        type: str
+        required: false
+        description: Local path for the shared sync folder, see defaults/main.yml

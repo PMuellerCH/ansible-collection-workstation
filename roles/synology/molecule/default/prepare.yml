@@ -1,0 +1,32 @@
+---
+- name: Prepare
+  hosts: all
+  gather_facts: false
+
+  vars:
+    prepare_http_proxy: "{{ lookup('env', 'http_proxy') or lookup('env', 'HTTP_PROXY') }}"
+
+  tasks:
+    - name: Bootstrap Python and sudo
+      ansible.builtin.raw: >-
+        export http_proxy="{{ prepare_http_proxy }}" https_proxy="{{ prepare_http_proxy }}";
+        apt-get update && apt-get install -y python3 sudo sqlite3
+      changed_when: true
+
+    - name: Check for a local CA trust bundle on the controller
+      ansible.builtin.stat:
+        path: /etc/ssl/certs/ca-certificates.crt
+      delegate_to: localhost
+      become: false
+      register: synology_prepare_local_ca_bundle
+
+    # Behind a TLS-inspecting corporate proxy, the controller trusts the proxy's CA
+    # (installed by IT) but this fresh container doesn't, breaking get_url downloads.
+    # Syncing the controller's bundle in is a no-op on unproxied CI (where the bundle
+    # is just the standard set the container would trust anyway).
+    - name: Sync the controller's CA trust bundle into the container
+      ansible.builtin.copy:
+        src: /etc/ssl/certs/ca-certificates.crt
+        dest: /etc/ssl/certs/ca-certificates.crt
+        mode: "0644"
+      when: synology_prepare_local_ca_bundle.stat.exists

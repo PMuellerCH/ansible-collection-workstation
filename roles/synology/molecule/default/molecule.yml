@@ -1,0 +1,23 @@
+---
+driver:
+  name: docker
+
+platforms:
+  - name: synology-ubuntu2404
+    image: ubuntu:24.04
+    pre_build_image: true
+    command: sleep infinity
+    tmpfs:
+      - /run
+      - /run/lock
+
+provisioner:
+  name: ansible
+  playbooks:
+    prepare: prepare.yml
+    converge: converge.yml
+    verify: verify.yml
+  inventory:
+    host_vars:
+      synology-ubuntu2404:
+        ansible_python_interpreter: /usr/bin/python3

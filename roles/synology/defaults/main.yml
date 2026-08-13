@@ -1,0 +1,18 @@
+---
+# No Renovate datasource available for Synology packages — update manually
+# Check https://www.synology.com/en-global/support/download for new releases
+
+synology_drive_version: "4.0.2-17889"
+synology_chat_version: "1.2.3-0232"
+synology_note_station_version: "2.2.5-804"
+
+# Sync task folders (local paths)
+synology_drive_private_local: "{{ ansible_facts['env']['HOME'] }}/Documents/SynologyDrive/private"
+synology_drive_shared_local: "{{ ansible_facts['env']['HOME'] }}/Documents/SynologyDrive/shared"
+
+# Pre-seeded Drive connection details — set from your own inventory/vars
+synology_drive_server: ""
+synology_drive_hostname: ""
+synology_drive_port: 6690
+synology_drive_username: ""
+synology_drive_ssl_signature: ""
