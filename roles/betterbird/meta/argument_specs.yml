@@ -1,0 +1,90 @@
+---
+argument_specs:
+  main:
+    short_description: Install Betterbird (Thunderbird fork), pre-configured with email, CalDAV, and CardDAV
+    options:
+      betterbird_email_address:
+        type: str
+        required: false
+        description: Email address for the mail identity, see defaults/main.yml
+      betterbird_email_full_name:
+        type: str
+        required: false
+        description: Display name for the mail identity and signature, see defaults/main.yml
+      betterbird_email_username:
+        type: str
+        required: false
+        description: IMAP/SMTP/CalDAV/CardDAV username, see defaults/main.yml
+      betterbird_email_mobile:
+        type: str
+        required: false
+        description: Mobile number shown in the HTML signature, see defaults/main.yml
+      betterbird_email_address_line1:
+        type: str
+        required: false
+        description: First address line shown in the HTML signature, see defaults/main.yml
+      betterbird_email_address_line2:
+        type: str
+        required: false
+        description: Second address line shown in the HTML signature, see defaults/main.yml
+      betterbird_imap_host:
+        type: str
+        required: false
+        description: IMAP server hostname, see defaults/main.yml
+      betterbird_imap_port:
+        type: int
+        required: false
+        description: IMAP port (SSL), see defaults/main.yml
+      betterbird_smtp_host:
+        type: str
+        required: false
+        description: SMTP server hostname, see defaults/main.yml
+      betterbird_smtp_port:
+        type: int
+        required: false
+        description: SMTP port (SSL), see defaults/main.yml
+      betterbird_caldav_base:
+        type: str
+        required: false
+        description: CalDAV base URL, see defaults/main.yml
+      betterbird_caldav_principal:
+        type: str
+        required: false
+        description: CalDAV principal path segment, see defaults/main.yml
+      betterbird_calendars:
+        type: list
+        elements: dict
+        required: false
+        description: Calendar list (uuid, name, slug, color, main), see defaults/main.yml
+      betterbird_carddav_url:
+        type: str
+        required: false
+        description: CardDAV address book URL, see defaults/main.yml
+      betterbird_carddav_name:
+        type: str
+        required: false
+        description: CardDAV address book display name, see defaults/main.yml
+      betterbird_hunspell_de_ch_version:
+        type: str
+        required: false
+        description: hunspell-de-ch apt package version, see defaults/main.yml
+      betterbird_dict_de_ch_version:
+        type: str
+        required: false
+        description: Swiss German dictionary extension version (no Renovate datasource), see defaults/main.yml
+      betterbird_dict_de_ch_url:
+        type: str
+        required: false
+        description: Swiss German dictionary extension download URL, see defaults/main.yml
+      betterbird_dict_de_ch_checksum:
+        type: str
+        required: false
+        description: Swiss German dictionary extension checksum, see defaults/main.yml
+      betterbird_profile_base:
+        type: str
+        required: false
+        description: Betterbird Flatpak profile base directory, see defaults/main.yml
+      betterbird_profile_dir:
+        type: str
+        required: false
+        description: Betterbird default profile directory, see defaults/main.yml

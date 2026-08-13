@@ -1,0 +1,74 @@
+// Betterbird user preferences — managed by Ansible, applied on every startup.
+// Credentials are not stored here — Betterbird will prompt on first login/sync.
+
+// ---- Email account (IMAP + SMTP) ----
+user_pref("mail.accountmanager.accounts", "account1");
+user_pref("mail.accountmanager.defaultaccount", "account1");
+
+// Identity
+user_pref("mail.identity.id1.fullName", "{{ betterbird_email_full_name }}");
+user_pref("mail.identity.id1.useremail", "{{ betterbird_email_address }}");
+user_pref("mail.identity.id1.smtpServer", "smtp1");
+user_pref("mail.identity.id1.htmlSigFormat", true);
+user_pref("mail.identity.id1.htmlSigText", "<p style=\"margin:0;\"><strong>{{ betterbird_email_full_name }}</strong></p><hr style=\"border:none;border-top:1px solid #ccc;margin:6px 0;\"><p style=\"margin:0;font-size:0.9em;color:#555;\"><a href=\"mailto:{{ betterbird_email_address }}\">{{ betterbird_email_address }}</a><br>{{ betterbird_email_mobile }}<br>{{ betterbird_email_address_line1 }}, {{ betterbird_email_address_line2 }}</p>");
+
+// IMAP server (socketType 3 = SSL/TLS)
+user_pref("mail.account.account1.identities", "id1");
+user_pref("mail.account.account1.server", "server1");
+user_pref("mail.server.server1.hostname", "{{ betterbird_imap_host }}");
+user_pref("mail.server.server1.name", "{{ betterbird_email_address }}");
+user_pref("mail.server.server1.port", {{ betterbird_imap_port }});
+user_pref("mail.server.server1.socketType", 3);
+user_pref("mail.server.server1.type", "imap");
+user_pref("mail.server.server1.userName", "{{ betterbird_email_username }}");
+user_pref("mail.server.server1.login_at_startup", true);
+
+// SMTP server (try_ssl 3 = SSL/TLS, authMethod 3 = normal password)
+user_pref("mail.smtpservers", "smtp1");
+user_pref("mail.smtp.defaultserver", "smtp1");
+user_pref("mail.smtpserver.smtp1.hostname", "{{ betterbird_smtp_host }}");
+user_pref("mail.smtpserver.smtp1.port", {{ betterbird_smtp_port }});
+user_pref("mail.smtpserver.smtp1.try_ssl", 3);
+user_pref("mail.smtpserver.smtp1.authMethod", 3);
+user_pref("mail.smtpserver.smtp1.username", "{{ betterbird_email_username }}");
+
+// ---- CalDAV calendars (Synology Calendar) ----
+// UUIDs and slugs copied from prefs.js after manual configuration.
+// URL format: https://<host>:5001/caldav.php/<principal>/<calendar-slug>/
+{% for cal in betterbird_calendars %}
+user_pref("calendar.registry.{{ cal.uuid }}.cache.enabled", true);
+user_pref("calendar.registry.{{ cal.uuid }}.calendar-main-in-composite", {{ cal.main | lower }});
+user_pref("calendar.registry.{{ cal.uuid }}.color", "{{ cal.color }}");
+user_pref("calendar.registry.{{ cal.uuid }}.disabled", false);
+user_pref("calendar.registry.{{ cal.uuid }}.imip.identity.key", "id1");
+user_pref("calendar.registry.{{ cal.uuid }}.name", "{{ cal.name }}");
+user_pref("calendar.registry.{{ cal.uuid }}.notifications.times", "");
+user_pref("calendar.registry.{{ cal.uuid }}.readOnly", false);
+user_pref("calendar.registry.{{ cal.uuid }}.refreshInterval", "30");
+user_pref("calendar.registry.{{ cal.uuid }}.suppressAlarms", false);
+user_pref("calendar.registry.{{ cal.uuid }}.type", "caldav");
+user_pref("calendar.registry.{{ cal.uuid }}.uri", "{{ betterbird_caldav_base }}{{ betterbird_caldav_principal }}/{{ cal.slug }}/");
+user_pref("calendar.registry.{{ cal.uuid }}.username", "{{ betterbird_email_username }}");
+{% endfor %}
+user_pref("calendar.list.sortOrder", "{{ betterbird_calendars | map(attribute='uuid') | join(' ') }}");
+
+// ---- CardDAV address book (Synology Contacts) ----
+// dirType 102 = CardDAV (as written by Betterbird after manual setup).
+// carddav.token initialises the sync; Betterbird will update it after first sync.
+user_pref("ldap_2.servers.MyContacts.carddav.token", "http://radicale.org/ns/sync/1_0");
+user_pref("ldap_2.servers.MyContacts.carddav.url", "{{ betterbird_carddav_url }}/");
+user_pref("ldap_2.servers.MyContacts.carddav.username", "{{ betterbird_email_username }}");
+user_pref("ldap_2.servers.MyContacts.description", "{{ betterbird_carddav_name }}");
+user_pref("ldap_2.servers.MyContacts.dirType", 102);
+user_pref("ldap_2.servers.MyContacts.filename", "abook-1.sqlite");
+user_pref("ldap_2.servers.MyContacts.uid", "36ac2f1b-c6cd-4e90-951b-10a3299ccc04");
+
+// ---- Calendar: week starts on Monday ----
+user_pref("calendar.week.start", 1);
+
+// ---- Locale: Swiss German (date format dd.MM.yyyy HH:mm, 24h clock) ----
+user_pref("intl.locale.requested", "de-CH");
+
+// ---- Spell checking: Swiss German ----
+user_pref("spellchecker.dictionary", "de-CH");
+user_pref("mail.compose.autospellcheck", true);

@@ -1,0 +1,17 @@
+---
+galaxy_info:
+  role_name: betterbird
+  author: Philipp Müller
+  description: Installs Betterbird (Thunderbird fork), pre-configured with email, CalDAV, and CardDAV
+  license: Apache-2.0
+  min_ansible_version: "2.17"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - noble
+  galaxy_tags:
+    - workstation
+    - email
+    - betterbird
+
+dependencies: []

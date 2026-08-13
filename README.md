@@ -8,12 +8,11 @@ An Ansible Galaxy collection for provisioning personal/home workstation tools on
 | --- | --- |
 | `bitwarden` | Bitwarden password manager desktop app |
 | `synology` | Synology Drive client |
-| `thunderbird` | Thunderbird email client |
+| `betterbird` | Betterbird (Thunderbird fork) email client |
 | `beets` | Music library manager |
 | `spotify` | Spotify desktop app |
 | `plex` | Plex Desktop and Plexamp |
 | `graphics` | Graphics tools (Inkscape, GIMP) |
-| `emoji_picker` | Emoji picker (emoji-fzf + smile) |
 
 ## Installation
 
@@ -23,7 +22,7 @@ collections:
   - name: pmuellerch.workstation
     type: git
     source: https://github.com/PMuellerCH/ansible-collection-workstation.git
-    version: "0.1.1"
+    version: "0.1.3"
 ```
 
 ```bash
@@ -35,7 +34,7 @@ ansible-galaxy collection install -r requirements.yml
 ```yaml
 - hosts: localhost
   roles:
-    - pmuellerch.workstation.thunderbird
+    - pmuellerch.workstation.betterbird
     - pmuellerch.workstation.bitwarden
 ```
 
