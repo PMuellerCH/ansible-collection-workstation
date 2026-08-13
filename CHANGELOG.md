@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.2](https://github.com/PMuellerCH/ansible-collection-workstation/compare/v0.1.1...0.1.2) (2026-08-13)
+
+
+### Bug Fixes
+
+* drop v-prefix from release tags ([8fe65e6](https://github.com/PMuellerCH/ansible-collection-workstation/commit/8fe65e6f2f7f9e619487e39d822b16b50f71a064))
+* drop v-prefix from release tags ([ae4697a](https://github.com/PMuellerCH/ansible-collection-workstation/commit/ae4697aae3c6d98d8b0e9385dfd4d87c057f66cd))
+
+
+### CI/CD
+
+* drop redundant push-to-main trigger from lint workflow ([8615763](https://github.com/PMuellerCH/ansible-collection-workstation/commit/8615763097a6c2b21c901b618bda6cc15479abda))
+* drop redundant push-to-main trigger from lint workflow ([1218b32](https://github.com/PMuellerCH/ansible-collection-workstation/commit/1218b32c616d5a97024c68483e24fd72adc8b0f9))
+
 ## [0.1.1](https://github.com/PMuellerCH/ansible-collection-workstation/compare/v0.1.0...v0.1.1) (2026-08-12)
 
 
