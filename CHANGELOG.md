@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.1.4](https://github.com/PMuellerCH/ansible-collection-workstation/compare/0.1.3...0.1.4) (2026-08-13)
+
+
+### Features
+
+* add betterbird role ([9256a8c](https://github.com/PMuellerCH/ansible-collection-workstation/commit/9256a8cbf630fd7cde09cdf3205f4266fd59a0f4))
+* add betterbird role ([d22a79c](https://github.com/PMuellerCH/ansible-collection-workstation/commit/d22a79ce5130d711385242bd0ae024c1c8625984))
+
+
+### Bug Fixes
+
+* declare community.general as a collection dependency ([649e39f](https://github.com/PMuellerCH/ansible-collection-workstation/commit/649e39f427b050236b7c25a765f11d47d096136d))
+* declare community.general as a collection dependency ([649e39f](https://github.com/PMuellerCH/ansible-collection-workstation/commit/649e39f427b050236b7c25a765f11d47d096136d))
+* declare community.general as a collection dependency ([0f2acf1](https://github.com/PMuellerCH/ansible-collection-workstation/commit/0f2acf169b336ca6379181cce2d85d7bdb13629e))
+
 ## [0.1.3](https://github.com/PMuellerCH/ansible-collection-workstation/compare/0.1.2...0.1.3) (2026-08-13)
 
 
