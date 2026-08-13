@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.3](https://github.com/PMuellerCH/ansible-collection-workstation/compare/0.1.2...0.1.3) (2026-08-13)
+
+
+### Features
+
+* add synology role ([f3851c2](https://github.com/PMuellerCH/ansible-collection-workstation/commit/f3851c2d1906e05f66eb27c4b228c97f780ed0c6))
+* add synology role ([a200627](https://github.com/PMuellerCH/ansible-collection-workstation/commit/a200627a1ba669c9575e2f0727200c5f48f59dac))
+
+
+### Bug Fixes
+
+* classify .j2 templates as Jinja for language detection ([41a91c9](https://github.com/PMuellerCH/ansible-collection-workstation/commit/41a91c982cfe979b7105b2b64ec29a4f6abe2b48))
+* classify .j2 templates as Jinja for language detection ([738bd35](https://github.com/PMuellerCH/ansible-collection-workstation/commit/738bd35ca90e0da184a0faba6f3ae295155b5a62))
+
 ## [0.1.2](https://github.com/PMuellerCH/ansible-collection-workstation/compare/v0.1.1...0.1.2) (2026-08-13)
 
 
