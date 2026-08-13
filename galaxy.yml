@@ -18,6 +18,8 @@ tags:
 repository: https://github.com/PMuellerCH/ansible-collection-workstation
 homepage: https://github.com/PMuellerCH/ansible-collection-workstation
 issues: https://github.com/PMuellerCH/ansible-collection-workstation/issues
+dependencies:
+  community.general: ">=8.0.0"
 build_ignore:
   - "*.tar.gz"
   - ".git"
