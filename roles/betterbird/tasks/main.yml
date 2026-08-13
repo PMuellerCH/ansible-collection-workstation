@@ -1,0 +1,98 @@
+---
+# ---- Install Betterbird via Flatpak ----
+- name: Install Betterbird via Flatpak
+  community.general.flatpak:
+    name: eu.betterbird.Betterbird
+    state: present
+    method: system
+  become: true
+
+# ---- Install system spell checker ----
+- name: Install Swiss German spell checker
+  ansible.builtin.apt:
+    name:
+      - "hunspell-de-ch={{ betterbird_hunspell_de_ch_version }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+
+# ---- Step 1: extract install hash BEFORE deploying any config ----
+# Betterbird (Thunderbird fork) uses [InstallXXXX] sections in profiles.ini and
+# installs.ini to map an installation to a profile. Without this section,
+# it ignores the profile and creates a new one.
+
+- name: Read existing Betterbird installs.ini
+  ansible.builtin.slurp:
+    src: "{{ betterbird_profile_base }}/installs.ini"
+  register: betterbird_installs_ini_raw
+  failed_when: false
+
+- name: Extract Betterbird install hash from installs.ini
+  ansible.builtin.set_fact:
+    betterbird_install_hash: >-
+      {{ (betterbird_installs_ini_raw.content | b64decode)
+         | regex_search('\[([A-F0-9]+)\]', '\1') | first }}
+  when: betterbird_installs_ini_raw.content is defined
+
+# ---- Step 2: create profile and deploy config ----
+
+- name: Create Betterbird profile directory
+  ansible.builtin.file:
+    path: "{{ betterbird_profile_dir }}"
+    state: directory
+    mode: "0700"
+
+- name: Deploy Betterbird profiles.ini
+  ansible.builtin.template:
+    src: profiles.ini.j2
+    dest: "{{ betterbird_profile_base }}/profiles.ini"
+    mode: "0600"
+    backup: true
+
+- name: Deploy Betterbird installs.ini
+  ansible.builtin.template:
+    src: installs.ini.j2
+    dest: "{{ betterbird_profile_base }}/installs.ini"
+    mode: "0600"
+    backup: true
+  when: betterbird_install_hash is defined
+
+- name: Check if Betterbird prefs.js already exists
+  ansible.builtin.stat:
+    path: "{{ betterbird_profile_dir }}/prefs.js"
+  register: betterbird_prefs_stat
+
+# Deploy prefs.js only on first run — once Betterbird has written to it,
+# we leave it alone. user.js handles idempotent updates on every startup.
+- name: Deploy initial Betterbird prefs.js (email + CalDAV + CardDAV)
+  ansible.builtin.template:
+    src: prefs.js.j2
+    dest: "{{ betterbird_profile_dir }}/prefs.js"
+    mode: "0600"
+  when: not betterbird_prefs_stat.stat.exists
+
+- name: Deploy Betterbird user.js (idempotent settings re-applied on every startup)
+  ansible.builtin.template:
+    src: user.js.j2
+    dest: "{{ betterbird_profile_dir }}/user.js"
+    mode: "0600"
+    backup: true
+
+# ---- Spell checking: install dictionary extension ----
+# Betterbird reads distribution/extensions/ from the profile base dir.
+# Profile-level sideloads (extensions/) require manual user approval;
+# distribution/extensions/ are treated as system extensions (auto-enabled).
+- name: Create Betterbird distribution extensions directory
+  ansible.builtin.file:
+    path: "{{ betterbird_profile_base }}/distribution/extensions"
+    state: directory
+    mode: "0755"
+
+- name: Download Swiss German dictionary XPI into Betterbird distribution extensions
+  ansible.builtin.get_url:
+    url: "{{ betterbird_dict_de_ch_url }}"
+    dest: "{{ betterbird_profile_base }}/distribution/extensions/de-CH@dictionaries.addons.mozilla.org.xpi"
+    checksum: "{{ betterbird_dict_de_ch_checksum }}"
+    mode: "0644"
+  when: not ansible_check_mode

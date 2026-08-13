@@ -1,0 +1,29 @@
+---
+betterbird_email_address: ""
+betterbird_email_full_name: ""
+betterbird_email_username: ""
+betterbird_email_mobile: ""
+betterbird_email_address_line1: ""
+betterbird_email_address_line2: ""
+betterbird_imap_host: ""
+betterbird_imap_port: 993
+betterbird_smtp_host: ""
+betterbird_smtp_port: 465
+betterbird_caldav_base: ""
+betterbird_caldav_principal: ""
+betterbird_calendars: []
+betterbird_carddav_url: ""
+betterbird_carddav_name: ""
+
+betterbird_profile_base: "{{ ansible_facts['env']['HOME'] }}/.var/app/eu.betterbird.Betterbird/.thunderbird"
+betterbird_profile_dir: "{{ betterbird_profile_base }}/profile.default"
+
+# hunspell-de-ch: Swiss German spell checker (system package for Hunspell-based apps)
+# renovate: datasource=deb depName=hunspell-de-ch registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
+betterbird_hunspell_de_ch_version: "20161207-12"
+
+# Spell check dictionary extension (addons.thunderbird.net — no Renovate datasource available)
+# Check for updates at: https://addons.thunderbird.net/en-US/thunderbird/addon/dictionary-german-swiss/
+betterbird_dict_de_ch_version: "2.1"
+betterbird_dict_de_ch_url: "https://addons.thunderbird.net/thunderbird/downloads/file/1021547/german_dictionary_switzerland-2.1.xpi"
+betterbird_dict_de_ch_checksum: "sha256:20b62459f5b435130768995b0563bf8450eaf9ae57272b5368344cd1e9ef68e7"

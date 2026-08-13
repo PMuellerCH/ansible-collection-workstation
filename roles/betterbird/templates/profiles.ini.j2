@@ -1,0 +1,15 @@
+[General]
+StartWithLastProfile=1
+Version=2
+
+[Profile0]
+Name=default
+IsRelative=1
+Path=profile.default
+Default=1
+
+{% if betterbird_install_hash is defined %}
+[Install{{ betterbird_install_hash }}]
+Default=profile.default
+Locked=1
+{% endif %}
