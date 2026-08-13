@@ -23,7 +23,7 @@ collections:
   - name: pmuellerch.workstation
     type: git
     source: https://github.com/PMuellerCH/ansible-collection-workstation.git
-    version: "v0.1.0"
+    version: "0.1.1"
 ```
 
 ```bash
