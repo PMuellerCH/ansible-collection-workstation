@@ -1,0 +1,14 @@
+---
+- name: Install Plex Desktop via Flatpak
+  community.general.flatpak:
+    name: tv.plex.PlexDesktop
+    state: present
+    method: system
+  become: true
+
+- name: Install Plexamp via Flatpak
+  community.general.flatpak:
+    name: com.plexamp.Plexamp
+    state: present
+    method: system
+  become: true

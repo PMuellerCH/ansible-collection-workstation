@@ -1,0 +1,45 @@
+---
+- name: Install Spotify via Flatpak
+  community.general.flatpak:
+    name: com.spotify.Client
+    state: present
+    method: system
+  become: true
+
+- name: Get installed ncspot version
+  ansible.builtin.command: ncspot --version
+  register: multimedia_ncspot_current_version
+  changed_when: false
+  failed_when: false
+
+- name: Download ncspot
+  ansible.builtin.get_url:
+    url: "https://github.com/hrkfdn/ncspot/releases/download/v{{ multimedia_ncspot_version }}/ncspot-v{{ multimedia_ncspot_version }}-linux-x86_64.tar.gz"
+    dest: "/tmp/ncspot-v{{ multimedia_ncspot_version }}.tar.gz"
+    mode: "0644"
+  when: multimedia_ncspot_current_version.rc != 0 or multimedia_ncspot_version not in multimedia_ncspot_current_version.stdout
+
+- name: Install ncspot binary
+  ansible.builtin.unarchive:
+    src: "/tmp/ncspot-v{{ multimedia_ncspot_version }}.tar.gz"
+    dest: /usr/local/bin/
+    include:
+      - ncspot
+    remote_src: true
+    mode: "0755"
+  become: true
+  when: multimedia_ncspot_current_version.rc != 0 or multimedia_ncspot_version not in multimedia_ncspot_current_version.stdout
+  ignore_errors: "{{ ansible_check_mode }}"
+
+- name: Create ncspot config directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/ncspot"
+    state: directory
+    mode: "0755"
+
+- name: Deploy ncspot config
+  ansible.builtin.copy:
+    src: ncspot_config.toml
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/ncspot/config.toml"
+    mode: "0644"
+    force: false

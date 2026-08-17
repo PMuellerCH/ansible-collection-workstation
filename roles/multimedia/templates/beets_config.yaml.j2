@@ -1,0 +1,19 @@
+# Beets music library configuration
+# Deployed by Ansible on first run only — local edits are preserved.
+
+plugins: chroma fetchart
+
+chroma:
+  apikey: YOUR_ACOUSTID_API_KEY  # register at https://acoustid.org/login
+
+directory: ~/Music
+library: ~/.config/beets/library.db
+
+paths:
+  default: $albumartist/$artist - $title
+
+import:
+  move: false
+  copy: true
+  write: true
+  none_rec_action: skip  # skip unmatched tracks without prompting

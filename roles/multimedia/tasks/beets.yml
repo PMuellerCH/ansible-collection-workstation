@@ -1,0 +1,34 @@
+---
+- name: Install beets system dependencies
+  ansible.builtin.apt:
+    name:
+      - libchromaprint-tools  # provides fpcalc binary for audio fingerprinting
+      - ffmpeg                 # required by audioread (pyacoustid dep) to decode MP3s
+    state: present
+  become: true
+
+- name: Install beets via pipx
+  community.general.pipx:
+    name: "beets=={{ multimedia_beets_version }}"
+    state: present
+
+- name: Inject pyacoustid into beets pipx venv (enables chroma plugin)
+  community.general.pipx:
+    name: beets
+    state: inject
+    inject_packages:
+      - "pyacoustid=={{ multimedia_beets_pyacoustid_version }}"
+  ignore_errors: "{{ ansible_check_mode }}"
+
+- name: Create beets config directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/beets"
+    state: directory
+    mode: "0755"
+
+- name: Deploy beets config (only if not yet present — user-editable)
+  ansible.builtin.template:
+    src: beets_config.yaml.j2
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/beets/config.yaml"
+    mode: "0644"
+    force: false

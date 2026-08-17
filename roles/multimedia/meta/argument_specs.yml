@@ -1,0 +1,17 @@
+---
+argument_specs:
+  main:
+    short_description: Install beets, Spotify + ncspot, and Plex Desktop + Plexamp — each independently toggleable
+    options:
+      multimedia_beets_version:
+        type: str
+        required: false
+        description: beets PyPI version, see defaults/main.yml
+      multimedia_beets_pyacoustid_version:
+        type: str
+        required: false
+        description: pyacoustid PyPI version (enables beets' chroma plugin), see defaults/main.yml
+      multimedia_ncspot_version:
+        type: str
+        required: false
+        description: ncspot binary version (GitHub release tag v<version>), see defaults/main.yml

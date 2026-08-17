@@ -1,0 +1,26 @@
+# ncspot configuration
+# Run `ncspot` to launch. Log in with your Spotify account on first start.
+# Requires Spotify Premium.
+
+[theme]
+background = "black"
+primary = "#CDD6F4"
+secondary = "#6C7086"
+title = "#CBA6F7"
+playing = "#A6E3A1"
+playing_selected = "#A6E3A1"
+playing_bg = "#1E1E2E"
+highlight = "#313244"
+highlight_fg = "#CDD6F4"
+error = "#F38BA8"
+error_bg = "#1E1E2E"
+statusbar = "#CDD6F4"
+statusbar_progress = "#CBA6F7"
+statusbar_bg = "#181825"
+cmdline = "#CDD6F4"
+cmdline_bg = "#181825"
+search_match = "#F9E2AF"
+
+[keys]
+queue = "q"
+search = "/"
