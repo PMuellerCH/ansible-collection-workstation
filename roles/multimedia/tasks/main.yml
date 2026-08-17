@@ -1,0 +1,38 @@
+---
+# ---- Bootstrap Flatpak/Flathub (needed by spotify + plex, not beets) ----
+- name: Install Flatpak
+  ansible.builtin.apt:
+    name:
+      - xdg-utils
+      - flatpak
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  tags:
+    - spotify
+    - plex
+
+- name: Add Flathub remote
+  community.general.flatpak_remote:
+    name: flathub
+    state: present
+    flatpakrepo_url: https://flathub.org/repo/flathub.flatpakrepo
+    method: system
+  become: true
+  ignore_errors: "{{ ansible_check_mode }}"
+  tags:
+    - spotify
+    - plex
+
+- name: Install beets (music library manager)
+  ansible.builtin.import_tasks: beets.yml
+  tags: beets
+
+- name: Install Spotify + ncspot
+  ansible.builtin.import_tasks: spotify.yml
+  tags: spotify
+
+- name: Install Plex Desktop + Plexamp
+  ansible.builtin.import_tasks: plex.yml
+  tags: plex

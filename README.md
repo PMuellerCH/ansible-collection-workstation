@@ -9,9 +9,7 @@ An Ansible Galaxy collection for provisioning personal/home workstation tools on
 | `bitwarden` | Bitwarden password manager desktop app |
 | `synology` | Synology Drive client |
 | `betterbird` | Betterbird (Thunderbird fork) email client |
-| `beets` | Music library manager |
-| `spotify` | Spotify desktop app |
-| `plex` | Plex Desktop and Plexamp |
+| `multimedia` | beets (music library manager), Spotify + ncspot, Plex Desktop and Plexamp — each independently toggleable |
 | `graphics` | Graphics tools (Inkscape, GIMP) |
 
 ## Installation

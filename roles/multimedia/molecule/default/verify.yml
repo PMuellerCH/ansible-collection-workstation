@@ -1,0 +1,27 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: true
+
+  tasks:
+    - name: Check beets is installed
+      ansible.builtin.command: beet --version
+      register: multimedia_beet_check
+      changed_when: false
+
+    - name: Check pyacoustid was injected (chroma plugin dependency)
+      ansible.builtin.command: /usr/local/pipx/venvs/beets/bin/python -c 'import acoustid'
+      register: multimedia_pyacoustid_check
+      changed_when: false
+
+    - name: Check beets config was deployed
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/beets/config.yaml"
+      register: multimedia_beets_config
+
+    - name: Assert everything installed and configured correctly
+      ansible.builtin.assert:
+        that:
+          - multimedia_beet_check.rc == 0
+          - multimedia_pyacoustid_check.rc == 0
+          - multimedia_beets_config.stat.exists

@@ -1,0 +1,27 @@
+---
+- name: Converge
+  hosts: all
+  gather_facts: true
+  # sudo (become) resets the environment by default, stripping any proxy vars set on
+  # the container itself. Setting them here applies them to the module's exec
+  # environment directly, after become — same pattern computer-setup's site.yml uses.
+  #
+  # PIPX_HOME/PIPX_BIN_DIR redirect pipx-installed apps (beet) to a location already
+  # on the default PATH, instead of pipx's normal ~/.local/{share,bin} — avoids
+  # needing a PATH override that depends on ansible_facts (which isn't safe to
+  # reference in a play-level environment: block gathered in the same play).
+  environment:
+    http_proxy: "{{ lookup('env', 'http_proxy') or lookup('env', 'HTTP_PROXY') }}"
+    https_proxy: "{{ lookup('env', 'https_proxy') or lookup('env', 'HTTPS_PROXY') }}"
+    no_proxy: "{{ lookup('env', 'no_proxy') or lookup('env', 'NO_PROXY') }}"
+    PIPX_HOME: /usr/local/pipx
+    PIPX_BIN_DIR: /usr/local/bin
+
+  tasks:
+    # Only the beets tag: spotify/plex install full GUI apps via Flatpak/Flathub
+    # (heavy runtime deps, fragile sandboxing in Docker), the same reason betterbird
+    # has no molecule scenario at all — not a good fit for container testing.
+    - name: Include pmuellerch.workstation.multimedia (beets only)
+      ansible.builtin.include_role:
+        name: pmuellerch.workstation.multimedia
+        tasks_from: beets
