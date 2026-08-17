@@ -5,7 +5,9 @@ Installs [Betterbird](https://www.betterbird.eu/) (Thunderbird fork) via Flatpak
 
 ## What it does
 
-1. Installs Betterbird via Flatpak (`eu.betterbird.Betterbird`, see [Package installation order](../../CLAUDE.md)).
+1. Bootstraps Flatpak and the Flathub remote (self-contained — doesn't assume the consumer already set this up),
+   then installs Betterbird via Flatpak (`eu.betterbird.Betterbird`, see
+   [Package installation order](../../CLAUDE.md)).
 2. Installs the `hunspell-de-ch` apt package for Swiss German spellcheck (used by other Hunspell-based apps too, not just Betterbird).
 3. Registers the default profile via templated `profiles.ini`/`installs.ini` — Betterbird ignores a profile
    without a matching `[InstallXXXX]` section, so the install hash is extracted from any existing `installs.ini`

@@ -1,4 +1,24 @@
 ---
+# ---- Bootstrap Flatpak/Flathub ----
+- name: Install Flatpak
+  ansible.builtin.apt:
+    name:
+      - xdg-utils
+      - flatpak
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+
+- name: Add Flathub remote
+  community.general.flatpak_remote:
+    name: flathub
+    state: present
+    flatpakrepo_url: https://flathub.org/repo/flathub.flatpakrepo
+    method: system
+  become: true
+  ignore_errors: "{{ ansible_check_mode }}"
+
 # ---- Install Betterbird via Flatpak ----
 - name: Install Betterbird via Flatpak
   community.general.flatpak:
