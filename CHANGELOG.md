@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.6](https://github.com/PMuellerCH/ansible-collection-workstation/compare/0.1.5...0.1.6) (2026-08-17)
+
+
+### Features
+
+* add graphics role ([be4f069](https://github.com/PMuellerCH/ansible-collection-workstation/commit/be4f0697b3c7f6b7cbab578dd7d9e5a9b61d311a))
+* add graphics role ([1e80ff4](https://github.com/PMuellerCH/ansible-collection-workstation/commit/1e80ff4d55195c03399d2fd11a0b1ef12f4019d2))
+
 ## [0.1.5](https://github.com/PMuellerCH/ansible-collection-workstation/compare/0.1.4...0.1.5) (2026-08-17)
 
 
