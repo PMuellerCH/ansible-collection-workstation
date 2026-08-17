@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.1.5](https://github.com/PMuellerCH/ansible-collection-workstation/compare/0.1.4...0.1.5) (2026-08-17)
+
+
+### Features
+
+* add multimedia role (beets + spotify + plex) ([df471d3](https://github.com/PMuellerCH/ansible-collection-workstation/commit/df471d3be8d2731a07347dce8683c2d7a435c016))
+* add multimedia role (beets + spotify + plex) ([df471d3](https://github.com/PMuellerCH/ansible-collection-workstation/commit/df471d3be8d2731a07347dce8683c2d7a435c016))
+* add multimedia role (beets + spotify + plex) ([c21aed4](https://github.com/PMuellerCH/ansible-collection-workstation/commit/c21aed4842992f71028a86193ff3fdf9a15c004d))
+
+
+### Bug Fixes
+
+* betterbird role doesn't bootstrap Flatpak/Flathub itself ([eb95f19](https://github.com/PMuellerCH/ansible-collection-workstation/commit/eb95f19db98566a6566214fa73b84ababc49e1db))
+* betterbird role doesn't bootstrap Flatpak/Flathub itself ([eb95f19](https://github.com/PMuellerCH/ansible-collection-workstation/commit/eb95f19db98566a6566214fa73b84ababc49e1db))
+* betterbird role doesn't bootstrap Flatpak/Flathub itself ([ce0afdb](https://github.com/PMuellerCH/ansible-collection-workstation/commit/ce0afdbf6132b70a2183fa2e26b9756cb96fb965))
+
 ## [0.1.4](https://github.com/PMuellerCH/ansible-collection-workstation/compare/0.1.3...0.1.4) (2026-08-13)
 
 
