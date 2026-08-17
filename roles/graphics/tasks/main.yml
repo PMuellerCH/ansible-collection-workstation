@@ -1,0 +1,37 @@
+---
+- name: Install graphics tools
+  ansible.builtin.apt:
+    name:
+      - inkscape
+      - gimp
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+
+# ---- Bootstrap Flatpak/Flathub (needed for Pinta — not packaged in apt on Noble) ----
+- name: Install Flatpak
+  ansible.builtin.apt:
+    name:
+      - xdg-utils
+      - flatpak
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+
+- name: Add Flathub remote
+  community.general.flatpak_remote:
+    name: flathub
+    state: present
+    flatpakrepo_url: https://flathub.org/repo/flathub.flatpakrepo
+    method: system
+  become: true
+  ignore_errors: "{{ ansible_check_mode }}"
+
+- name: Install Pinta via Flatpak
+  community.general.flatpak:
+    name: com.github.PintaProject.Pinta
+    state: present
+    method: system
+  become: true

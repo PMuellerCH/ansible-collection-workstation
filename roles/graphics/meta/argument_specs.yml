@@ -1,0 +1,5 @@
+---
+argument_specs:
+  main:
+    short_description: Install raster and vector graphics editors (Inkscape, GIMP, Pinta)
+    options: {}

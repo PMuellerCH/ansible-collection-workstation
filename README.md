@@ -10,7 +10,7 @@ An Ansible Galaxy collection for provisioning personal/home workstation tools on
 | `synology` | Synology Drive client |
 | `betterbird` | Betterbird (Thunderbird fork) email client |
 | `multimedia` | beets (music library manager), Spotify + ncspot, Plex Desktop and Plexamp — each independently toggleable |
-| `graphics` | Graphics tools (Inkscape, GIMP) |
+| `graphics` | Graphics tools (Inkscape, GIMP, Pinta) |
 
 ## Installation
 
