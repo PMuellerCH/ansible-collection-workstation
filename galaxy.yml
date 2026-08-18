@@ -1,7 +1,7 @@
 ---
 namespace: pmuellerch
 name: workstation
-version: 0.1.6 # x-release-please-version
+version: 0.1.7 # x-release-please-version
 readme: README.md
 description: Ansible collection for provisioning personal workstation tools
 license:

@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.1.7](https://github.com/PMuellerCH/ansible-collection-workstation/compare/0.1.6...0.1.7) (2026-08-18)
+
+
+### Documentation
+
+* fix stale references and version pins ([27313c4](https://github.com/PMuellerCH/ansible-collection-workstation/commit/27313c4c8e9656e9157443c45b53d49a3a963f06))
+* fix stale references and version pins ([27313c4](https://github.com/PMuellerCH/ansible-collection-workstation/commit/27313c4c8e9656e9157443c45b53d49a3a963f06))
+* fix stale references and version pins ([a70b5d8](https://github.com/PMuellerCH/ansible-collection-workstation/commit/a70b5d864f5a4967468f259c605cb1b38722b636)), closes [#40](https://github.com/PMuellerCH/ansible-collection-workstation/issues/40)
+
 ## [0.1.6](https://github.com/PMuellerCH/ansible-collection-workstation/compare/0.1.5...0.1.6) (2026-08-17)
 
 
