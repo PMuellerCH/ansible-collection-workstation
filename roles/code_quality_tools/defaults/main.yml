@@ -26,7 +26,7 @@ code_quality_tools_checkov_version: "3.3.11"
 code_quality_tools_ansible_lint_version: "26.8.0"
 
 # renovate: datasource=pypi depName=ansible-core
-code_quality_tools_ansible_core_version: "2.21.2"
+code_quality_tools_ansible_core_version: "2.21.3"
 
 # Minimum pipx version community.general.pipx requires (Ubuntu 24.04's apt-provided
 # pipx is only 1.4.3 — see README "pipx bootstrap" section).
