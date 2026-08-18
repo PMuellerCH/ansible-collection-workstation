@@ -23,7 +23,7 @@ code_quality_tools_yamllint_version: "1.38.0"
 code_quality_tools_checkov_version: "3.3.11"
 
 # renovate: datasource=pypi depName=ansible-lint
-code_quality_tools_ansible_lint_version: "26.6.0"
+code_quality_tools_ansible_lint_version: "26.8.0"
 
 # renovate: datasource=pypi depName=ansible-core
 code_quality_tools_ansible_core_version: "2.21.2"
