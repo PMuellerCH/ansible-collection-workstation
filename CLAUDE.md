@@ -12,11 +12,12 @@ environment. Role code is generic and public; personal configuration lives in th
 ## Common commands
 
 ```bash
-# Install this collection locally for linting
+# Install this collection locally for linting — also pulls in runtime deps
+# declared in galaxy.yml's `dependencies:` (e.g. community.general)
 ansible-galaxy collection install . --force
 
-# Install collection dependencies
-ansible-galaxy collection install -r requirements.yml
+# Install molecule's own driver dependency (community.docker)
+ansible-galaxy collection install -r requirements-molecule.yml
 
 # Lint
 yamllint --config-file .yamllint.yml .
@@ -38,7 +39,7 @@ before running `ansible-lint`.
 ## Architecture
 
 ```text
-galaxy.yml                  # Collection metadata (namespace, name, version)
+galaxy.yml                  # Collection metadata (namespace, name, version, dependencies)
 meta/runtime.yml            # Minimum ansible-core version requirement
 roles/ROLE_README_TEMPLATE.md  # Copy this for every new role's README.md (build_ignore'd)
 roles/<name>/
@@ -84,6 +85,15 @@ Every version string must be pinned to an exact version and covered by a Renovat
 - **GitHub Actions**: tracked by `github-actions` manager
 - **Pre-commit hooks**: tracked by `pre-commit` manager
 
+### Collection dependencies
+
+If a role's tasks use a module from outside `ansible.builtin` (e.g. `community.general.flatpak`),
+declare that collection in `galaxy.yml`'s `dependencies:` field — this is the only mechanism that
+makes `ansible-galaxy collection install .` (what CI, `ansible-lint`, and every consumer's
+`requirements.yml` entry actually run) pull it in automatically. A collection used only by one
+role but not declared here will pass locally if it happens to already be installed on your
+machine, then fail in CI with `couldn't resolve module/action`.
+
 ### Package installation order
 
 1. apt
@@ -101,7 +111,9 @@ Every version string must be pinned to an exact version and covered by a Renovat
 
 ### Role naming
 
-All role names use underscores (never hyphens): `emoji_picker`, `gui_customization`, etc.
+All role names use underscores (never hyphens) — matches this collection's existing roles
+(`bitwarden`, `synology`, `betterbird`, `multimedia`, `graphics`) and the sibling
+`swisstopo.workstation` collection's convention (`emoji_picker`, `gui_customization`, etc.).
 
 ### Theming
 
