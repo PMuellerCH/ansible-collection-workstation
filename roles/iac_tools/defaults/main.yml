@@ -34,7 +34,7 @@ iac_tools_hvac_version: "2.4.0"
 
 # ── docker ───────────────────────────────────────────────────────────────
 # renovate: datasource=github-releases depName=moby/moby extractVersion=^docker-v(?<version>.*)$
-iac_tools_docker_version: "29.7.1"
+iac_tools_docker_version: "29.7.2"
 
 # ── aws ──────────────────────────────────────────────────────────────────
 # renovate: datasource=github-tags depName=aws/aws-cli
