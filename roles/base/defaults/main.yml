@@ -60,7 +60,7 @@ base_ssh_extra_hosts: []
 
 # ---- python ----
 # renovate: datasource=github-releases depName=astral-sh/uv extractVersion=^(?<version>.*)$
-base_python_uv_version: "0.12.3"
+base_python_uv_version: "0.12.5"
 # renovate: datasource=deb depName=build-essential registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
 base_python_build_essential_version: "12.10ubuntu1"
 # renovate: datasource=deb depName=python3-pip registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
