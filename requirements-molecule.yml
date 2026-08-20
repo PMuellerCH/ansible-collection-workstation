@@ -1,6 +1,6 @@
 ---
 collections:
   # Required by the molecule docker driver
-  # renovate: datasource=ansible-galaxy depName=community.docker
+  # renovate: datasource=galaxy-collection depName=community.docker
   - name: community.docker
     version: "5.2.2"
