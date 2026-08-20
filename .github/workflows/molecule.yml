@@ -23,7 +23,7 @@ jobs:
       startsWith(github.head_ref, 'release-please--') ||
       startsWith(github.head_ref, 'renovate/') ||
       github.event_name == 'workflow_dispatch'
-    uses: PMuellerCH/shared-actions/.github/workflows/ansible_molecule.yml@v1
+    uses: PMuellerCH/shared-actions/.github/workflows/ansible_molecule.yml@main
     with:
       python-version: "3.14"
       install-self-collection: "true"

@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   lint:
-    uses: PMuellerCH/shared-actions/.github/workflows/ansible_lint.yml@v1
+    uses: PMuellerCH/shared-actions/.github/workflows/ansible_lint.yml@main
     with:
       python-version: "3.14"
       install-self-collection: "true"
