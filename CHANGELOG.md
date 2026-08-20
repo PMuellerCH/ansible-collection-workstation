@@ -1,5 +1,52 @@
 # Changelog
 
+## [0.1.8](https://github.com/PMuellerCH/ansible-collection-workstation/compare/0.1.7...0.1.8) (2026-08-20)
+
+
+### Features
+
+* run molecule only for roles that actually changed ([#69](https://github.com/PMuellerCH/ansible-collection-workstation/issues/69)) ([195d878](https://github.com/PMuellerCH/ansible-collection-workstation/commit/195d87862dee1653a1ccac67f8b3730154ec3217))
+
+
+### Bug Fixes
+
+* content-aware check for .github/requirements.txt changes ([#71](https://github.com/PMuellerCH/ansible-collection-workstation/issues/71)) ([bf216dd](https://github.com/PMuellerCH/ansible-collection-workstation/commit/bf216dd5f1411132e289aa97bf8f83e808b33039))
+* correct invalid renovate datasource and enable pre-commit manager ([3124728](https://github.com/PMuellerCH/ansible-collection-workstation/commit/3124728d2a550132193f596feff79c459fb4e1f5))
+* correct invalid renovate datasource and enable pre-commit manager ([3124728](https://github.com/PMuellerCH/ansible-collection-workstation/commit/3124728d2a550132193f596feff79c459fb4e1f5))
+* correct invalid renovate datasource and enable pre-commit manager ([16ba1a3](https://github.com/PMuellerCH/ansible-collection-workstation/commit/16ba1a35fed8b425bdb6c47753d17191d10ada41))
+* dorny/paths-filter needs token: '' to avoid API permission failure ([#64](https://github.com/PMuellerCH/ansible-collection-workstation/issues/64)) ([ac7e62d](https://github.com/PMuellerCH/ansible-collection-workstation/commit/ac7e62dc425d1bc5821001ccc5aa12baf8f68258))
+
+
+### Miscellaneous
+
+* **deps:** update dependency ansible-core to v2.21.1 [security] ([#49](https://github.com/PMuellerCH/ansible-collection-workstation/issues/49)) ([9792f29](https://github.com/PMuellerCH/ansible-collection-workstation/commit/9792f297b942e004db183fc71c9a594d949e0395))
+* **deps:** update dependency ansible-core to v2.21.3 ([#59](https://github.com/PMuellerCH/ansible-collection-workstation/issues/59)) ([78f1dbb](https://github.com/PMuellerCH/ansible-collection-workstation/commit/78f1dbb19b2cc4541584ee31873dd1298d11ed30))
+* **deps:** update dependency ansible-lint to v26.8.0 ([#50](https://github.com/PMuellerCH/ansible-collection-workstation/issues/50)) ([0d15a44](https://github.com/PMuellerCH/ansible-collection-workstation/commit/0d15a441080ab48c52ee0e554c325427f707061b))
+* **deps:** update dependency checkov to v3.3.12 ([#52](https://github.com/PMuellerCH/ansible-collection-workstation/issues/52)) ([e02583a](https://github.com/PMuellerCH/ansible-collection-workstation/commit/e02583ae88eede154d43a18792feca2c41bea4aa))
+* **deps:** update dependency checkov to v3.3.13 ([#60](https://github.com/PMuellerCH/ansible-collection-workstation/issues/60)) ([8d1c162](https://github.com/PMuellerCH/ansible-collection-workstation/commit/8d1c162eddc2af1265bc2836326477180737fa58))
+* **deps:** update dorny/paths-filter action to v4 ([#63](https://github.com/PMuellerCH/ansible-collection-workstation/issues/63)) ([8382129](https://github.com/PMuellerCH/ansible-collection-workstation/commit/83821299e1ebb00d6bbd7c58feb9ecef8a3d7c3a))
+* **deps:** update googleapis/release-please-action action to v5 ([#56](https://github.com/PMuellerCH/ansible-collection-workstation/issues/56)) ([defce70](https://github.com/PMuellerCH/ansible-collection-workstation/commit/defce7025b47390832071ea7966f2d95eca3095e))
+* **deps:** update pre-commit hook adrienverge/yamllint to v1.38.0 ([#53](https://github.com/PMuellerCH/ansible-collection-workstation/issues/53)) ([d98e759](https://github.com/PMuellerCH/ansible-collection-workstation/commit/d98e75936c738ca991a212056701edec52988cdc))
+* **deps:** update pre-commit hook compilerla/conventional-pre-commit to v3.6.0 ([#54](https://github.com/PMuellerCH/ansible-collection-workstation/issues/54)) ([5082157](https://github.com/PMuellerCH/ansible-collection-workstation/commit/5082157428203ffff9655eb3de5019a85880d9b4))
+* **deps:** update pre-commit hook compilerla/conventional-pre-commit to v4 ([#57](https://github.com/PMuellerCH/ansible-collection-workstation/issues/57)) ([0e1493a](https://github.com/PMuellerCH/ansible-collection-workstation/commit/0e1493a10625b08f971e5d64a9ed4a94af5aaed0))
+* **deps:** update pre-commit hook igorshubovych/markdownlint-cli to v0.49.1 ([#55](https://github.com/PMuellerCH/ansible-collection-workstation/issues/55)) ([76d7651](https://github.com/PMuellerCH/ansible-collection-workstation/commit/76d765101c6894f400ce39d9d6c35a436aee158e))
+* **deps:** update pre-commit hook pre-commit/pre-commit-hooks to v6 ([#58](https://github.com/PMuellerCH/ansible-collection-workstation/issues/58)) ([aa12785](https://github.com/PMuellerCH/ansible-collection-workstation/commit/aa12785542e0691a5ec0a5da7627e6a5e2614401))
+
+
+### CI/CD
+
+* enable Renovate automerge for non-major updates ([#65](https://github.com/PMuellerCH/ansible-collection-workstation/issues/65)) ([4f9e437](https://github.com/PMuellerCH/ansible-collection-workstation/commit/4f9e437b66f59eee503bf1e312b3954802723709))
+* migrate onto PMuellerCH/shared-actions reusable workflows ([7e5efa5](https://github.com/PMuellerCH/ansible-collection-workstation/commit/7e5efa573587b36f9713bb380d33133a9f04a900))
+* migrate onto PMuellerCH/shared-actions reusable workflows ([7e5efa5](https://github.com/PMuellerCH/ansible-collection-workstation/commit/7e5efa573587b36f9713bb380d33133a9f04a900))
+* migrate onto PMuellerCH/shared-actions reusable workflows ([5cae56e](https://github.com/PMuellerCH/ansible-collection-workstation/commit/5cae56e54d46fa9b45eae98a76e3e31a47416a1e)), closes [#43](https://github.com/PMuellerCH/ansible-collection-workstation/issues/43)
+* retrigger (propagation check) ([04412e6](https://github.com/PMuellerCH/ansible-collection-workstation/commit/04412e6c5682237735b1fcf8dacdb992c53597c1))
+* retrigger after excluding .ansible/ from markdownlint ([5b6d9d4](https://github.com/PMuellerCH/ansible-collection-workstation/commit/5b6d9d4dbfce683867b372bd269b9a3c51f7f11f))
+* retrigger after fixing composite action version templating ([4dd6270](https://github.com/PMuellerCH/ansible-collection-workstation/commit/4dd627009f50909ae6e741f84abf422967df26bd))
+* retrigger after fixing nested composite action bug ([81427e6](https://github.com/PMuellerCH/ansible-collection-workstation/commit/81427e6319e25ca63851b979feb8dcc96677881a))
+* retrigger after granting shared-actions access ([8ed5089](https://github.com/PMuellerCH/ansible-collection-workstation/commit/8ed5089e712369c1b7d51b886283c16ebdc8c913))
+* retrigger after making shared-actions public ([0f5196f](https://github.com/PMuellerCH/ansible-collection-workstation/commit/0f5196f06d9d54c0ec186be945a83489da6655fb))
+* skip molecule on non-role Renovate PRs ([#62](https://github.com/PMuellerCH/ansible-collection-workstation/issues/62)) ([04a6058](https://github.com/PMuellerCH/ansible-collection-workstation/commit/04a6058d44fab5743171e7d798d2a1f1bf2ebfcf)), closes [#61](https://github.com/PMuellerCH/ansible-collection-workstation/issues/61)
+
 ## [0.1.7](https://github.com/PMuellerCH/ansible-collection-workstation/compare/0.1.6...0.1.7) (2026-08-18)
 
 
