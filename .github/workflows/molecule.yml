@@ -2,14 +2,12 @@
 name: Molecule
 
 # Auto-discovers any role under roles/ with a molecule/default/ scenario and runs
-# `molecule test` for it as a matrix. Only fires on the release-please PR (so a
-# release is never cut without molecule passing) or manual dispatch, since a full
-# molecule run is too slow/expensive to gate every ordinary feature PR — those get
-# fast lint-only feedback from ci.yml instead.
-#
-# swisstopo's collections call a shared reusable workflow for this
-# (swisstopo/infra-github-shared-actions), but that repo is private to the
-# swisstopo org, so this is inlined instead.
+# `molecule test` for it as a matrix. Fires on the release-please PR and on
+# Renovate PRs (so a release is never cut without molecule passing, and so
+# Renovate automerge's "tests pass" gate is real rather than vacuous) or manual
+# dispatch — not on every ordinary feature PR, since a full molecule run is too
+# slow/expensive to gate routine iteration. Those get fast lint-only feedback
+# from ci.yml instead.
 
 "on":
   pull_request:
@@ -20,79 +18,12 @@ permissions:
   contents: read
 
 jobs:
-  discover-roles:
-    name: Discover roles
-    if: startsWith(github.head_ref, 'release-please--') || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    outputs:
-      roles: ${{ steps.discover.outputs.roles }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Discover roles with a molecule/default scenario
-        id: discover
-        run: |
-          roles=$(for d in roles/*/molecule/default; do
-            [ -d "$d" ] && basename "$(dirname "$(dirname "$d")")"
-          done | sort | jq -R -s -c 'split("\n") | map(select(length > 0))')
-          echo "roles=$roles" >> "$GITHUB_OUTPUT"
-          echo "Discovered roles: $roles"
-
   molecule:
-    name: Molecule (${{ matrix.role }})
-    needs: discover-roles
-    if: needs.discover-roles.result == 'success' && needs.discover-roles.outputs.roles != '[]'
-    runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        role: ${{ fromJson(needs.discover-roles.outputs.roles) }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.14"
-          cache: pip
-          cache-dependency-path: .github/requirements.txt
-
-      - name: Install Python tools
-        run: pip install -r .github/requirements.txt
-
-      # Installed after the cache restore below so the current repo's collection
-      # code always wins, regardless of what the cache may have placed in ~/.ansible.
-      - name: Cache Ansible collections and roles
-        id: ansible-cache
-        uses: actions/cache@v5
-        with:
-          path: ~/.ansible
-          key: ansible-${{ hashFiles('requirements.yml') }}-${{ hashFiles('requirements-molecule.yml') }}
-          restore-keys: |
-            ansible-${{ hashFiles('requirements.yml') }}-
-
-      - name: Install this collection
-        run: ansible-galaxy collection install . --force
-
-      - name: Install collection dependencies
-        if: steps.ansible-cache.outputs.cache-hit != 'true'
-        run: |
-          if [ -f requirements.yml ]; then
-            ansible-galaxy collection install -r requirements.yml
-          fi
-
-      - name: Install molecule collection dependencies
-        if: steps.ansible-cache.outputs.cache-hit != 'true'
-        run: |
-          if [ -f requirements-molecule.yml ]; then
-            ansible-galaxy collection install -r requirements-molecule.yml
-          fi
-
-      - name: Run molecule for ${{ matrix.role }}
-        working-directory: roles/${{ matrix.role }}
-        env:
-          ANSIBLE_PYTHON_INTERPRETER: auto_silent
-        run: molecule test
+    if: >-
+      startsWith(github.head_ref, 'release-please--') ||
+      startsWith(github.head_ref, 'renovate/') ||
+      github.event_name == 'workflow_dispatch'
+    uses: PMuellerCH/shared-actions/.github/workflows/ansible_molecule.yml@v1
+    with:
+      python-version: "3.14"
+      install-self-collection: "true"
