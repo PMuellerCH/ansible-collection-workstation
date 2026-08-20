@@ -56,7 +56,7 @@ iac_tools_aws_profiles: []
 
 # ── terraform ────────────────────────────────────────────────────────────
 # renovate: datasource=deb depName=terraform registryUrl=https://apt.releases.hashicorp.com?suite=noble&components=main&binaryArch=amd64
-iac_tools_terraform_version: "1.15.8-1"
+iac_tools_terraform_version: "1.15.9-1"
 # renovate: datasource=deb depName=vault registryUrl=https://apt.releases.hashicorp.com?suite=noble&components=main&binaryArch=amd64
 iac_tools_vault_version: "2.0.4-1"
 # renovate: datasource=github-releases depName=terraform-linters/tflint extractVersion=^v(?<version>.*)$
