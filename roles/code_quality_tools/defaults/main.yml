@@ -7,7 +7,7 @@ code_quality_tools_checkov_enabled: true
 code_quality_tools_ansible_lint_enabled: true
 
 # renovate: datasource=github-releases depName=aquasecurity/trivy extractVersion=^v(?<version>.*)$
-code_quality_tools_trivy_version: "0.73.0"
+code_quality_tools_trivy_version: "0.74.0"
 code_quality_tools_trivy_download_base: "https://github.com/aquasecurity/trivy/releases/download/v{{ code_quality_tools_trivy_version }}"
 
 # renovate: datasource=deb depName=pre-commit registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
