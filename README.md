@@ -28,23 +28,6 @@ already in place.
 | [modern_cli](roles/modern_cli/README.md) | bat, btop, eza, fd, fzf, htop, presenterm, ripgrep, zoxide, emoji-fzf |
 | [terminal_env](roles/terminal_env/README.md) | zsh, tmux, kitty |
 
-```mermaid
-flowchart TB
-  base["base (run first)"]
-  base --> cli_dev_env & chat_clients & clipboard_tools & code_quality_tools
-  base --> desktop_apps & desktop_customization & gh & iac_tools
-  base --> modern_cli & terminal_env
-
-  cli_dev_env -. "presenterm.nvim plugin needs<br/>the presenterm binary" .-> modern_cli
-  clipboard_tools -. "ch function needs fzf" .-> modern_cli
-  modern_cli -. "emoji function needs wl-copy" .-> clipboard_tools
-  cli_dev_env -. "tmux-navigator keybindings" .-> terminal_env
-```
-
-Solid arrows are hard "must run first" dependencies; dotted arrows are soft
-couplings documented in the linked roles' own READMEs (shell functions or
-plugin configs that degrade gracefully if the other role isn't installed).
-
 Every role uses per-tool Ansible tags (in addition to an umbrella
 `<role_name>` tag) so a consuming playbook can select a single tool with
 `--tags <tool>` — see each role's own README for its tag table.
