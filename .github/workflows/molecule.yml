@@ -9,13 +9,18 @@ name: Molecule
 # slow/expensive to gate routine iteration. Those get fast lint-only feedback
 # from ci.yml instead.
 #
-# For Renovate PRs specifically, also skip if the diff doesn't touch anything
-# that affects role behavior (e.g. a github-actions manager bump to a workflow
-# file) — no point spinning up a Docker matrix for that. Release-please and
-# workflow_dispatch always run the full suite regardless: release-please's own
-# diff is just CHANGELOG.md/version bumps, but it's the last gate before
-# tagging a release that may include role changes merged via ordinary feature
-# PRs, which never ran molecule at merge time.
+# For Renovate PRs specifically, only test the role(s) whose own files actually
+# changed (not the full matrix) — a Renovate PR only ever touches one role's
+# defaults/main.yml (or occasionally a shared file). README.md and meta/
+# changes within a role don't count either: every role here has an empty
+# dependencies: [] (galaxy_info is purely descriptive), so neither affects
+# runtime behavior molecule would catch. A change to a shared file
+# (requirements-molecule.yml, .github/requirements.txt, galaxy.yml) still runs
+# the full matrix, since those affect every role's test environment.
+# Release-please and workflow_dispatch always run the full suite regardless:
+# release-please's own diff is just CHANGELOG.md/version bumps, but it's the
+# last gate before tagging a release that may include role changes merged via
+# ordinary feature PRs, which never ran molecule at merge time.
 
 "on":
   pull_request:
@@ -27,11 +32,11 @@ permissions:
 
 jobs:
   changes:
-    name: Detect role-affecting changes
+    name: Detect changed roles
     if: startsWith(github.head_ref, 'renovate/')
     runs-on: ubuntu-latest
     outputs:
-      roles: ${{ steps.filter.outputs.roles }}
+      roles: ${{ steps.resolve.outputs.roles }}
     steps:
       # fetch-depth: 0 + token: '' (below) forces dorny/paths-filter to diff via
       # local git instead of the GitHub REST API. The API path needs
@@ -41,16 +46,57 @@ jobs:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+
+      - name: List all roles
+        id: list-roles
+        shell: bash
+        run: |
+          all=$(for d in roles/*/; do basename "$d"; done | sort | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          echo "all=$all" >> "$GITHUB_OUTPUT"
+
+      - name: Generate per-role and shared path filters
+        id: gen-filters
+        shell: bash
+        run: |
+          {
+            echo "filters<<FILTERS_EOF"
+            echo "shared:"
+            echo "  - 'requirements-molecule.yml'"
+            echo "  - '.github/requirements.txt'"
+            echo "  - 'galaxy.yml'"
+            for d in roles/*/; do
+              role=$(basename "$d")
+              echo "$role:"
+              echo "  - 'roles/$role/**'"
+              echo "  - '!roles/$role/README.md'"
+              echo "  - '!roles/$role/meta/**'"
+            done
+            echo "FILTERS_EOF"
+          } >> "$GITHUB_OUTPUT"
+
       - uses: dorny/paths-filter@v4
         id: filter
         with:
           token: ""
-          filters: |
-            roles:
-              - 'roles/**'
-              - 'requirements-molecule.yml'
-              - '.github/requirements.txt'
-              - 'galaxy.yml'
+          predicate-quantifier: some-with-excludes
+          filters: ${{ steps.gen-filters.outputs.filters }}
+
+      - name: Resolve final role list
+        id: resolve
+        shell: bash
+        env:
+          SHARED_CHANGED: ${{ steps.filter.outputs.shared }}
+          CHANGED_ROLES: ${{ steps.filter.outputs.changes }}
+          ALL_ROLES: ${{ steps.list-roles.outputs.all }}
+        run: |
+          if [ "$SHARED_CHANGED" = "true" ]; then
+            echo "A shared file changed — testing every role."
+            echo "roles=$ALL_ROLES" >> "$GITHUB_OUTPUT"
+          else
+            roles=$(echo "$CHANGED_ROLES" | jq -c '[.[] | select(. != "shared")]')
+            echo "Role-specific changes detected: $roles"
+            echo "roles=$roles" >> "$GITHUB_OUTPUT"
+          fi
 
   molecule:
     needs: [changes]
@@ -63,9 +109,10 @@ jobs:
       always() && (
         startsWith(github.head_ref, 'release-please--') ||
         github.event_name == 'workflow_dispatch' ||
-        (startsWith(github.head_ref, 'renovate/') && needs.changes.outputs.roles == 'true')
+        (startsWith(github.head_ref, 'renovate/') && needs.changes.outputs.roles != '[]')
       )
     uses: PMuellerCH/shared-actions/.github/workflows/ansible_molecule.yml@v1
     with:
       python-version: "3.14"
       install-self-collection: "true"
+      roles: ${{ startsWith(github.head_ref, 'renovate/') && needs.changes.outputs.roles || '' }}
