@@ -15,8 +15,16 @@ name: Molecule
 # changes within a role don't count either: every role here has an empty
 # dependencies: [] (galaxy_info is purely descriptive), so neither affects
 # runtime behavior molecule would catch. A change to a shared file
-# (requirements-molecule.yml, .github/requirements.txt, galaxy.yml) still runs
-# the full matrix, since those affect every role's test environment.
+# (requirements-molecule.yml, galaxy.yml) still runs the full matrix, since
+# those affect every role's test environment.
+#
+# .github/requirements.txt gets its own content-aware check rather than a
+# blanket path match: it bundles both molecule's own dependencies
+# (ansible-core, molecule, molecule-plugins) and lint-only ones (ansible-lint,
+# yamllint, checkov) that molecule never touches. A path-only filter can't tell
+# those apart, so a checkov-only bump would otherwise trigger a pointless
+# full-matrix run.
+#
 # Release-please and workflow_dispatch always run the full suite regardless:
 # release-please's own diff is just CHANGELOG.md/version bumps, but it's the
 # last gate before tagging a release that may include role changes merged via
@@ -62,7 +70,6 @@ jobs:
             echo "filters<<FILTERS_EOF"
             echo "shared:"
             echo "  - 'requirements-molecule.yml'"
-            echo "  - '.github/requirements.txt'"
             echo "  - 'galaxy.yml'"
             for d in roles/*/; do
               role=$(basename "$d")
@@ -81,15 +88,30 @@ jobs:
           predicate-quantifier: some-with-excludes
           filters: ${{ steps.gen-filters.outputs.filters }}
 
+      - name: Check .github/requirements.txt for molecule-relevant changes
+        id: reqs-check
+        shell: bash
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          git fetch origin "$BASE_REF" --depth=1
+          if git diff "origin/$BASE_REF"...HEAD -- .github/requirements.txt \
+              | grep -qE '^[+-](ansible-core|molecule|molecule-plugins)=='; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Resolve final role list
         id: resolve
         shell: bash
         env:
           SHARED_CHANGED: ${{ steps.filter.outputs.shared }}
+          REQS_CHANGED: ${{ steps.reqs-check.outputs.changed }}
           CHANGED_ROLES: ${{ steps.filter.outputs.changes }}
           ALL_ROLES: ${{ steps.list-roles.outputs.all }}
         run: |
-          if [ "$SHARED_CHANGED" = "true" ]; then
+          if [ "$SHARED_CHANGED" = "true" ] || [ "$REQS_CHANGED" = "true" ]; then
             echo "A shared file changed — testing every role."
             echo "roles=$ALL_ROLES" >> "$GITHUB_OUTPUT"
           else
