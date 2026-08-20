@@ -1,5 +1,57 @@
 # Changelog
 
+## [0.1.15](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/0.1.14...0.1.15) (2026-08-20)
+
+
+### Features
+
+* run molecule only for roles that actually changed ([#118](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/118)) ([c1be725](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/c1be7250ea0a270b1aaf6ea0cd2e1e7fe73d0b2a))
+
+
+### Bug Fixes
+
+* content-aware check for .github/requirements.txt changes ([#121](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/121)) ([b0a4659](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/b0a465913661f3b128941c74f7f8e869aae17529))
+* dorny/paths-filter needs token: '' to avoid API permission failure ([#115](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/115)) ([5e2df4d](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/5e2df4db14a8ce52e8acce093199a3146d79fce9))
+* stale verify.yml pins + skip molecule on non-role Renovate PRs ([#112](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/112)) ([5970be6](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/5970be6b2abf21605b8c91b6ecb4b0154a59e507))
+
+
+### Miscellaneous
+
+* **deps:** update dependency @anthropic-ai/claude-code to v2.1.234 ([#92](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/92)) ([7a40037](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/7a40037931aa0d240a466f7f951b5c163a1bc3c2))
+* **deps:** update dependency @anthropic-ai/claude-code to v2.1.237 ([#99](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/99)) ([8056ed8](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/8056ed8f50c965528fe6735d64e3f88671027679))
+* **deps:** update dependency ansible-core to v2.21.3 ([#80](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/80)) ([93e485a](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/93e485a15e0fd83b22441a176084426b3887490d))
+* **deps:** update dependency ansible-lint to v26.8.0 ([#89](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/89)) ([220e2fb](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/220e2fb13a43ae650b89022a8f5c5c6f2ba96a03))
+* **deps:** update dependency aquasecurity/trivy to v0.74.0 ([#100](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/100)) ([715ad12](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/715ad12603c9b315ee02c4ff9013eb51e07e0929))
+* **deps:** update dependency astral-sh/uv to v0.12.5 ([#95](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/95)) ([23f3278](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/23f3278ca3431df1ab6908644b9596bc94dcf67c))
+* **deps:** update dependency aws/aws-cli to v2.36.25 ([#74](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/74)) ([74a91d7](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/74a91d7f70ad933e7d637d57cca9b8ffd8caef6a))
+* **deps:** update dependency aws/aws-cli to v2.36.27 ([#102](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/102)) ([1407f28](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/1407f28d32e42b0af1eca820b2ffffa0aa0d8483))
+* **deps:** update dependency checkov to v3.3.11 ([#86](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/86)) ([35771cd](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/35771cddfaba968c8790f9feb0c28e866826c921))
+* **deps:** update dependency checkov to v3.3.13 ([#103](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/103)) ([25c4dd1](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/25c4dd1554bc2c26b78d68d978a13f01be3c69cc))
+* **deps:** update dependency community.docker to v5.2.2 ([#75](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/75)) ([bff7b84](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/bff7b84af18c201c3a2e76ad86e8962e4df2c0aa))
+* **deps:** update dependency community.general to v13.3.0 ([#81](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/81)) ([37b0f14](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/37b0f14f37986d84d03432bc880eadb7efd9987a))
+* **deps:** update dependency helm/helm to v4.2.4 ([#96](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/96)) ([b7dd6b1](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/b7dd6b1cbb91ef743385749823093eda45a03692))
+* **deps:** update dependency ismaelmartinez/teams-for-linux to v2.16.0 ([#101](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/101)) ([5a8cc9c](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/5a8cc9cf93ad20026ca768ce4c47d829347772be))
+* **deps:** update dependency ismaelmartinez/teams-for-linux to v2.17.0 ([#119](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/119)) ([1e1cff4](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/1e1cff47d4e31bbe54c3c8b0d2ebeb2844ebdd7d))
+* **deps:** update dependency jesseduffield/lazygit to v0.64.1 ([#97](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/97)) ([fd2e35b](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/fd2e35bbe43e902388f08496bf53c818703692fb))
+* **deps:** update dependency junegunn/fzf to v0.74.3 ([#98](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/98)) ([c8537b1](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/c8537b1036c06d5dadbc33d35afe340759de8661))
+* **deps:** update dependency kubernetes/kubernetes to v1.36.4 ([#113](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/113)) ([313f9d0](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/313f9d096661c6b3fb986596e6a8cb41477a168c))
+* **deps:** update dependency moby/moby to v29.7.2 ([#76](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/76)) ([3590908](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/3590908afff88128698e01d26e21782747e06e71))
+* **deps:** update dependency molecule to v26.8.0 ([#90](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/90)) ([084bcb2](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/084bcb24482aaf650c4fb355c03ad0885af78ad0))
+* **deps:** update dependency pipx to v1.16.7 ([#59](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/59)) ([1a84f96](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/1a84f96be1c9a2539d0b80cb3129e5e5825c013d))
+* **deps:** update dependency terraform to v1.15.9-1 ([#104](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/104)) ([1bc46b1](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/1bc46b1f863f2c784fa8f24794f192337c81d678))
+* **deps:** update dorny/paths-filter action to v4 ([#114](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/114)) ([4759633](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/47596339c85bac57bfc11e28766961d63f03d9fa))
+
+
+### CI/CD
+
+* enable Renovate automerge for non-major updates ([#116](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/116)) ([c5b2fcf](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/c5b2fcf17a63c83858152510b9ae5233205ec655))
+* wire up molecule testing ([#108](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/108)) ([feea88a](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/feea88aef24129d7f1c675c858954909721722bb))
+
+
+### Documentation
+
+* standardize role READMEs and drop private-repo migration history ([#105](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/105)) ([367b9a1](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/367b9a15d24650eb1f25faa5ff05d705d7117e89))
+
 ## [0.1.14](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/0.1.13...0.1.14) (2026-08-12)
 
 
