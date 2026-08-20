@@ -3,7 +3,7 @@
 bitwarden_version: "2026.7.0"
 
 # renovate: datasource=github-releases depName=doy/rbw
-bitwarden_rbw_version: "1.15.0"
+bitwarden_rbw_version: "1.15.1"
 
 # Email written into rbw's config.json — set from your own inventory/vars
 bitwarden_email: ""
