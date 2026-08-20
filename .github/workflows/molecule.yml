@@ -8,6 +8,14 @@ name: Molecule
 # dispatch — not on every ordinary feature PR, since a full molecule run is too
 # slow/expensive to gate routine iteration. Those get fast lint-only feedback
 # from ci.yml instead.
+#
+# For Renovate PRs specifically, also skip if the diff doesn't touch anything
+# that affects role behavior (e.g. a github-actions manager bump to a workflow
+# file) — no point spinning up a Docker matrix for that. Release-please and
+# workflow_dispatch always run the full suite regardless: release-please's own
+# diff is just CHANGELOG.md/version bumps, but it's the last gate before
+# tagging a release that may include role changes merged via ordinary feature
+# PRs, which never ran molecule at merge time.
 
 "on":
   pull_request:
@@ -18,11 +26,37 @@ permissions:
   contents: read
 
 jobs:
+  changes:
+    name: Detect role-affecting changes
+    if: startsWith(github.head_ref, 'renovate/')
+    runs-on: ubuntu-latest
+    outputs:
+      roles: ${{ steps.filter.outputs.roles }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            roles:
+              - 'roles/**'
+              - 'requirements-molecule.yml'
+              - '.github/requirements.txt'
+              - 'galaxy.yml'
+
   molecule:
-    if: >-
-      startsWith(github.head_ref, 'release-please--') ||
-      startsWith(github.head_ref, 'renovate/') ||
-      github.event_name == 'workflow_dispatch'
+    needs: [changes]
+    # always() is required here: `changes` only runs for renovate/*-branch PRs
+    # (see its own if:), so it's skipped for release-please/workflow_dispatch —
+    # and a downstream job's default success() gate treats a skipped need as
+    # not-satisfied, skipping this job too, unless always() forces evaluation
+    # of the condition below regardless of the needed job's outcome.
+    if: |
+      always() && (
+        startsWith(github.head_ref, 'release-please--') ||
+        github.event_name == 'workflow_dispatch' ||
+        (startsWith(github.head_ref, 'renovate/') && needs.changes.outputs.roles == 'true')
+      )
     uses: PMuellerCH/shared-actions/.github/workflows/ansible_molecule.yml@v1
     with:
       python-version: "3.14"
