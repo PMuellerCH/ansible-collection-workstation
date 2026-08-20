@@ -44,7 +44,7 @@ repos:
         args: [--framework, ansible, --directory, ., --quiet]
 
   - repo: https://github.com/igorshubovych/markdownlint-cli
-    rev: v0.43.0
+    rev: v0.49.1
     hooks:
       - id: markdownlint
         args: [--config, .markdownlint.yml]
