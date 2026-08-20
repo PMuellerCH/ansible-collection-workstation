@@ -10,7 +10,7 @@ cli_dev_env_claude_code_enabled: true
 cli_dev_env_neovim_presenterm_plugin_enabled: true
 
 # renovate: datasource=github-releases depName=jesseduffield/lazygit extractVersion=^v(?<version>.*)$
-cli_dev_env_lazygit_version: "0.64.0"
+cli_dev_env_lazygit_version: "0.64.1"
 cli_dev_env_lazygit_download_base: "https://github.com/jesseduffield/lazygit/releases/download/v{{ cli_dev_env_lazygit_version }}"
 
 # renovate: datasource=github-releases depName=neovim/neovim extractVersion=^v(?<version>.*)$
