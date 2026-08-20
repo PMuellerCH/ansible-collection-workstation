@@ -3,21 +3,62 @@
 Configures desktop-environment-level settings (fixed workspaces, workspace
 keybindings), installs Flameshot (screenshot tool: apt install, XDG
 autostart, Print-key keybinding), and installs the `smile` emoji picker
-(Flatpak) — for both GNOME and COSMIC. Merges what used to be three separate
-`gui-customization`, `flameshot`, and `emoji-picker` (GUI half only — the
-CLI half, `emoji-fzf`, lives in `modern_cli` instead) roles: `gui-customization`
-and `flameshot` are bundled because flameshot's COSMIC keybinding is wired
-through the custom-shortcuts file that the desktop-customization tasks
-create — a real ordering dependency, not just topical overlap. `emoji-picker`
-is added here because it is GUI desktop tooling of the same shape as
-Flameshot (a single small desktop utility), not because it shares any file
-or state with the other two.
+(Flatpak) — for both GNOME and COSMIC.
 
-## Tagging (for backward-compatible selective runs)
+Desktop/workspace settings and Flameshot are bundled together because
+Flameshot's COSMIC keybinding is wired through the custom-shortcuts file
+that the desktop-customization tasks create — a real ordering dependency,
+not just topical overlap. The emoji picker is added here because it is GUI
+desktop tooling of the same shape as Flameshot (a single small desktop
+utility), not because it shares any file or state with the other two. The
+CLI half of emoji picking (`emoji-fzf`) lives in the `modern_cli` role
+instead.
+
+## What it does
+
+- **GNOME/COSMIC workspaces**: sets 9 fixed workspaces and workspace
+  switch/move keybindings (`Super+1-9`, `Super+Shift+1-9`).
+- **Flameshot**: installs via apt, deploys an XDG autostart entry, and binds
+  the Print key to `flameshot gui`.
+- **Emoji picker**: installs the `smile` Flatpak app (`it.mijorus.smile`).
+
+## Requirements
+
+| OS | Tested |
+| --- | --- |
+| Ubuntu 24.04 | yes |
+
+No Ansible role dependency (this role runs standalone in Molecule) — but on
+a real workstation, run `base` first, per the root README. The role
+bootstraps Flatpak + the Flathub remote itself for the emoji picker (apt install `flatpak` + `xdg-utils`,
+then add the Flathub remote), the same self-contained pattern the
+`chat_clients` role uses for Slack. `community.general.dconf` (GNOME
+settings) requires a running D-Bus session — run this role while logged
+into a graphical GNOME session, not over a headless SSH connection.
+
+## Role Variables
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `desktop_customization_desktop_environment` | `gnome` | Desktop environment in use (`gnome` or `cosmic`). Controls which task set is applied. |
+| `desktop_customization_flameshot_version` | see `defaults/main.yml` | flameshot apt package version (deb datasource: Ubuntu Noble), held after install. |
+| `desktop_customization_smile_enabled` | `true` | Whether to install the `smile` emoji picker. Also gates the Flatpak/Flathub bootstrap (the only consumer of Flatpak in this role). |
+
+## Example Playbook
+
+```yaml
+- hosts: workstations
+  roles:
+    - role: swisstopo.workstation.desktop_customization
+      vars:
+        desktop_customization_desktop_environment: cosmic
+```
+
+## Tags
 
 Every task carries its own tag(s) in addition to the umbrella
-`desktop_customization` tag, so a consuming playbook can still filter by the
-tool's original identity even though it's one role:
+`desktop_customization` tag, so a consuming playbook can filter to a single
+tool:
 
 | Tool | Tags |
 | --- | --- |
@@ -34,14 +75,6 @@ and `flameshot` tags, even though they conceptually belong to
 gui-customization — a `--tags flameshot`-only run on COSMIC still depends
 on them existing, so they must stay reachable under either tag on their
 own to keep `--tags flameshot` self-sufficient.
-
-## Variables
-
-| Variable | Default | Description |
-| --- | --- | --- |
-| `desktop_customization_desktop_environment` | `gnome` | Desktop environment in use (`gnome` or `cosmic`). Controls which task set is applied. |
-| `desktop_customization_flameshot_version` | see `defaults/main.yml` | flameshot apt package version (deb datasource: Ubuntu Noble), held after install. |
-| `desktop_customization_smile_enabled` | `true` | Whether to install the `smile` emoji picker. Also gates the Flatpak/Flathub bootstrap (the only consumer of Flatpak in this role). |
 
 ## GNOME
 
@@ -65,9 +98,6 @@ own to keep `--tags flameshot` self-sufficient.
   merging the Flameshot entry into it — any other custom shortcuts the user
   already has configured (via GNOME Settings or otherwise) are preserved,
   not overwritten.
-- `community.general.dconf` requires a running D-Bus session — run this role
-  while logged into a graphical GNOME session, not over a headless SSH
-  connection.
 
 ## COSMIC
 
@@ -107,12 +137,6 @@ own to keep `--tags flameshot` self-sufficient.
   role's exact pattern rather than assuming another role already set up
   Flatpak. The bootstrap and the install task are both gated on
   `desktop_customization_smile_enabled`.
-- Only the GUI half of computer-setup's old `emoji-picker` role. The CLI
-  half (`emoji-fzf`, pipx install + zsh `emoji` function) is out of scope
-  here and lives in the `modern_cli` role instead.
-
-## Platforms
-
-| OS | Tested |
-| --- | --- |
-| Ubuntu 24.04 | yes |
+- Only the GUI half of emoji picking. The CLI half (`emoji-fzf`, pipx
+  install + zsh `emoji` function) is out of scope here and lives in the
+  `modern_cli` role instead.

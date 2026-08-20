@@ -2,27 +2,70 @@
 
 Installs and configures the daily terminal environment: **zsh** (with
 oh-my-zsh, powerlevel10k, and plugins), **tmux** (with TPM), and **kitty** —
-all Catppuccin Mocha themed. Merges what used to be three separate `zsh`,
-`tmux`, and `kitty` roles: they're bundled here because they're the daily
+all Catppuccin Mocha themed. Bundled together because they're the daily
 terminal stack a developer reaches for as one unit, and zsh's XDG config
 mechanism (`~/.config/zsh/conf.d/*.zsh`) is the integration point tmux's
 auto-start snippet plugs into.
 
+## What it does
+
+- Installs zsh, bootstraps oh-my-zsh, and clones powerlevel10k plus the
+  fzf-tab / zsh-autosuggestions / zsh-syntax-highlighting plugins at pinned
+  versions.
+- Deploys a Catppuccin-Mocha-themed `.zshrc` sourcing every
+  `~/.config/zsh/conf.d/*.zsh` snippet, and sets zsh as the default login
+  shell.
+- Installs kitty with a Catppuccin Mocha `kitty.conf`.
+- Installs tmux, TPM (Tmux Plugin Manager), and the Catppuccin Mocha tmux
+  theme, and deploys a `tmux.conf` with vim-style pane navigation and a
+  zsh snippet that auto-starts tmux on login.
+
+## Requirements
+
+| OS | Tested |
+| --- | --- |
+| Ubuntu 24.04 | yes |
+
+Requires `curl` and `git` on the target (oh-my-zsh's installer and every
+plugin/theme clone in this role use them) — on a real workstation these are
+provided by the `base` role, which every consuming playbook runs first. No
+collection role is otherwise required to have run first.
+
 ## Execution order
 
-Tasks run in a fixed order — **zsh, then kitty, then tmux** (matching the
-original `computer-setup/site.yml` role order) — because zsh establishes
-`~/.config/zsh/conf.d/` and the `.zshrc` sourcing mechanism
+Tasks run in a fixed order — **zsh, then kitty, then tmux** — because zsh
+establishes `~/.config/zsh/conf.d/` and the `.zshrc` sourcing mechanism
 (`for f in ~/.config/zsh/conf.d/*.zsh; do source "$f"; done`) that tmux's
 shell-integration snippet (auto-start tmux on login) depends on. The tmux
 section also creates `~/.config/zsh/conf.d/` itself as a defensive
 no-op-if-exists safety net, in case the task order is ever changed.
 
-## Tagging (for backward-compatible selective runs)
+## Role Variables
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `terminal_env_zsh_version` | see `defaults/main.yml` | zsh apt package version (deb datasource: Ubuntu Noble) |
+| `terminal_env_zsh_omz_commit` | see `defaults/main.yml` | Pinned commit SHA of `ohmyzsh/ohmyzsh` used to fetch `install.sh` (no tags/releases published upstream; not Renovate-tracked, same posture as `modern_cli_bat_theme_ref`) |
+| `terminal_env_zsh_powerlevel10k_version` | see `defaults/main.yml` | powerlevel10k theme version (github-tags: `romkatv/powerlevel10k`) |
+| `terminal_env_zsh_fzf_tab_version` | see `defaults/main.yml` | fzf-tab plugin version (github-tags: `Aloxaf/fzf-tab`) |
+| `terminal_env_zsh_autosuggestions_version` | see `defaults/main.yml` | zsh-autosuggestions plugin version (github-tags: `zsh-users/zsh-autosuggestions`) |
+| `terminal_env_zsh_syntax_highlighting_version` | see `defaults/main.yml` | zsh-syntax-highlighting plugin version (github-tags: `zsh-users/zsh-syntax-highlighting`) |
+| `terminal_env_tmux_version` | see `defaults/main.yml` | tmux apt package version (deb datasource: Ubuntu Noble) |
+| `terminal_env_tmux_catppuccin_version` | see `defaults/main.yml` | Catppuccin tmux plugin version (github-releases: `catppuccin/tmux`) |
+| `terminal_env_kitty_version` | see `defaults/main.yml` | kitty apt package version (deb datasource: Ubuntu Noble) |
+
+## Example Playbook
+
+```yaml
+- hosts: workstations
+  roles:
+    - role: swisstopo.workstation.terminal_env
+```
+
+## Tags
 
 Every task carries its own tag(s) in addition to the umbrella `terminal_env`
-tag, so a consuming playbook can still filter by the tool's original identity
-even though it's one role:
+tag, so a consuming playbook can filter to a single tool:
 
 | Tool | Tags |
 | --- | --- |
@@ -33,20 +76,6 @@ even though it's one role:
 **Do not** put an outer `tags:` on the role invocation in your play — that
 tag cascades to every task in the role and defeats this per-tool filtering.
 
-## Variables
-
-| Variable | Default | Description |
-| --- | --- | --- |
-| `terminal_env_zsh_version` | see `defaults/main.yml` | zsh apt package version (deb datasource: Ubuntu Noble) |
-| `terminal_env_zsh_omz_commit` | see `defaults/main.yml` | Pinned commit SHA of `ohmyzsh/ohmyzsh` used to fetch `install.sh` (no tags/releases published upstream; not Renovate-tracked, same posture as `modern_cli_bat_theme_ref`) |
-| `terminal_env_zsh_powerlevel10k_version` | `1.20.0` | powerlevel10k theme version (github-tags: `romkatv/powerlevel10k`) |
-| `terminal_env_zsh_fzf_tab_version` | `1.3.0` | fzf-tab plugin version (github-tags: `Aloxaf/fzf-tab`) |
-| `terminal_env_zsh_autosuggestions_version` | `0.7.1` | zsh-autosuggestions plugin version (github-tags: `zsh-users/zsh-autosuggestions`) |
-| `terminal_env_zsh_syntax_highlighting_version` | `0.8.0` | zsh-syntax-highlighting plugin version (github-tags: `zsh-users/zsh-syntax-highlighting`) |
-| `terminal_env_tmux_version` | see `defaults/main.yml` | tmux apt package version (deb datasource: Ubuntu Noble) |
-| `terminal_env_tmux_catppuccin_version` | `2.3.0` | Catppuccin tmux plugin version (github-releases: `catppuccin/tmux`) |
-| `terminal_env_kitty_version` | see `defaults/main.yml` | kitty apt package version (deb datasource: Ubuntu Noble) |
-
 ## zsh
 
 - Installed via apt, exact version pinned and held afterward
@@ -56,14 +85,7 @@ tag cascades to every task in the role and defeats this per-tool filtering.
   (`# noqa: command-instead-of-module` — no Ansible module alternative
   exists), fetched from a pinned commit SHA of `ohmyzsh/ohmyzsh` rather than
   the mutable `master` branch (the project publishes no tags/releases to pin
-  a version to or verify a checksum against). This requires `curl`, and
-  every plugin/theme clone in this role uses `ansible.builtin.git`, which
-  requires the `git` binary. Neither is installed by this role itself — it
-  assumes the `base` role has already run (every consuming playbook runs
-  `base` first, and `base` absorbed the standalone `git` role during an
-  earlier migration batch). Molecule's `prepare.yml` installs both `curl`
-  and `git` for the bare test container, same as `kitty`'s font dependency
-  below.
+  a version to or verify a checksum against).
 - powerlevel10k, fzf-tab, zsh-autosuggestions, and zsh-syntax-highlighting
   are cloned from GitHub at pinned version tags (checked via
   `git tag --points-at HEAD` for idempotency; on a version mismatch, the
@@ -115,9 +137,9 @@ tag cascades to every task in the role and defeats this per-tool filtering.
   `Alt+1–9` for windows, `Ctrl+hjkl` for panes — smart: passes through to
   nvim splits when neovim is focused, detected via `#{pane_current_command}`.
   This pairs with the `christoomey/vim-tmux-navigator` plugin that lives in
-  the separate `neovim` role — a soft coupling via keybinding convention
-  only (not a file-write dependency), so no task ordering or gating is
-  needed between the two roles.
+  the `cli_dev_env` role's neovim config — a soft coupling via keybinding
+  convention only (not a file-write dependency), so no task ordering or
+  gating is needed between the two roles.
 - A zsh snippet (`~/.config/zsh/conf.d/tmux.zsh`) auto-starts tmux on
   interactive login: the first terminal window gets a session named `main`;
   if `main` already exists (i.e. this isn't the first window), subsequent
@@ -139,9 +161,3 @@ tag cascades to every task in the role and defeats this per-tool filtering.
 - `allow-passthrough on` is set to enable the Kitty graphics protocol to
   pass through tmux (required for `image.nvim` inline image rendering in
   Neovim).
-
-## Platforms
-
-| OS | Tested |
-| --- | --- |
-| Ubuntu 24.04 | yes |

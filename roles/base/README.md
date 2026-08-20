@@ -1,15 +1,53 @@
 # swisstopo.workstation.base
 
-Foundational workstation setup, applied first on every machine: base system packages,
-hostname, locale, corporate proxy, git, SSH, the Python toolchain, and fonts.
+Foundational workstation setup: base system packages, hostname, locale, corporate
+proxy, git, SSH, the Python toolchain, and fonts. This role must run **first** —
+every other role in the collection assumes locale, proxy, and hostname are already
+configured.
 
-Merges what were five separate roles in the previous private implementation
-(`base`, `git`, `ssh`, `python`, `fonts`) into one role, since none of them carry
-consumer-specific data and all are foundational enough to belong together. Original
-per-tool granularity is preserved via task tags (`base`, `git`, `ssh`, `python`,
-`fonts`) so `--tags <tool>` still runs only that slice.
+Base packages, git, SSH, Python, and fonts are one role because none of them carry
+consumer-specific data and all are foundational enough that a real workstation
+always wants all of them. Per-tool granularity is preserved via task tags
+(`base`, `git`, `ssh`, `python`, `fonts`) so `--tags <tool>` still runs only that
+slice — see [Tags](#tags).
 
-## Variables
+## What it does
+
+- Installs core system packages (`curl`, `jq`, `yq`, `unzip`, `dnsutils`,
+  `cifs-utils`, `pwgen`, `openssl`, `direnv`, `open-vm-tools`, `locales`,
+  `hunspell-de-ch`, `hunspell-en-us`).
+- Sets the hostname (`ansible.builtin.hostname`, persisted to `/etc/hostname`).
+- Generates and deploys `de_CH.UTF-8`/`en_US.UTF-8` locales to the shell, the
+  systemd user session, and GNOME dconf.
+- On VMware, installs `open-vm-tools` and a clipboard-integration autostart entry.
+- Disables apt's periodic update popups.
+- **Corporate proxy** (only when `base_http_proxy` is set): deploys proxy
+  environment variables to the systemd user session (Electron apps like Slack),
+  the Flatpak sandbox global override (Spotify), `/etc/environment`, `~/.npmrc`,
+  and GNOME dconf (`base_desktop_environment == 'gnome'` only); installs the
+  corporate proxy CA certificate into the system trust store and syncs it to a
+  Flatpak-accessible bundle.
+- Installs git and configures global identity/editor/pull-push defaults, plus
+  optional SSH-based commit/tag signing.
+- Creates `~/.ssh/` and `~/.config/ssh/`, deploys a config that routes GitHub SSH
+  over port 443 (works through restrictive firewalls), symlinks `~/.ssh/config`
+  to it, fixes key permissions if present, and injects `base_ssh_extra_hosts`
+  entries. Does **not** generate SSH keys — copy them from another machine first.
+- Installs `build-essential`, `python3-pip`, `python3-venv` via apt, and
+  `uv`/`uvx` from the GitHub release tarball to `/usr/local/bin/`.
+- Installs JetBrains Mono Nerd Font to `~/.local/share/fonts/` and refreshes the
+  font cache; a version stamp file skips re-download when already current.
+
+## Requirements
+
+| OS | Tested |
+| --- | --- |
+| Ubuntu 24.04 | yes |
+
+No dependency on any other role — `base` is meant to be the first role a
+consuming playbook runs.
+
+## Role Variables
 
 | Variable | Default | Description |
 | --- | --- | --- |
@@ -42,50 +80,49 @@ All other apt-pinned base packages (`curl`, `jq`, `yq`, `unzip`, `dnsutils`, `ci
 `pwgen`, `openssl`, `direnv`, `open-vm-tools`, `locales`, `hunspell-de-ch`,
 `hunspell-en-us`) have their own `base_<pkg>_version` variables — see `defaults/main.yml`.
 
-## Notes
-
-- **base**: installs core packages needed on every machine; sets the hostname
-  (`ansible.builtin.hostname`, persists to `/etc/hostname`); generates and deploys
-  `de_CH.UTF-8`/`en_US.UTF-8` locales to the shell, systemd user session, and GNOME
-  dconf; on VMware, installs `open-vm-tools` and a clipboard-integration autostart
-  entry; disables apt's periodic update popups.
-  - **Corporate proxy** (only when `base_http_proxy` is set): deploys proxy env vars
-    to the systemd user session (Electron apps like Slack), the Flatpak sandbox
-    global override (Spotify), `/etc/environment`, `~/.npmrc`, and GNOME dconf
-    (`base_desktop_environment == 'gnome'` only); installs the corporate (BIT) proxy CA
-    certificate into the system trust store and syncs it to a Flatpak-accessible
-    bundle. The CA cert bundled in `files/BITProxyCA06C.crt` is the currently active
-    intermediate (valid until Sep 2026) — must be replaced when corporate IT rotates
-    to a new CA generation.
-  - Must run first — other roles assume locale/proxy/hostname are already set.
-- **git**: installs git, configures global identity/editor/pull-push defaults, and
-  optionally SSH-based commit/tag signing.
-- **ssh**: creates `~/.ssh/` and `~/.config/ssh/`, deploys a config that routes
-  GitHub SSH over port 443 (works through restrictive firewalls), symlinks
-  `~/.ssh/config` to it, fixes key permissions if present, and injects
-  `base_ssh_extra_hosts` entries. Does not generate SSH keys — copy them from another
-  machine first.
-- **python**: installs `build-essential`, `python3-pip`, `python3-venv` via apt, and
-  `uv`/`uvx` from the GitHub release tarball to `/usr/local/bin/`.
-- **fonts**: installs JetBrains Mono Nerd Font to `~/.local/share/fonts/` and
-  refreshes the font cache; a version stamp file skips re-download when already current.
-
-## Example
+## Example Playbook
 
 ```yaml
-- role: swisstopo.workstation.base
-  vars:
-    base_hostname: my-machine
-    base_git_user_name: Jane Doe
-    base_git_user_email: jane@example.com
-    base_git_editor: nvim
-    base_http_proxy: "http://proxy.example.com:8080"
-    base_https_proxy: "http://proxy.example.com:8080"
-    base_no_proxy: "localhost,127.0.0.1,example.com"
-    base_vault_addr: "https://vault.example.com:8200"
-    base_ssh_extra_hosts:
-      - name: my-server
-        hostname: 10.0.0.5
-        user: admin
-        identity_file: "~/.ssh/admin_key"
+- hosts: workstations
+  roles:
+    - role: swisstopo.workstation.base
+      vars:
+        base_hostname: my-machine
+        base_git_user_name: Jane Doe
+        base_git_user_email: jane@example.com
+        base_git_editor: nvim
+        base_http_proxy: "http://proxy.example.com:8080"
+        base_https_proxy: "http://proxy.example.com:8080"
+        base_no_proxy: "localhost,127.0.0.1,example.com"
+        base_vault_addr: "https://vault.example.com:8200"
+        base_ssh_extra_hosts:
+          - name: my-server
+            hostname: 10.0.0.5
+            user: admin
+            identity_file: "~/.ssh/admin_key"
 ```
+
+## Tags
+
+Every task carries its own tag(s) in addition to the umbrella `base` tag, so a
+consuming playbook can filter to a single tool slice:
+
+| Slice | Tags |
+| --- | --- |
+| Core packages, hostname, locale, proxy | `base` |
+| git | `git`, `base` |
+| SSH | `ssh`, `base` |
+| Python toolchain (`uv`) | `python`, `base` |
+| Fonts | `fonts`, `base` |
+
+**Do not** put an outer `tags:` on the role invocation in your play — that tag
+cascades to every task in the role and defeats this per-tool filtering.
+
+## Notes
+
+- The corporate proxy CA cert bundled in `files/BITProxyCA06C.crt` is the
+  currently active intermediate (valid until Sep 2026) — must be replaced when
+  corporate IT rotates to a new CA generation.
+- `community.general.dconf` (locale, proxy) requires a running D-Bus session —
+  run this role while logged into a graphical session, not over a headless SSH
+  connection.

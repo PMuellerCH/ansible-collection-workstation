@@ -3,10 +3,9 @@
 Installs a set of modern CLI tool replacements: `bat` (cat), `btop` (top),
 `emoji-fzf` (emoji picker), `eza` (ls), `fd`/`fd-find` (find), `fzf` (fuzzy
 finder), `htop` (top), `presenterm` (terminal presentations), `ripgrep`
-(grep), `zoxide` (cd). Each tool is independently toggleable. This role
-merges what used to be several separate/duplicated implementations (`bat`,
-`btop`, `fzf`, `presenterm`, the CLI half of `emoji-picker`, and tools
-bundled ad hoc inside a `cli-tools` role) into one parameterized role.
+(grep), `zoxide` (cd). Each tool is independently toggleable and installed
+regardless of the others — this role is a single parameterized entry point
+for "modern CLI tool replacements" as a category.
 
 `bat`, `btop`, and `fzf` are additionally Catppuccin-Mocha-themed — the fixed
 collection-wide theme convention, not a variable. The other tools (`eza`,
@@ -31,6 +30,27 @@ every other exact-pin-and-hold task in this role: those (bat, btop, eza,
 etc.) each own their package outright, so a downgrade there only affects
 that one tool.
 
+## What it does
+
+- Installs `bat`, `btop`, `eza`, `fd-find`, `fzf`, `htop`, `ripgrep`,
+  `zoxide` via apt/GitHub releases.
+- Installs `emoji-fzf` via pipx.
+- Installs `presenterm` (binary + mermaid-cli rendering dependency).
+- Deploys Catppuccin Mocha theming for `bat`, `btop`, and `fzf`.
+- Deploys `~/.config/zsh/conf.d/modern_cli.zsh` with aliases for enabled
+  tools.
+
+## Requirements
+
+| OS | Tested |
+| --- | --- |
+| Ubuntu 24.04 | yes |
+
+No Ansible role dependency (this role runs standalone in Molecule) — but on
+a real workstation, run `base` first, per the root README. Your `.zshrc`
+must source `~/.config/zsh/conf.d/*.zsh` for the deployed shell aliases to
+take effect.
+
 ## External runtime dependencies not provided by this role
 
 - `emoji-fzf`'s deployed `emoji` shell function pipes through `wl-copy`
@@ -45,11 +65,54 @@ that one tool.
   Google Chrome separately (not installed by this role) if you need mermaid
   diagrams rendered inside presentations.
 
-## Tagging (for backward-compatible selective runs)
+## Role Variables
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `modern_cli_bat_enabled` | `true` | Install bat |
+| `modern_cli_btop_enabled` | `true` | Install btop |
+| `modern_cli_emoji_fzf_enabled` | `true` | Install emoji-fzf via pipx (also gates the pipx bootstrap) |
+| `modern_cli_eza_enabled` | `true` | Install eza |
+| `modern_cli_fd_enabled` | `true` | Install fd-find (symlinked to `fd`) |
+| `modern_cli_fzf_enabled` | `true` | Install fzf |
+| `modern_cli_htop_enabled` | `true` | Install htop |
+| `modern_cli_presenterm_enabled` | `true` | Install presenterm (binary + mermaid-cli only) |
+| `modern_cli_ripgrep_enabled` | `true` | Install ripgrep |
+| `modern_cli_zoxide_enabled` | `true` | Install zoxide |
+| `modern_cli_bat_version` | see `defaults/main.yml` | Exact apt version of bat |
+| `modern_cli_btop_version` | see `defaults/main.yml` | Exact apt version of btop |
+| `modern_cli_btop_catppuccin_version` | see `defaults/main.yml` | `catppuccin/btop` release tag for the theme archive |
+| `modern_cli_emoji_fzf_version` | see `defaults/main.yml` | emoji-fzf PyPI package version, installed via pipx |
+| `modern_cli_eza_version` | see `defaults/main.yml` | Exact apt version of eza |
+| `modern_cli_fd_version` | see `defaults/main.yml` | Exact apt version of fd-find |
+| `modern_cli_fzf_version` | see `defaults/main.yml` | fzf binary version (github-releases: `junegunn/fzf`) |
+| `modern_cli_htop_version` | see `defaults/main.yml` | Exact apt version of htop |
+| `modern_cli_presenterm_version` | see `defaults/main.yml` | presenterm binary version (github-releases: `mfontanini/presenterm`) |
+| `modern_cli_presenterm_download_base` | see `defaults/main.yml` | Base URL the presenterm archive and its `.sha512` checksum are downloaded from |
+| `modern_cli_presenterm_archive` | see `defaults/main.yml` | Filename of the presenterm release archive |
+| `modern_cli_presenterm_mermaid_cli_version` | see `defaults/main.yml` | `@mermaid-js/mermaid-cli` npm version for mermaid rendering |
+| `modern_cli_presenterm_nodejs_version` | see `defaults/main.yml` | Exact apt version of nodejs, required for mermaid-cli |
+| `modern_cli_presenterm_npm_version` | see `defaults/main.yml` | Exact apt version of npm (not pulled in automatically by nodejs — only a Suggests, not a Depends) |
+| `modern_cli_ripgrep_version` | see `defaults/main.yml` | Exact apt version of ripgrep |
+| `modern_cli_zoxide_version` | see `defaults/main.yml` | Exact apt version of zoxide |
+| `modern_cli_pipx_min_version` | see `defaults/main.yml` | pipx version bootstrapped via `pip --user` so `community.general.pipx` (needs >=1.7.0) works on Ubuntu 24.04's apt-provided pipx 1.4.3. Only used when `modern_cli_emoji_fzf_enabled` |
+| `modern_cli_deploy_shell_aliases` | `true` | Deploy `~/.config/zsh/conf.d/modern_cli.zsh` with aliases for enabled tools |
+| `modern_cli_bat_theme_ref` | see `defaults/main.yml` | Pinned commit of `catppuccin/bat` the theme file is downloaded from |
+| `modern_cli_bat_theme_checksum` | see `defaults/main.yml` | Checksum of the bat theme file, verified by `get_url` |
+| `modern_cli_btop_catppuccin_checksum` | see `defaults/main.yml` | Checksum of the btop themes archive, verified by `get_url` |
+
+## Example Playbook
+
+```yaml
+- hosts: workstations
+  roles:
+    - role: swisstopo.workstation.modern_cli
+```
+
+## Tags
 
 Every task carries its own tag(s) in addition to the umbrella `modern_cli`
-tag, so a consuming playbook can still filter by the tool's original identity
-even though it's one role:
+tag, so a consuming playbook can filter to a single tool:
 
 | Tool(s) | Tags |
 | --- | --- |
@@ -67,54 +130,10 @@ tag cascades to every task in the role and defeats this per-tool filtering.
 Rely on the tasks' own tags; Ansible filters `--tags` across the whole play,
 not per role.
 
-## Variables
+## pipx bootstrap
 
-| Variable | Default | Description |
-| --- | --- | --- |
-| `modern_cli_bat_enabled` | `true` | Install bat |
-| `modern_cli_btop_enabled` | `true` | Install btop |
-| `modern_cli_emoji_fzf_enabled` | `true` | Install emoji-fzf via pipx (also gates the pipx bootstrap) |
-| `modern_cli_eza_enabled` | `true` | Install eza |
-| `modern_cli_fd_enabled` | `true` | Install fd-find (symlinked to `fd`) |
-| `modern_cli_fzf_enabled` | `true` | Install fzf |
-| `modern_cli_htop_enabled` | `true` | Install htop |
-| `modern_cli_presenterm_enabled` | `true` | Install presenterm (binary + mermaid-cli only) |
-| `modern_cli_ripgrep_enabled` | `true` | Install ripgrep |
-| `modern_cli_zoxide_enabled` | `true` | Install zoxide |
-| `modern_cli_bat_version` | `0.24.0-1build1` | Exact apt version of bat |
-| `modern_cli_btop_version` | `1.3.0-1` | Exact apt version of btop |
-| `modern_cli_btop_catppuccin_version` | `1.0.0` | `catppuccin/btop` release tag for the theme archive |
-| `modern_cli_emoji_fzf_version` | `0.12.0` | emoji-fzf PyPI package version, installed via pipx |
-| `modern_cli_eza_version` | `0.18.2-1` | Exact apt version of eza |
-| `modern_cli_fd_version` | `9.0.0-1` | Exact apt version of fd-find |
-| `modern_cli_fzf_version` | `0.74.2` | fzf binary version (github-releases: `junegunn/fzf`) |
-| `modern_cli_htop_version` | `3.3.0-4build1` | Exact apt version of htop |
-| `modern_cli_presenterm_version` | `0.16.1` | presenterm binary version (github-releases: `mfontanini/presenterm`) |
-| `modern_cli_presenterm_download_base` | see `defaults/main.yml` | Base URL the presenterm archive and its `.sha512` checksum are downloaded from |
-| `modern_cli_presenterm_archive` | see `defaults/main.yml` | Filename of the presenterm release archive |
-| `modern_cli_presenterm_mermaid_cli_version` | `11.16.0` | `@mermaid-js/mermaid-cli` npm version for mermaid rendering |
-| `modern_cli_presenterm_nodejs_version` | `18.19.1+dfsg-6ubuntu5` | Exact apt version of nodejs, required for mermaid-cli |
-| `modern_cli_presenterm_npm_version` | `9.2.0~ds1-2` | Exact apt version of npm (not pulled in automatically by nodejs — only a Suggests, not a Depends) |
-| `modern_cli_ripgrep_version` | `14.1.0-1` | Exact apt version of ripgrep |
-| `modern_cli_zoxide_version` | `0.9.3-1` | Exact apt version of zoxide |
-| `modern_cli_pipx_min_version` | `1.7.1` | pipx version bootstrapped via `pip --user` so `community.general.pipx` (needs >=1.7.0) works on Ubuntu 24.04's apt-provided pipx 1.4.3. Only used when `modern_cli_emoji_fzf_enabled` |
-| `modern_cli_deploy_shell_aliases` | `true` | Deploy `~/.config/zsh/conf.d/modern_cli.zsh` with aliases for enabled tools |
-| `modern_cli_bat_theme_ref` | `6810349b28055dce54076712fc05fc68da4b8ec0` | Pinned commit of `catppuccin/bat` the theme file is downloaded from |
-| `modern_cli_bat_theme_checksum` | `sha256:395566f0...` | Checksum of the bat theme file, verified by `get_url` |
-| `modern_cli_btop_catppuccin_checksum` | `sha256:5331e055...` | Checksum of the btop themes archive, verified by `get_url` |
-
-**Note:** this role only drops the `modern_cli.zsh` snippet into `~/.config/zsh/conf.d/` —
-it does not enable the aliases itself. Your `.zshrc` must actually source
-`~/.config/zsh/conf.d/*.zsh` for them to take effect.
-
-**pipx bootstrap:** `emoji-fzf` is the only pipx-installed tool in this role.
-Since roles must be independently runnable, `modern_cli` bootstraps its own
-adequate pipx (`pip install --user pipx=={{ modern_cli_pipx_min_version }}`)
-rather than assuming a consumer already upgraded the system pipx — identical
-to the pattern used by the `code_quality_tools` role.
-
-## Platforms
-
-| OS | Tested |
-| --- | --- |
-| Ubuntu 24.04 | yes |
+`emoji-fzf` is the only pipx-installed tool in this role. Since roles must
+be independently runnable, `modern_cli` bootstraps its own adequate pipx
+(`pip install --user pipx=={{ modern_cli_pipx_min_version }}`) rather than
+assuming a consumer already upgraded the system pipx — identical to the
+pattern used by the `code_quality_tools` role.

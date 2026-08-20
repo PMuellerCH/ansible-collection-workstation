@@ -4,16 +4,102 @@ Installs infra/cloud CLI tooling a cloud engineer reaches for together:
 `ansible-core` (pipx) with Galaxy collections, Docker CE, AWS CLI v2 +
 session-manager-plugin, Terraform + Vault + tfswitch/tflint/terraform-docs,
 and a full Kubernetes toolchain (kubectl, k9s, helm, kubectx/kubens, stern,
-krew, kubeconform, kube-linter). Merges what used to be five separate roles
-in `computer-setup` (`ansible`, `docker`, `aws`, `terraform`,
-`kubernetes_tools`) — the same category of tool for provisioning and
-operating cloud infrastructure.
+krew, kubeconform, kube-linter). Bundled together because they're the same
+category of tool for provisioning and operating cloud infrastructure.
 
-## Tagging (for backward-compatible selective runs)
+## What it does
+
+- **ansible**: installs `ansible-core` via pipx, injects `hvac`/`molecule`/
+  `molecule-plugins` into its venv, and installs the collection's own
+  requirements (Galaxy collections).
+- **docker**: installs Docker CE from its official apt repository.
+- **aws**: installs AWS CLI v2 and `session-manager-plugin` from GitHub
+  releases, and renders `~/.aws/config` from `iac_tools_aws_profiles`.
+- **terraform**: installs Terraform, Vault, tfswitch, tflint, and
+  terraform-docs.
+- **kubernetes_tools**: installs kubectl, k9s, helm, kubectx/kubens, stern,
+  krew, kubeconform, and kube-linter, and renders `~/.kube/config` from
+  `iac_tools_kubernetes_clusters`.
+
+## Requirements
+
+| OS | Tested |
+| --- | --- |
+| Ubuntu 24.04 | yes |
+
+No Ansible role dependency (this role runs standalone in Molecule) — but on
+a real workstation, run `base` first, per the root README.
+
+## Role Variables
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `iac_tools_ansible_enabled` | `true` | Install ansible-core + Galaxy collections |
+| `iac_tools_docker_enabled` | `true` | Install Docker CE |
+| `iac_tools_aws_enabled` | `true` | Install AWS CLI v2 + session-manager-plugin |
+| `iac_tools_terraform_enabled` | `true` | Install Terraform/Vault/tfswitch/tflint/terraform-docs |
+| `iac_tools_kubernetes_tools_enabled` | `true` | Install the Kubernetes toolchain |
+| `iac_tools_http_proxy` | `""` | Corporate HTTP proxy URL. Leave empty on machines without a proxy |
+| `iac_tools_https_proxy` | `iac_tools_http_proxy` | Corporate HTTPS proxy URL |
+| `iac_tools_no_proxy` | `""` | Comma-separated proxy bypass list |
+| `iac_tools_vault_addr` | `""` | HashiCorp Vault server address. Leave empty to skip Vault shell integration |
+| `iac_tools_pipx_min_version` | see `defaults/main.yml` | pipx version bootstrapped via `pip install --user`, see below |
+| `iac_tools_ansible_core_version` | see `defaults/main.yml` | ansible-core version (pypi), via pipx |
+| `iac_tools_ansible_molecule_version` | see `defaults/main.yml` | molecule version (pypi), injected into the ansible-core venv |
+| `iac_tools_ansible_molecule_plugins_version` | see `defaults/main.yml` | molecule-plugins[docker] version (pypi), injected into the ansible-core venv |
+| `iac_tools_hvac_version` | see `defaults/main.yml` | hvac version (pypi), injected into the ansible-core venv by both `ansible` and `kubernetes_tools` |
+| `iac_tools_docker_version` | see `defaults/main.yml` | Docker CE version (github-releases: `moby/moby`) |
+| `iac_tools_aws_cli_version` | see `defaults/main.yml` | AWS CLI v2 version (github-tags: `aws/aws-cli`) |
+| `iac_tools_aws_boto3_version` | see `defaults/main.yml` | boto3 version (pypi), injected into the ansible-core venv |
+| `iac_tools_aws_session_manager_plugin_version` | see `defaults/main.yml` | session-manager-plugin version (github-releases: `aws/session-manager-plugin`) |
+| `iac_tools_aws_profiles` | `[]` | AWS SSO profiles rendered into `~/.aws/config` — see below |
+| `iac_tools_terraform_version` | see `defaults/main.yml` | Terraform apt package version (deb: HashiCorp apt) |
+| `iac_tools_vault_version` | see `defaults/main.yml` | Vault apt package version (deb: HashiCorp apt) |
+| `iac_tools_tflint_version` | see `defaults/main.yml` | tflint binary version (github-releases) |
+| `iac_tools_terraform_docs_version` | see `defaults/main.yml` | terraform-docs binary version (github-releases) |
+| `iac_tools_terraform_docs_archive` | see `defaults/main.yml` | Filename of the terraform-docs release archive |
+| `iac_tools_tfswitch_version` | see `defaults/main.yml` | tfswitch binary version (github-releases: `warrensbox/terraform-switcher`), checksum-verified |
+| `iac_tools_tfswitch_archive` | see `defaults/main.yml` | Filename of the tfswitch release archive |
+| `iac_tools_tfswitch_download_base` | see `defaults/main.yml` | Base URL the tfswitch archive and its `checksums.txt` are downloaded from |
+| `iac_tools_terraform_cloud_token` | `""` | Terraform Cloud API token from the consumer's own secret store |
+| `iac_tools_terraform_vault_github_token` | `""` | GitHub PAT for `vault login --method=github`, from the consumer's own secret store |
+| `iac_tools_kubectl_version` | see `defaults/main.yml` | kubectl version (github-releases: `kubernetes/kubernetes`), checksum-verified |
+| `iac_tools_kubectl_url` | see `defaults/main.yml` | Download URL for the pinned kubectl binary |
+| `iac_tools_kubectl_checksum_url` | see `defaults/main.yml` | URL of kubectl's published `.sha256` checksum file |
+| `iac_tools_k9s_version` | see `defaults/main.yml` | k9s version (github-releases) |
+| `iac_tools_helm_version` | see `defaults/main.yml` | helm version (github-releases) |
+| `iac_tools_kubectx_version` | see `defaults/main.yml` | kubectx/kubens version (github-releases) |
+| `iac_tools_kubectx_archive` | see `defaults/main.yml` | Filename of the kubectx release archive |
+| `iac_tools_kubens_archive` | see `defaults/main.yml` | Filename of the kubens release archive |
+| `iac_tools_stern_version` | see `defaults/main.yml` | stern version (github-releases) |
+| `iac_tools_krew_version` | see `defaults/main.yml` | krew version (github-releases) |
+| `iac_tools_kubeconform_version` | see `defaults/main.yml` | kubeconform version (github-releases) |
+| `iac_tools_kube_linter_version` | see `defaults/main.yml` | kube-linter version (github-releases) |
+| `iac_tools_kubernetes_pip_kubernetes_version` | see `defaults/main.yml` | Python `kubernetes` library version (pypi), non-Ubuntu targets only |
+| `iac_tools_kubernetes_pip_jsonpatch_version` | see `defaults/main.yml` | Python `jsonpatch` library version (pypi), non-Ubuntu targets only |
+| `iac_tools_kubernetes_pip_pyhcl_version` | see `defaults/main.yml` | Python `pyhcl` library version (pypi), non-Ubuntu targets only |
+| `iac_tools_kubernetes_clusters` | `[]` | EKS clusters rendered into `~/.kube/config` — see below |
+| `iac_tools_kubernetes_current_context` | `""` | kubeconfig `current-context`; defaults to the first cluster entry |
+
+## Example Playbook
+
+```yaml
+- hosts: workstations
+  roles:
+    - role: swisstopo.workstation.iac_tools
+      vars:
+        iac_tools_vault_addr: "https://vault.example.com:8200"
+        iac_tools_aws_profiles:
+          - name: default
+            sso_start_url: "https://example.awsapps.com/start#/"
+            sso_region: eu-central-1
+            output: json
+```
+
+## Tags
 
 Every task carries its own tag in addition to the umbrella `iac_tools` tag,
-so a consuming playbook can still filter by the tool's original identity
-even though it's one role:
+so a consuming playbook can filter to a single sub-role:
 
 | Sub-role | Tag |
 | --- | --- |
@@ -27,58 +113,14 @@ even though it's one role:
 **Do not** put an outer `tags:` on the role invocation in your play — that
 tag cascades to every task in the role and defeats this per-tool filtering.
 
-## Variables
-
-| Variable | Default | Description |
-| --- | --- | --- |
-| `iac_tools_ansible_enabled` | `true` | Install ansible-core + Galaxy collections |
-| `iac_tools_docker_enabled` | `true` | Install Docker CE |
-| `iac_tools_aws_enabled` | `true` | Install AWS CLI v2 + session-manager-plugin |
-| `iac_tools_terraform_enabled` | `true` | Install Terraform/Vault/tfswitch/tflint/terraform-docs |
-| `iac_tools_kubernetes_tools_enabled` | `true` | Install the Kubernetes toolchain |
-| `iac_tools_http_proxy` | `""` | Corporate HTTP proxy URL. Leave empty on machines without a proxy |
-| `iac_tools_https_proxy` | `iac_tools_http_proxy` | Corporate HTTPS proxy URL |
-| `iac_tools_no_proxy` | `""` | Comma-separated proxy bypass list |
-| `iac_tools_vault_addr` | `""` | HashiCorp Vault server address. Leave empty to skip Vault shell integration |
-| `iac_tools_pipx_min_version` | `1.7.1` | pipx version bootstrapped via `pip install --user`, see below |
-| `iac_tools_ansible_core_version` | `2.21.2` | ansible-core version (pypi), via pipx |
-| `iac_tools_ansible_molecule_version` | `26.6.0` | molecule version (pypi), injected into the ansible-core venv |
-| `iac_tools_ansible_molecule_plugins_version` | `26.7.15` | molecule-plugins[docker] version (pypi), injected into the ansible-core venv |
-| `iac_tools_hvac_version` | `2.4.0` | hvac version (pypi), injected into the ansible-core venv by both `ansible` and `kubernetes_tools` |
-| `iac_tools_docker_version` | `29.7.1` | Docker CE version (github-releases: `moby/moby`) |
-| `iac_tools_aws_cli_version` | `2.36.16` | AWS CLI v2 version (github-tags: `aws/aws-cli`) |
-| `iac_tools_aws_boto3_version` | `1.43.27` | boto3 version (pypi), injected into the ansible-core venv |
-| `iac_tools_aws_session_manager_plugin_version` | `1.2.814.0` | session-manager-plugin version (github-releases: `aws/session-manager-plugin`) |
-| `iac_tools_aws_profiles` | `[]` | AWS SSO profiles rendered into `~/.aws/config` — see below |
-| `iac_tools_terraform_version` | see `defaults/main.yml` | Terraform apt package version (deb: HashiCorp apt) |
-| `iac_tools_vault_version` | see `defaults/main.yml` | Vault apt package version (deb: HashiCorp apt) |
-| `iac_tools_tflint_version` | `0.64.0` | tflint binary version (github-releases) |
-| `iac_tools_terraform_docs_version` | `0.24.0` | terraform-docs binary version (github-releases) |
-| `iac_tools_tfswitch_version` | `1.19.0` | tfswitch binary version (github-releases: `warrensbox/terraform-switcher`), checksum-verified |
-| `iac_tools_terraform_cloud_token` | `""` | Terraform Cloud API token from the consumer's own secret store |
-| `iac_tools_terraform_vault_github_token` | `""` | GitHub PAT for `vault login --method=github`, from the consumer's own secret store |
-| `iac_tools_kubectl_version` | `1.36.3` | kubectl version (github-releases: `kubernetes/kubernetes`), checksum-verified |
-| `iac_tools_k9s_version` | `0.50.18` | k9s version (github-releases) |
-| `iac_tools_helm_version` | `4.2.3` | helm version (github-releases) |
-| `iac_tools_kubectx_version` | `0.11.0` | kubectx/kubens version (github-releases) |
-| `iac_tools_stern_version` | `1.34.0` | stern version (github-releases) |
-| `iac_tools_krew_version` | `0.5.0` | krew version (github-releases) |
-| `iac_tools_kubeconform_version` | `0.8.0` | kubeconform version (github-releases) |
-| `iac_tools_kube_linter_version` | `0.8.3` | kube-linter version (github-releases) |
-| `iac_tools_kubernetes_pip_kubernetes_version` | `36.0.3` | Python `kubernetes` library version (pypi), non-Ubuntu targets only |
-| `iac_tools_kubernetes_pip_jsonpatch_version` | `1.33` | Python `jsonpatch` library version (pypi), non-Ubuntu targets only |
-| `iac_tools_kubernetes_pip_pyhcl_version` | `0.4.5` | Python `pyhcl` library version (pypi), non-Ubuntu targets only |
-| `iac_tools_kubernetes_clusters` | `[]` | EKS clusters rendered into `~/.kube/config` — see below |
-| `iac_tools_kubernetes_current_context` | `""` | kubeconfig `current-context`; defaults to the first cluster entry |
-
 ## Parameterized personal data
 
-Two files in the original `computer-setup` roles hardcoded real
+`iac_tools_aws_profiles` and `iac_tools_kubernetes_clusters` drive Jinja2
+templates instead of static files, since a shared collection can't ship
 organization-specific data (SSO account IDs, EKS cluster CA certs, IAM role
-ARNs). A shared collection can't ship those as static files — they're now
-Jinja2 templates driven by list-of-dict variables, both defaulting to an
-empty list. **When the list is empty, the corresponding file is not
-deployed at all** (rather than writing an empty or broken config).
+ARNs) as fixed content. Both default to an empty list. **When the list is
+empty, the corresponding file is not deployed at all** (rather than writing
+an empty or broken config).
 
 ### `iac_tools_aws_profiles` → `~/.aws/config`
 
@@ -125,12 +167,17 @@ separate field, so there's no risk of it drifting out of sync.
 ## Shared ansible-core pipx venv
 
 `ansible`, `aws`, and `kubernetes_tools` (on non-Ubuntu targets) all inject
-packages into the *same* `ansible-core` pipx venv. In `computer-setup` this
-worked via implicit ordering across three separate roles in `site.yml`; as
-one role, the injects are now sequenced explicitly within a single task
-list: `ansible-core` install → `hvac`/`molecule`/`molecule-plugins` inject
-(ansible) → Galaxy collections → ... → `boto3` inject (aws) → ... →
-Kubernetes Python libraries inject (kubernetes_tools, non-Ubuntu only).
+packages into the *same* `ansible-core` pipx venv, so the injects are
+sequenced explicitly within a single task list:
+
+```mermaid
+flowchart LR
+  A["ansible-core install"] --> B["inject hvac / molecule /<br/>molecule-plugins (ansible)"]
+  B --> C["Galaxy collections"]
+  C --> D["inject boto3 (aws)"]
+  D --> E["inject kubernetes/jsonpatch/pyhcl<br/>(kubernetes_tools, non-Ubuntu only)"]
+```
+
 `hvac` is injected by both `ansible` and `kubernetes_tools`; a single shared
 `iac_tools_hvac_version` variable keeps both injects requesting the same
 version instead of fighting over the venv.
@@ -165,15 +212,13 @@ every inject) is gated with `when: not ansible_check_mode`.
 ## Notes
 
 - **kubectl** is checksum-verified against its published `.sha256` from
-  `dl.k8s.io` — unchanged from the original role.
+  `dl.k8s.io`.
 - **AWS CLI v2 installer** and **session-manager-plugin** only publish a GPG
   `.sig` upstream, not a plain or structured checksum file — outside the
   two-tier `get_url` checksum pattern used elsewhere in this collection
   (plain `sha256sum`-format file, or a structured file `get_url` can't parse
   directly). GPG signature verification isn't yet an established pattern in
-  this collection, so this is deliberately deferred rather than blocking —
-  matching how earlier batches treated downloads with no straightforward
-  checksum path.
+  this collection, so this is deliberately deferred rather than blocking.
 - **Terraform and Vault** install from the official HashiCorp apt
   repository (`signed_by` a pinned GPG keyring). apt itself validates
   package integrity against that repo's signed `Release` metadata, so no
@@ -190,12 +235,5 @@ every inject) is gated with `when: not ansible_check_mode`.
   changes (e.g. `docker login` credentials, manually-tweaked AWS/kube
   profiles) survive re-runs.
 - `python3-kubernetes`/`python3-jsonpatch`/`python3-hvac`/`python3-pyhcl`
-  are installed via apt on Ubuntu; on non-Ubuntu targets (e.g. Pop!_OS,
-  which `computer-setup` itself runs on) the equivalent pip packages are
-  injected into the shared ansible-core pipx venv instead.
-
-## Platforms
-
-| OS | Tested |
-| --- | --- |
-| Ubuntu 24.04 | yes |
+  are installed via apt on Ubuntu; on non-Ubuntu targets the equivalent pip
+  packages are injected into the shared ansible-core pipx venv instead.

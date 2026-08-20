@@ -1,15 +1,32 @@
 # swisstopo.workstation.gh
 
-Installs the GitHub CLI (`gh`) via apt and holds it at the pinned version.
+Installs the GitHub CLI (`gh`) via apt.
 
-## Variables
+## What it does
 
-| Variable | Default | Description |
-| --- | --- | --- |
-| `gh_version` | `2.45.0-1ubuntu0.3` | Exact apt package version of `gh` to install |
+- Installs `gh` from Ubuntu's apt archive, exact version pinned.
+- Holds the package afterward (`dpkg_selections: hold`) so unattended
+  `apt upgrade` can't drift it.
 
-## Platforms
+## Requirements
 
 | OS | Tested |
 | --- | --- |
 | Ubuntu 24.04 | yes |
+
+No Ansible role dependency (this role runs standalone in Molecule) — but on
+a real workstation, run `base` first, per the root README.
+
+## Role Variables
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `gh_version` | see `defaults/main.yml` | Exact apt package version of `gh` to install |
+
+## Example Playbook
+
+```yaml
+- hosts: workstations
+  roles:
+    - role: swisstopo.workstation.gh
+```

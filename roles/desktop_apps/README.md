@@ -4,8 +4,7 @@ Installs standard/mainstream desktop applications that don't share any
 functional state with each other: OnlyOffice Desktop Editors (office suite,
 installed from its own apt repository) and system-wide Firefox policies
 (Bitwarden extension force-installed, de-CH dictionary force-installed,
-native password manager disabled). Merges what used to be `computer-setup`'s
-separate `onlyoffice` and `firefox` roles.
+native password manager disabled).
 
 This is a deliberate **category-level bundle** — the same precedent as this
 collection's `code_quality_tools` role (trivy, pre-commit, yamllint, checkov,
@@ -20,11 +19,49 @@ functional coupling like `desktop_customization`'s `gui-customization`+
 `flameshot` (where flameshot's COSMIC keybinding is wired through a file
 `gui-customization`'s tasks create — a real ordering dependency).
 
-## Tagging (for backward-compatible selective runs)
+## What it does
+
+- Installs OnlyOffice Desktop Editors from its own apt repository.
+- Deploys `/etc/firefox/policies/policies.json`: disables the native
+  Firefox password manager, force-installs the Bitwarden extension pinned
+  to the navigation bar, force-installs the Swiss German (`de-CH`)
+  dictionary, and sets it as the default spellcheck language.
+
+## Requirements
+
+| OS | Tested |
+| --- | --- |
+| Ubuntu 24.04 | yes |
+
+No Ansible role dependency (this role runs standalone in Molecule) — but on
+a real workstation, run `base` first, per the root README. Firefox itself
+is **not installed** by this role — it's assumed pre-installed (ships with
+Pop!_OS / most Ubuntu desktop images).
+
+## Role Variables
+
+| Variable | Default | Description |
+| --- | --- | --- |
+| `desktop_apps_onlyoffice_enabled` | `true` | Install OnlyOffice Desktop Editors |
+| `desktop_apps_firefox_enabled` | `true` | Deploy system-wide Firefox policies |
+| `desktop_apps_onlyoffice_version` | see `defaults/main.yml` | `onlyoffice-desktopeditors` apt package version (deb datasource: OnlyOffice's own apt repository) |
+
+Firefox has no configurable variables beyond its enable toggle — the policy
+content is fixed. `de-CH` is swisstopo's standard locale, not something
+meant to be parameterized per machine.
+
+## Example Playbook
+
+```yaml
+- hosts: workstations
+  roles:
+    - role: swisstopo.workstation.desktop_apps
+```
+
+## Tags
 
 Every task carries its own tag(s) in addition to the umbrella
-`desktop_apps` tag, so a consuming playbook can still filter by the
-application's original identity even though it's one role:
+`desktop_apps` tag, so a consuming playbook can filter to a single app:
 
 | App | Tags |
 | --- | --- |
@@ -33,19 +70,6 @@ application's original identity even though it's one role:
 
 **Do not** put an outer `tags:` on the role invocation in your play — that
 tag cascades to every task in the role and defeats this per-app filtering.
-
-## Variables
-
-| Variable | Default | Description |
-| --- | --- | --- |
-| `desktop_apps_onlyoffice_enabled` | `true` | Install OnlyOffice Desktop Editors |
-| `desktop_apps_firefox_enabled` | `true` | Deploy system-wide Firefox policies |
-| `desktop_apps_onlyoffice_version` | `9.4.0-129` | `onlyoffice-desktopeditors` apt package version (deb datasource: OnlyOffice's own apt repository) |
-
-Firefox has no configurable variables beyond its enable toggle — the policy
-content is fixed. `de-CH` is swisstopo's standard locale, not something
-meant to be parameterized per machine (same posture as this org's
-`betterbird` role, which hardcodes the same locale for its own defaults).
 
 ## OnlyOffice
 
@@ -81,11 +105,3 @@ meant to be parameterized per machine (same posture as this org's
   force-installed.
 - The default spellcheck language is set to `de-CH` via
   `Preferences.spellchecker.dictionary`.
-- Firefox itself is **not installed** by this role — it's assumed
-  pre-installed (ships with Pop!_OS / most Ubuntu desktop images).
-
-## Platforms
-
-| OS | Tested |
-| --- | --- |
-| Ubuntu 24.04 | yes |
