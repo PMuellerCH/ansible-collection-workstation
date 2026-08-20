@@ -1,6 +1,6 @@
 ---
 # renovate: datasource=github-releases depName=bitwarden/clients extractVersion=^desktop-v(?<version>.*)$
-bitwarden_version: "2026.7.0"
+bitwarden_version: "2026.8.0"
 
 # renovate: datasource=github-releases depName=doy/rbw
 bitwarden_rbw_version: "1.15.0"
