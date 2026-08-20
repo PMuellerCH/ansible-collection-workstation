@@ -31,7 +31,7 @@ modern_cli_eza_version: "0.18.2-1"
 modern_cli_fd_version: "9.0.0-1"
 
 # renovate: datasource=github-releases depName=junegunn/fzf extractVersion=^v(?<version>.*)$
-modern_cli_fzf_version: "0.74.2"
+modern_cli_fzf_version: "0.74.3"
 
 # renovate: datasource=deb depName=htop registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
 modern_cli_htop_version: "3.3.0-4build1"
