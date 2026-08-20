@@ -77,7 +77,7 @@ iac_tools_terraform_vault_github_token: ""
 
 # ── kubernetes_tools ─────────────────────────────────────────────────────
 # renovate: datasource=github-releases depName=kubernetes/kubernetes extractVersion=^v(?<version>.*)$
-iac_tools_kubectl_version: "1.36.3"
+iac_tools_kubectl_version: "1.36.4"
 iac_tools_kubectl_url: "https://dl.k8s.io/release/v{{ iac_tools_kubectl_version }}/bin/linux/amd64/kubectl"
 iac_tools_kubectl_checksum_url: "https://dl.k8s.io/release/v{{ iac_tools_kubectl_version }}/bin/linux/amd64/kubectl.sha256"
 # renovate: datasource=github-releases depName=derailed/k9s extractVersion=^v(?<version>.*)$
