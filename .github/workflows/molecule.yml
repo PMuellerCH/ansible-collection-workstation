@@ -33,10 +33,18 @@ jobs:
     outputs:
       roles: ${{ steps.filter.outputs.roles }}
     steps:
+      # fetch-depth: 0 + token: '' (below) forces dorny/paths-filter to diff via
+      # local git instead of the GitHub REST API. The API path needs
+      # pull-requests: read, which GitHub silently downgrades to read-only
+      # regardless of declared permissions when the PR modifies a workflow file
+      # itself (a real case here: Renovate bumping this action's own pin).
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - uses: dorny/paths-filter@v3
         id: filter
         with:
+          token: ""
           filters: |
             roles:
               - 'roles/**'
