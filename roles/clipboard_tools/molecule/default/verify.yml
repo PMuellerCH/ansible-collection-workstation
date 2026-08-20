@@ -13,6 +13,11 @@
 - name: Verify
   hosts: all
   gather_facts: true
+  # Load the role's own defaults so pinned-version assertions below track
+  # defaults/main.yml as their single source of truth, rather than a second
+  # hardcoded literal that would silently go stale whenever Renovate bumps it.
+  vars_files:
+    - ../../defaults/main.yml
   tasks:
     - name: Gather package facts
       ansible.builtin.package_facts:
@@ -40,7 +45,7 @@
       ansible.builtin.assert:
         # cliphist writes its version output to stderr, not stdout (same as
         # the current-version idempotency check in tasks/main.yml).
-        that: "'0.7.0' in _clipboard_tools_cliphist_version.stderr"
+        that: "clipboard_tools_cliphist_version in _clipboard_tools_cliphist_version.stderr"
 
     - name: Check clipse runs
       ansible.builtin.command: clipse -v
@@ -49,7 +54,7 @@
 
     - name: Assert clipse reports the pinned version
       ansible.builtin.assert:
-        that: "'1.2.1' in _clipboard_tools_clipse_version.stdout"
+        that: "clipboard_tools_clipse_version in _clipboard_tools_clipse_version.stdout"
 
     - name: Check cliphist autostart entry was deployed
       ansible.builtin.stat:
