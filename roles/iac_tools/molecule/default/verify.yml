@@ -2,6 +2,12 @@
 - name: Verify
   hosts: all
   gather_facts: true
+  # Load the role's own defaults so the pinned-version assertion below tracks
+  # iac_tools_ansible_core_version as its single source of truth, rather than
+  # a second hardcoded literal that would silently go stale whenever Renovate
+  # bumps defaults/main.yml.
+  vars_files:
+    - ../../defaults/main.yml
   vars:
     _iac_tools_local_bin: "{{ ansible_facts['env']['HOME'] }}/.local/bin"
   tasks:
@@ -13,7 +19,7 @@
 
     - name: Assert ansible-core reports the pinned version
       ansible.builtin.assert:
-        that: "'2.21.2' in _iac_tools_ansible_core_check.stdout"
+        that: "iac_tools_ansible_core_version in _iac_tools_ansible_core_check.stdout"
 
     - name: Inspect hvac injected into the ansible-core pipx venv
       ansible.builtin.command: "{{ _iac_tools_local_bin }}/pipx runpip ansible-core show hvac"
@@ -22,7 +28,7 @@
 
     - name: Assert the injected hvac is the expected version
       ansible.builtin.assert:
-        that: "'Version: 2.4.0' in _iac_tools_hvac_check.stdout"
+        that: "'Version: ' + iac_tools_hvac_version in _iac_tools_hvac_check.stdout"
 
     - name: Inspect molecule injected into the ansible-core pipx venv
       ansible.builtin.command: "{{ _iac_tools_local_bin }}/pipx runpip ansible-core show molecule"
@@ -31,7 +37,7 @@
 
     - name: Assert the injected molecule is the expected version
       ansible.builtin.assert:
-        that: "'Version: 26.6.0' in _iac_tools_molecule_check.stdout"
+        that: "'Version: ' + iac_tools_ansible_molecule_version in _iac_tools_molecule_check.stdout"
 
     - name: Inspect boto3 injected into the ansible-core pipx venv
       ansible.builtin.command: "{{ _iac_tools_local_bin }}/pipx runpip ansible-core show boto3"
@@ -40,7 +46,7 @@
 
     - name: Assert the injected boto3 is the expected version
       ansible.builtin.assert:
-        that: "'Version: 1.43.27' in _iac_tools_boto3_check.stdout"
+        that: "'Version: ' + iac_tools_aws_boto3_version in _iac_tools_boto3_check.stdout"
 
     - name: Check Galaxy collections were installed
       ansible.builtin.stat:
@@ -89,7 +95,7 @@
 
     - name: Assert AWS CLI reports the pinned version
       ansible.builtin.assert:
-        that: "'2.36.16' in _iac_tools_aws_cli_check.stdout"
+        that: "iac_tools_aws_cli_version in _iac_tools_aws_cli_check.stdout"
 
     - name: Check session-manager-plugin reports the pinned version
       ansible.builtin.command: session-manager-plugin --version
@@ -98,7 +104,7 @@
 
     - name: Assert session-manager-plugin reports the pinned version
       ansible.builtin.assert:
-        that: "'1.2.814.0' in _iac_tools_smp_check.stdout"
+        that: "iac_tools_aws_session_manager_plugin_version in _iac_tools_smp_check.stdout"
 
     - name: Slurp deployed AWS config
       ansible.builtin.slurp:
@@ -119,7 +125,9 @@
 
     - name: Assert terraform reports the pinned version
       ansible.builtin.assert:
-        that: "'1.15.8' in _iac_tools_terraform_check.stdout"
+        # iac_tools_terraform_version carries a deb revision suffix (e.g. "-1")
+        # that `terraform version` doesn't print, so match on the part before it.
+        that: "iac_tools_terraform_version.split('-')[0] in _iac_tools_terraform_check.stdout"
 
     - name: Get dpkg selection for terraform
       ansible.builtin.command: dpkg --get-selections terraform
@@ -137,7 +145,7 @@
 
     - name: Assert tflint reports the pinned version
       ansible.builtin.assert:
-        that: "'0.64.0' in _iac_tools_tflint_check.stdout"
+        that: "iac_tools_tflint_version in _iac_tools_tflint_check.stdout"
 
     - name: Check terraform-docs reports the pinned version
       ansible.builtin.command: terraform-docs --version
@@ -146,7 +154,7 @@
 
     - name: Assert terraform-docs reports the pinned version
       ansible.builtin.assert:
-        that: "'0.24.0' in _iac_tools_terraform_docs_check.stdout"
+        that: "iac_tools_terraform_docs_version in _iac_tools_terraform_docs_check.stdout"
 
     - name: Check tfswitch reports the pinned version
       ansible.builtin.command: tfswitch --version
@@ -155,7 +163,7 @@
 
     - name: Assert tfswitch reports the pinned version
       ansible.builtin.assert:
-        that: "'1.19.0' in _iac_tools_tfswitch_check.stdout"
+        that: "iac_tools_tfswitch_version in _iac_tools_tfswitch_check.stdout"
 
     - name: Slurp deployed terraformrc
       ansible.builtin.slurp:
@@ -175,7 +183,7 @@
 
     - name: Assert kubectl reports the pinned version
       ansible.builtin.assert:
-        that: "'1.36.3' in _iac_tools_kubectl_check.stdout"
+        that: "iac_tools_kubectl_version in _iac_tools_kubectl_check.stdout"
 
     - name: Check k9s reports the pinned version
       ansible.builtin.command: k9s version --short
@@ -184,7 +192,7 @@
 
     - name: Assert k9s reports the pinned version
       ansible.builtin.assert:
-        that: "'0.50.18' in _iac_tools_k9s_check.stdout"
+        that: "iac_tools_k9s_version in _iac_tools_k9s_check.stdout"
 
     - name: Check helm reports the pinned version
       ansible.builtin.command: helm version --short
@@ -193,7 +201,7 @@
 
     - name: Assert helm reports the pinned version
       ansible.builtin.assert:
-        that: "'4.2.3' in _iac_tools_helm_check.stdout"
+        that: "iac_tools_helm_version in _iac_tools_helm_check.stdout"
 
     - name: Check kubectx reports the pinned version
       ansible.builtin.command: kubectx --version
@@ -202,7 +210,7 @@
 
     - name: Assert kubectx reports the pinned version
       ansible.builtin.assert:
-        that: "'0.11.0' in _iac_tools_kubectx_check.stdout"
+        that: "iac_tools_kubectx_version in _iac_tools_kubectx_check.stdout"
 
     - name: Check kubens is installed
       ansible.builtin.stat:
@@ -220,7 +228,7 @@
 
     - name: Assert stern reports the pinned version
       ansible.builtin.assert:
-        that: "'1.34.0' in _iac_tools_stern_check.stdout"
+        that: "iac_tools_stern_version in _iac_tools_stern_check.stdout"
 
     - name: Check krew is installed
       ansible.builtin.stat:
@@ -238,7 +246,7 @@
 
     - name: Assert kubeconform reports the pinned version
       ansible.builtin.assert:
-        that: "'0.8.0' in _iac_tools_kubeconform_check.stdout"
+        that: "iac_tools_kubeconform_version in _iac_tools_kubeconform_check.stdout"
 
     - name: Check kube-linter reports the pinned version
       ansible.builtin.command: kube-linter version
@@ -247,7 +255,7 @@
 
     - name: Assert kube-linter reports the pinned version
       ansible.builtin.assert:
-        that: "'0.8.3' in _iac_tools_kube_linter_check.stdout"
+        that: "iac_tools_kube_linter_version in _iac_tools_kube_linter_check.stdout"
 
     - name: Check helm-diff plugin is installed
       ansible.builtin.stat:

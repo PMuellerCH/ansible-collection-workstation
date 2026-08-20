@@ -2,6 +2,12 @@
 - name: Verify
   hosts: all
   gather_facts: true
+  # Load the role's own defaults so the pinned-version assertion below tracks
+  # code_quality_tools_checkov_version as its single source of truth, rather
+  # than a second hardcoded literal that would silently go stale whenever
+  # Renovate bumps defaults/main.yml.
+  vars_files:
+    - ../../defaults/main.yml
   vars:
     _code_quality_tools_local_bin: "{{ ansible_facts['env']['HOME'] }}/.local/bin"
   tasks:
@@ -38,7 +44,7 @@
 
     - name: Assert trivy reports the pinned version
       ansible.builtin.assert:
-        that: "'0.73.0' in _code_quality_tools_trivy_version.stdout"
+        that: "code_quality_tools_trivy_version in _code_quality_tools_trivy_version.stdout"
 
     - name: Check pipx bootstrap produced pipx >= 1.7.0
       ansible.builtin.command: "{{ _code_quality_tools_local_bin }}/pipx --version"
@@ -56,7 +62,7 @@
 
     - name: Assert detect-secrets reports the pinned version
       ansible.builtin.assert:
-        that: "'1.5.0' in _code_quality_tools_detect_secrets_version.stdout"
+        that: "code_quality_tools_detect_secrets_version in _code_quality_tools_detect_secrets_version.stdout"
 
     - name: Check yamllint is importable via its pipx-installed binary
       ansible.builtin.command: "{{ _code_quality_tools_local_bin }}/yamllint --version"
@@ -65,7 +71,7 @@
 
     - name: Assert yamllint reports the pinned version
       ansible.builtin.assert:
-        that: "'1.38.0' in _code_quality_tools_yamllint_version.stdout"
+        that: "code_quality_tools_yamllint_version in _code_quality_tools_yamllint_version.stdout"
 
     - name: Check checkov is importable via its pipx-installed binary
       ansible.builtin.command: "{{ _code_quality_tools_local_bin }}/checkov --version"
@@ -74,7 +80,7 @@
 
     - name: Assert checkov reports the pinned version
       ansible.builtin.assert:
-        that: "'3.3.9' in _code_quality_tools_checkov_version.stdout"
+        that: "code_quality_tools_checkov_version in _code_quality_tools_checkov_version.stdout"
 
     - name: Check ansible-lint is importable via its pipx-installed binary
       ansible.builtin.command: "{{ _code_quality_tools_local_bin }}/ansible-lint --version"
@@ -83,7 +89,7 @@
 
     - name: Assert ansible-lint reports the pinned version
       ansible.builtin.assert:
-        that: "'26.6.0' in _code_quality_tools_ansible_lint_version.stdout"
+        that: "code_quality_tools_ansible_lint_version in _code_quality_tools_ansible_lint_version.stdout"
 
     - name: Inspect ansible-core injected into the ansible-lint pipx venv
       ansible.builtin.command: "{{ _code_quality_tools_local_bin }}/pipx runpip ansible-lint show ansible-core"
@@ -92,4 +98,4 @@
 
     - name: Assert the injected ansible-core is the expected version
       ansible.builtin.assert:
-        that: "'Version: 2.21.2' in _code_quality_tools_injected_ansible_core.stdout"
+        that: "'Version: ' + code_quality_tools_ansible_core_version in _code_quality_tools_injected_ansible_core.stdout"

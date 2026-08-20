@@ -34,9 +34,15 @@ Every role uses per-tool Ansible tags (in addition to an umbrella
 
 ## Continuous Integration
 
-Lint (`ci.yml`) and release (`release-please.yml`) both run as thin wrappers around
-reusable workflows in [infra-github-shared-actions](https://github.com/swisstopo/infra-github-shared-actions),
+Lint (`ci.yml`), Molecule (`molecule.yml`), and release (`release-please.yml`) all run
+as thin wrappers around reusable workflows in
+[infra-github-shared-actions](https://github.com/swisstopo/infra-github-shared-actions),
 so tooling versions and behavior stay in sync with the other Ansible collections
 (e.g. `infra-ansible-collection-postgres`). Release-please authenticates as a GitHub
 App (org secrets `RELEASE_BOT_APP_ID` / `RELEASE_BOT_PRIVATE_KEY`) so release PRs are
 not blocked by the org policy on `github-actions[bot]`.
+
+Molecule auto-discovers every role with a `roles/<name>/molecule/default/` scenario and
+runs it as a matrix job, but only on the release-please PR, a Renovate PR, or manual
+`workflow_dispatch` — not on every ordinary feature PR, since a full matrix run is too
+slow to gate routine iteration (those get fast lint-only feedback from `ci.yml` instead).

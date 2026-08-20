@@ -24,6 +24,7 @@
       "description": "Update Ansible Galaxy collection versions in requirements.yml",
       "managerFilePatterns": [
         "/^requirements\\.yml$/",
+        "/^requirements-molecule\\.yml$/",
         "/^roles/.+/files/requirements\\.yml$/"
       ],
       "matchStrings": [

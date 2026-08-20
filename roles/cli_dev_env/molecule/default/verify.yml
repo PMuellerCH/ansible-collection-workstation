@@ -2,6 +2,12 @@
 - name: Verify
   hosts: all
   gather_facts: true
+  # Load the role's own defaults so pinned-version assertions below track
+  # cli_dev_env_claude_code_version as their single source of truth, rather
+  # than a second hardcoded literal that would silently go stale whenever
+  # Renovate bumps defaults/main.yml.
+  vars_files:
+    - ../../defaults/main.yml
   tasks:
     # lazygit
     - name: Check lazygit runs
@@ -11,7 +17,7 @@
 
     - name: Assert lazygit reports the pinned version
       ansible.builtin.assert:
-        that: "'0.64.0' in _cli_dev_env_lazygit_version.stdout"
+        that: "cli_dev_env_lazygit_version in _cli_dev_env_lazygit_version.stdout"
 
     - name: Stat lazygit config
       ansible.builtin.stat:
@@ -30,7 +36,7 @@
 
     - name: Assert neovim reports the pinned version
       ansible.builtin.assert:
-        that: "'NVIM v0.12.4' in _cli_dev_env_neovim_version.stdout"
+        that: "'NVIM v' + cli_dev_env_neovim_version in _cli_dev_env_neovim_version.stdout"
 
     - name: Stat neovim symlink
       ansible.builtin.stat:
@@ -133,7 +139,7 @@
 
     - name: Assert Claude Code CLI reports the pinned version
       ansible.builtin.assert:
-        that: "'2.1.227' in _cli_dev_env_claude_code_version.stdout"
+        that: "cli_dev_env_claude_code_version in _cli_dev_env_claude_code_version.stdout"
 
     - name: Read Claude Code global config
       ansible.builtin.slurp:

@@ -1,0 +1,26 @@
+---
+name: Molecule
+
+# Auto-discovers any role under roles/ with a molecule/default/ scenario and runs
+# `molecule test` for it as a matrix. Fires on the release-please PR and on
+# Renovate PRs (so a release is never cut without molecule passing, and so
+# Renovate automerge's "tests pass" gate is real rather than vacuous) or manual
+# dispatch — not on every ordinary feature PR, since a full molecule run is too
+# slow/expensive to gate routine iteration. Those get fast lint-only feedback
+# from ci.yml instead.
+
+"on":
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  molecule:
+    if: >-
+      startsWith(github.head_ref, 'release-please--') ||
+      startsWith(github.head_ref, 'renovate/') ||
+      github.event_name == 'workflow_dispatch'
+    uses: swisstopo/infra-github-shared-actions/.github/workflows/ansible_molecule.yml@main
