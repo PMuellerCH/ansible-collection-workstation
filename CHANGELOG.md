@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.9](https://github.com/PMuellerCH/ansible-collection-workstation/compare/0.1.8...0.1.9) (2026-08-21)
+
+
+### Miscellaneous
+
+* **deps:** update dependency bitwarden/clients to v2026.8.0 ([#72](https://github.com/PMuellerCH/ansible-collection-workstation/issues/72)) ([c00f585](https://github.com/PMuellerCH/ansible-collection-workstation/commit/c00f585d01794a70b4327207fa0c1a240c2e9f15))
+* **deps:** update dependency hrkfdn/ncspot to v1.4.0 ([#74](https://github.com/PMuellerCH/ansible-collection-workstation/issues/74)) ([8e1c87b](https://github.com/PMuellerCH/ansible-collection-workstation/commit/8e1c87b2d980eace716fc39f2fade51e920a9759))
+
 ## [0.1.8](https://github.com/PMuellerCH/ansible-collection-workstation/compare/0.1.7...0.1.8) (2026-08-20)
 
 
