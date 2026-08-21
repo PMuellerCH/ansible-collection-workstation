@@ -162,13 +162,54 @@
   tags: [base]
 
 - name: Deploy Vault ZSH snippet
+  # Named base-vault.zsh (not vault.zsh) to avoid colliding with iac_tools'
+  # own "Deploy vault shell integration snippet" task, which writes a richer
+  # vault.zsh (VAULT_ADDR + VAULT_NAMESPACE + a vault-login() function) to
+  # the same conf.d directory when terraform/vault are enabled. Both roles
+  # are independent by design (see role-independence convention) and neither
+  # can defer to the other, so distinct filenames are the only way to avoid
+  # them perpetually overwriting each other's version of the same file.
   ansible.builtin.copy:
-    dest: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/vault.zsh"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/base-vault.zsh"
     mode: "0644"
     content: |
       export VAULT_ADDR="{{ base_vault_addr }}"
   become: false
   when: base_vault_addr != ''
+  tags: [base]
+
+- name: Check for legacy vault.zsh from older base role versions
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/vault.zsh"
+  register: base_legacy_vault_zsh
+  become: false
+  tags: [base]
+
+- name: Read legacy vault.zsh content
+  ansible.builtin.slurp:
+    src: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/vault.zsh"
+  register: base_legacy_vault_zsh_content
+  become: false
+  when: base_legacy_vault_zsh.stat.exists
+  tags: [base]
+
+- name: Remove legacy vault.zsh written by older base role versions
+  # Prior to the base-vault.zsh rename above (#124), this role wrote
+  # directly to vault.zsh, colliding with iac_tools' own richer template of
+  # the same name. Since ~/.config/zsh/conf.d/*.zsh files are all
+  # auto-sourced, a leftover legacy vault.zsh from an older base run would
+  # still be sourced and could override VAULT_ADDR with a stale value even
+  # after upgrading to this fix. Only remove it when its content is exactly
+  # the old base-only one-liner (no VAULT_NAMESPACE or vault-login
+  # function), so an iac_tools-managed vault.zsh is never touched.
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/vault.zsh"
+    state: absent
+  become: false
+  when: >-
+    base_legacy_vault_zsh.stat.exists and
+    'VAULT_NAMESPACE' not in (base_legacy_vault_zsh_content.content | b64decode) and
+    'vault-login' not in (base_legacy_vault_zsh_content.content | b64decode)
   tags: [base]
 
 - name: Create environment.d directory
