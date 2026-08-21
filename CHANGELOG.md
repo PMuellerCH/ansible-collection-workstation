@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.16](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/0.1.15...0.1.16) (2026-08-21)
+
+
+### Bug Fixes
+
+* rename base role's vault ZSH snippet to avoid colliding with iac_tools ([#125](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/125)) ([89bb1f9](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/89bb1f966ea0bdc48514514c4e87ff60631664dd))
+
+
+### Miscellaneous
+
+* **deps:** update dependency @anthropic-ai/claude-code to v2.1.238 ([#122](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/122)) ([85f213a](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/85f213ab4091d73623657ad941e8373945028dbf))
+* **deps:** update dependency aws/aws-cli to v2.36.28 ([#123](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/123)) ([c56ee4b](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/c56ee4b1fbf4ebddd91b61b71d9f9259347c1182))
+* **deps:** update dependency ryanoasis/nerd-fonts to v3.5.1 ([#127](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/127)) ([24ca251](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/24ca251823603b9cc0cda3938ef3e879824258c2))
+
 ## [0.1.15](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/0.1.14...0.1.15) (2026-08-20)
 
 
