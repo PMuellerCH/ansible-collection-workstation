@@ -74,4 +74,4 @@ base_fonts_fontconfig_version: "2.15.0-1.1ubuntu2"
 # renovate: datasource=deb depName=unzip registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
 base_fonts_unzip_version: "6.0-28ubuntu4.1"
 # renovate: datasource=github-releases depName=ryanoasis/nerd-fonts extractVersion=^v(?<version>.*)$
-base_fonts_nerd_font_version: "3.5.0"
+base_fonts_nerd_font_version: "3.5.1"
