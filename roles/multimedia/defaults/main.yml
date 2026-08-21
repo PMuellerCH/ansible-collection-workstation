@@ -6,4 +6,4 @@ multimedia_beets_version: "2.13.1"
 multimedia_beets_pyacoustid_version: "1.3.1"
 
 # renovate: datasource=github-releases depName=hrkfdn/ncspot extractVersion=^v(?<version>.*)$
-multimedia_ncspot_version: "1.3.4"
+multimedia_ncspot_version: "1.4.0"
