@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.0](https://github.com/PMuellerCH/ansible-collection-workstation/compare/0.1.9...1.0.0) (2026-08-21)
+
+
+### Miscellaneous
+
+* configure release-please for a v1.0.0 release ([#76](https://github.com/PMuellerCH/ansible-collection-workstation/issues/76)) ([0eca883](https://github.com/PMuellerCH/ansible-collection-workstation/commit/0eca8835a063fdb41a838a9994e5af98d94144e1)), closes [#75](https://github.com/PMuellerCH/ansible-collection-workstation/issues/75)
+
 ## [0.1.9](https://github.com/PMuellerCH/ansible-collection-workstation/compare/0.1.8...0.1.9) (2026-08-21)
 
 
