@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.0](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/0.1.17...1.0.0) (2026-08-21)
+
+
+### Miscellaneous
+
+* configure release-please for a v1.0.0 release ([#131](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/131)) ([ebfeec7](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/ebfeec7355f9c22a1590dda1735099f72d83dc2a)), closes [#130](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/130)
+* **deps:** update dependency aws/aws-cli to v2.36.29 ([#132](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/132)) ([d0eb144](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/d0eb144936e5f5a2377062d6d06f417769a9b427))
+
 ## [0.1.17](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/0.1.16...0.1.17) (2026-08-21)
 
 
