@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.17](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/0.1.16...0.1.17) (2026-08-21)
+
+
+### Features
+
+* add maintenance role for apt upgrade and system cleanup ([#128](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/128)) ([d1804ee](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/d1804ee2aaa4795d367ad362e486eab5267f58b7))
+
 ## [0.1.16](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/0.1.15...0.1.16) (2026-08-21)
 
 
