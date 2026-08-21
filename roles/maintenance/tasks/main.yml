@@ -1,0 +1,111 @@
+---
+- name: Update apt cache
+  # cache_valid_time: 0 forces a fresh apt-get update on every run — which
+  # the apt module reports as changed=true unconditionally (confirmed
+  # against the real module), even though refreshing the package index is
+  # not itself a meaningful state change. changed_when: false keeps this
+  # from breaking idempotence checks.
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 0
+  become: true
+  changed_when: false
+  when: maintenance_apt_upgrade_enabled
+  tags: [apt_upgrade, maintenance]
+
+- name: Upgrade non-held apt packages
+  # upgrade: safe is apt-get upgrade's equivalent — it already skips any
+  # package under apt-mark hold (every Ansible-pinned package in this
+  # collection is held after install), so this never touches a
+  # version-pinned tool. Only unpinned packages (generic utilities like
+  # curl's dependencies, kernel/security updates, etc.) move here.
+  ansible.builtin.apt:
+    upgrade: safe
+  become: true
+  when: maintenance_apt_upgrade_enabled
+  tags: [apt_upgrade, maintenance]
+
+- name: Remove orphaned apt packages
+  ansible.builtin.apt:
+    autoremove: true
+    purge: false
+  become: true
+  when: maintenance_apt_autoremove_enabled
+  tags: [apt_autoremove, maintenance]
+
+- name: Clean apt package cache
+  ansible.builtin.apt:
+    autoclean: true
+  become: true
+  when: maintenance_apt_autoclean_enabled
+  tags: [apt_autoclean, maintenance]
+
+- name: Vacuum systemd journal logs
+  # journalctl writes all its output (including "Vacuuming done...") to
+  # stderr, not stdout — confirmed against the real binary. Every "freed 0B"
+  # line means that journal directory had nothing to remove; changed only
+  # when at least one directory actually freed space.
+  ansible.builtin.command: "journalctl --vacuum-time={{ maintenance_journal_vacuum_time }}"
+  become: true
+  register: maintenance_journal_vacuum_result
+  changed_when: >-
+    maintenance_journal_vacuum_result.stderr_lines
+    | select('search', 'Vacuuming done')
+    | reject('search', 'freed 0B')
+    | list
+    | length > 0
+  when: maintenance_journal_vacuum_enabled
+  tags: [journal_vacuum, maintenance]
+
+- name: Detect if Docker is installed
+  # ansible.builtin.command execs argv directly with no shell, and `command`
+  # is a shell builtin with no standalone executable on this image (confirmed
+  # against the real system) — `command -v docker` here always fails with
+  # "Error executing command" (rc=2) regardless of whether Docker is
+  # actually installed, a false negative that would silently skip pruning
+  # even when Docker is present. `which` is a real binary (via
+  # /etc/alternatives), so it works correctly through the command module.
+  ansible.builtin.command: which docker
+  register: maintenance_docker_present
+  changed_when: false
+  failed_when: false
+  when: maintenance_docker_prune_enabled
+  tags: [docker_prune, maintenance]
+
+- name: Prune unused Docker images, containers, networks, and build cache
+  # Deliberately no --volumes: named volumes routinely hold data (databases,
+  # persistent app state) a workstation user did not consciously mark
+  # disposable, unlike images/containers/networks/build-cache which are
+  # cheap to recreate. Pruning those is a destructive default this role
+  # should not make on its own.
+  ansible.builtin.command: docker system prune --all --force
+  become: true
+  register: maintenance_docker_prune_result
+  changed_when: "'Total reclaimed space: 0B' not in maintenance_docker_prune_result.stdout"
+  when: >-
+    maintenance_docker_prune_enabled and
+    maintenance_docker_present.rc == 0
+  tags: [docker_prune, maintenance]
+
+- name: Detect if Flatpak is installed
+  # Same false-negative issue as the Docker check above: `command -v` needs
+  # a shell, ansible.builtin.command doesn't provide one.
+  ansible.builtin.command: which flatpak
+  register: maintenance_flatpak_present
+  changed_when: false
+  failed_when: false
+  when: maintenance_flatpak_cleanup_enabled
+  tags: [flatpak_cleanup, maintenance]
+
+- name: Remove unused Flatpak runtimes
+  ansible.builtin.command: flatpak uninstall --unused --noninteractive
+  become: false
+  register: maintenance_flatpak_cleanup_result
+  changed_when: "'Nothing unused to uninstall' not in maintenance_flatpak_cleanup_result.stdout"
+  failed_when: >-
+    maintenance_flatpak_cleanup_result.rc != 0 and
+    'Nothing unused to uninstall' not in maintenance_flatpak_cleanup_result.stdout
+  when: >-
+    maintenance_flatpak_cleanup_enabled and
+    maintenance_flatpak_present.rc == 0
+  tags: [flatpak_cleanup, maintenance]
