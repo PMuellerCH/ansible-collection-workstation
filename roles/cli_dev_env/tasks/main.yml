@@ -386,13 +386,62 @@
   when: cli_dev_env_claude_code_enabled and not ansible_check_mode
   tags: [claude-code, cli_dev_env]
 
+- name: Check for legacy root-owned global Claude Code install
+  ansible.builtin.stat:
+    path: /usr/lib/node_modules/@anthropic-ai/claude-code
+  register: cli_dev_env_claude_code_legacy_global_stat
+  when: cli_dev_env_claude_code_enabled
+  tags: [claude-code, cli_dev_env]
+
+- name: Remove legacy root-owned global Claude Code install
+  # Older versions of this role installed Claude Code as a root-owned global
+  # npm package (become: true, default npm prefix on a NodeSource install is
+  # /usr). This role now installs it under the invoking user's own npm
+  # prefix instead (see the ~/.npmrc task below), so a fresh `claude` on
+  # PATH no longer needs root to self-update — but a machine that already
+  # ran the old version has a stale root-owned copy left on disk. It no
+  # longer wins on PATH (the user prefix's bin dir is prepended ahead of
+  # /usr/bin by terminal_env's .zshrc), but remove it so there isn't a
+  # second, never-updated copy sitting around.
+  community.general.npm:
+    name: "@anthropic-ai/claude-code"
+    global: true
+    state: absent
+  become: true
+  when: >-
+    cli_dev_env_claude_code_enabled and
+    cli_dev_env_claude_code_legacy_global_stat.stat.exists and
+    not ansible_check_mode
+  tags: [claude-code, cli_dev_env]
+
+- name: Ensure npm global installs go to the user's own prefix
+  # Without this, the global install below would need become: true (npm's
+  # default global prefix is root-owned on a NodeSource install, e.g.
+  # /usr/lib/node_modules) — install Claude Code as the invoking user
+  # instead, so it doesn't need root and can self-update without root
+  # either. lineinfile (not copy) so any other settings a user has in their
+  # own ~/.npmrc (e.g. registry auth) are preserved. mode 0600 (not the repo
+  # default 0644) since ~/.npmrc can hold credentials — same mode the base
+  # role already uses for its own ~/.npmrc proxy-config task, and a
+  # narrower mode: here would otherwise relax an existing 0600 file's
+  # permissions on every run.
+  ansible.builtin.lineinfile:
+    path: "{{ ansible_facts['env']['HOME'] }}/.npmrc"
+    regexp: "^prefix="
+    line: "prefix={{ ansible_facts['env']['HOME'] }}/.local"
+    create: true
+    mode: "0600"
+  become: false
+  when: cli_dev_env_claude_code_enabled
+  tags: [claude-code, cli_dev_env]
+
 - name: Install Claude Code CLI globally via npm
   community.general.npm:
     name: "@anthropic-ai/claude-code"
     version: "{{ cli_dev_env_claude_code_version }}"
     global: true
     state: present
-  become: true
+  become: false
   when: cli_dev_env_claude_code_enabled and not ansible_check_mode
   tags: [claude-code, cli_dev_env]
 

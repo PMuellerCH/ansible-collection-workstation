@@ -8,6 +8,11 @@
   # Renovate bumps defaults/main.yml.
   vars_files:
     - ../../defaults/main.yml
+  vars:
+    # Claude Code is installed into the user's own npm prefix (~/.local),
+    # not a system-wide location on PATH by default for non-interactive
+    # exec — same convention as code_quality_tools' pipx-installed tools.
+    _cli_dev_env_claude_code_bin: "{{ ansible_facts['env']['HOME'] }}/.local/bin/claude"
   tasks:
     # lazygit
     - name: Check lazygit runs
@@ -133,7 +138,7 @@
         that: "_cli_dev_env_claude_code_node_version.stdout.startswith('v24.')"
 
     - name: Check Claude Code CLI runs
-      ansible.builtin.command: claude --version
+      ansible.builtin.command: "{{ _cli_dev_env_claude_code_bin }} --version"
       register: _cli_dev_env_claude_code_version
       changed_when: false
 

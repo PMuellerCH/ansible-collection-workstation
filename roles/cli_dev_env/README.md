@@ -197,6 +197,26 @@ globally via npm, plus the Node.js runtime it needs.
 and running `claude login` interactively after install** — this role only
 installs and configures the CLI; it does not (and cannot) authenticate it.
 
+### User-context install
+
+The npm install itself (`community.general.npm`, `global: true`) runs
+**without `become`**. npm's default global prefix is root-owned on a
+NodeSource install (e.g. `/usr/lib/node_modules`), so a plain `global: true`
+install would need root — instead, a `prefix=` line is added to the
+invoking user's own `~/.npmrc` (via `lineinfile`, so any other settings the
+user already has there are preserved) pointing at `~/.local`. The `claude`
+binary ends up in `~/.local/bin`, which `terminal_env`'s `.zshrc` already
+puts ahead of `/usr/bin` on `PATH`. This means Claude Code can self-update
+(`claude update` / auto-update) without root, and a re-run of this role
+doesn't need root for the CLI itself either (Node.js/npm's own apt install
+still does).
+
+If a machine already has the old root-owned global install from a previous
+version of this role, it's detected (`stat
+/usr/lib/node_modules/@anthropic-ai/claude-code`) and removed with a
+one-time `become: true` cleanup task, so there isn't a second, never-updated
+copy left on disk.
+
 ### Node.js management
 
 Node.js is sourced from [NodeSource](https://github.com/nodesource/distributions)
