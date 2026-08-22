@@ -14,13 +14,18 @@
   tags: [apt_upgrade, maintenance]
 
 - name: Upgrade non-held apt packages
-  # upgrade: safe is apt-get upgrade's equivalent — it already skips any
-  # package under apt-mark hold (every Ansible-pinned package in this
-  # collection is held after install), so this never touches a
-  # version-pinned tool. Only unpinned packages (generic utilities like
-  # curl's dependencies, kernel/security updates, etc.) move here.
+  # force_apt_get: true is required — without it, Ansible's apt module
+  # defaults upgrade: safe to *aptitude* safe-upgrade, not apt-get upgrade
+  # (confirmed in ansible-core's own apt.py: upgrade() picks APTITUDE_CMD
+  # unless force_apt_get is set). aptitude tracks held packages via its own
+  # separate resolver state and does not reliably honor apt-mark hold —
+  # confirmed live: without this flag, aptitude silently upgraded and
+  # unheld both nodejs and docker-ce despite apt-mark hold on both,
+  # defeating every other role's pin+hold in this collection in one run.
+  # apt-get upgrade (this flag) correctly skips held packages.
   ansible.builtin.apt:
     upgrade: safe
+    force_apt_get: true
   become: true
   when: maintenance_apt_upgrade_enabled
   tags: [apt_upgrade, maintenance]
