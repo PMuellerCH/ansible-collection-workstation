@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.0.1](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/1.0.0...1.0.1) (2026-08-22)
+
+
+### Bug Fixes
+
+* bump open-vm-tools pin, rotated out of the Ubuntu archive ([#138](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/138)) ([e4faef0](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/e4faef0d922f965cb791a75ab40c0addfa755fe9))
+* force apt-get backend for maintenance role's safe upgrade ([#136](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/136)) ([cad0d66](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/cad0d66034c84da3795d6606c644b456bf8b9bc6)), closes [#135](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/135)
+
 ## [1.0.0](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/0.1.17...1.0.0) (2026-08-21)
 
 
