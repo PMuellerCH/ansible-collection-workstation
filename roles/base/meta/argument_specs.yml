@@ -98,7 +98,7 @@ argument_specs:
       base_open_vm_tools_version:
         type: str
         required: false
-        default: "2:13.0.0-2~ubuntu0.24.04.1"
+        default: "2:13.0.10-0ubuntu0.24.04.1"
         description: open-vm-tools apt package version (only installed when running under VMware).
       base_locales_version:
         type: str

@@ -34,7 +34,7 @@ base_openssl_version: "3.0.13-0ubuntu3.12"
 # renovate: datasource=deb depName=direnv registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
 base_direnv_version: "2.32.1-2ubuntu0.24.04.3"
 # renovate: datasource=deb depName=open-vm-tools registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
-base_open_vm_tools_version: "2:13.0.0-2~ubuntu0.24.04.1"
+base_open_vm_tools_version: "2:13.0.10-0ubuntu0.24.04.1"
 # renovate: datasource=deb depName=locales registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
 base_locales_version: "2.39-0ubuntu8.8"
 # renovate: datasource=deb depName=hunspell-de-ch registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
