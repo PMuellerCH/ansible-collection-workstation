@@ -157,3 +157,14 @@
           - "'terraform' in _cli_dev_env_claude_code_global.mcpServers"
           - "'github' in _cli_dev_env_claude_code_global.mcpServers"
           - "'renovate' in _cli_dev_env_claude_code_global.mcpServers"
+
+    - name: Assert a manually-registered MCP server (seeded in prepare.yml) survived converge
+      # Proves the role merges onto mcpServers instead of replacing it
+      # wholesale — a server added outside this role (e.g. `claude mcp add`)
+      # must not be silently wiped by a re-run.
+      vars:
+        _cli_dev_env_claude_code_global: "{{ _cli_dev_env_claude_code_global_raw.content | b64decode | from_json }}"
+      ansible.builtin.assert:
+        that:
+          - "'aws-mcp' in _cli_dev_env_claude_code_global.mcpServers"
+          - _cli_dev_env_claude_code_global.mcpServers['aws-mcp'].command == 'uvx'

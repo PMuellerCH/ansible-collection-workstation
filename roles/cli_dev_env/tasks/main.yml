@@ -508,8 +508,17 @@
         command: npx
         args: ["-y", "renovate-mcp"]
         env: {}
+    # Merge onto (not replace) any existing mcpServers entries — a server
+    # registered outside this role (e.g. via `claude mcp add`, or `aws
+    # configure agent-toolkit`'s `aws-mcp`) survives a re-run instead of
+    # being silently wiped. Role-managed keys above still win on conflict
+    # (combine() defaults to the second/right-hand dict), so this role
+    # remains authoritative for its own servers' config.
+    _cli_dev_env_claude_code_merged_mcp_servers: >-
+      {{ (_cli_dev_env_claude_code_current_global.mcpServers | default({}))
+         | combine(_cli_dev_env_claude_code_desired_mcp_servers) }}
   ansible.builtin.copy:
-    content: "{{ _cli_dev_env_claude_code_current_global | combine({'mcpServers': _cli_dev_env_claude_code_desired_mcp_servers}) | to_nice_json }}\n"
+    content: "{{ _cli_dev_env_claude_code_current_global | combine({'mcpServers': _cli_dev_env_claude_code_merged_mcp_servers}) | to_nice_json }}\n"
     dest: "{{ ansible_facts['env']['HOME'] }}/.claude.json"
     mode: "0600"
   become: false
@@ -520,5 +529,5 @@
   when: >-
     not ansible_check_mode and
     cli_dev_env_claude_code_enabled and
-    (_cli_dev_env_claude_code_current_global.mcpServers | default({})) != _cli_dev_env_claude_code_desired_mcp_servers
+    (_cli_dev_env_claude_code_current_global.mcpServers | default({})) != _cli_dev_env_claude_code_merged_mcp_servers
   tags: [claude-code, cli_dev_env]

@@ -231,10 +231,15 @@ rather than Ubuntu's apt repository, to track a current LTS major version:
 
 ### MCP servers
 
-The Claude Code CLI's global config (`~/.claude.json`) has its `mcpServers`
-key merged with the following servers on every run — other keys in the file
-are left untouched (`ansible.builtin.combine` over the parsed JSON, not a
-full overwrite):
+The Claude Code CLI's global config (`~/.claude.json`) has the following
+servers merged onto its `mcpServers` key on every run — both other top-level
+keys in the file *and* any pre-existing `mcpServers` entries not listed below
+are left untouched (`ansible.builtin.combine` twice: once over the whole
+parsed JSON so unrelated top-level keys survive, and once inside `mcpServers`
+itself so a server registered outside this role — e.g. via `claude mcp add`,
+or `aws configure agent-toolkit`'s `aws-mcp` — survives a re-run instead of
+being silently wiped). The servers below still win on conflict, so this role
+remains authoritative for its own servers' config:
 
 | Server | Command | Purpose |
 | --- | --- | --- |
@@ -244,6 +249,11 @@ full overwrite):
 | `terraform` | `npx -y terraform-mcp-server` | Terraform registry/provider lookup |
 | `github` | `npx -y @modelcontextprotocol/server-github` | GitHub API access (uses `cli_dev_env_claude_code_github_token`) |
 | `renovate` | `npx -y renovate-mcp` | Renovate config lookup |
+
+The two `uvx`-launched servers (`awslabs.*`) set `UV_SYSTEM_CERTS: "true"` in
+their own `env` block, on top of (belt-and-suspenders with) the `base` role's
+global `UV_SYSTEM_CERTS` in `/etc/environment` — see that role's README for
+why `uv`/`uvx` need this at all behind a TLS-inspecting corporate proxy.
 
 A stray `mcpServers` key in `~/.claude/settings.json` (the *project/user
 settings* file, distinct from `~/.claude.json`) is removed if present — MCP

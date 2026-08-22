@@ -343,6 +343,23 @@
   when: base_http_proxy != ''
   tags: [base]
 
+- name: Set UV_SYSTEM_CERTS so uv/uvx trust the OS CA store
+  # uv/uvx use their own vendored CA bundle (via rustls) by default, not the
+  # OS trust store this role installs the corporate CA into above — same
+  # class of problem as Node.js above (NODE_EXTRA_CA_CERTS), just a
+  # different opt-in mechanism. Without this, any uv/uvx invocation that
+  # needs to fetch a package (e.g. `uvx <pypi-package>`, or a uvx-launched
+  # MCP server) fails with "invalid peer certificate: UnknownIssuer".
+  ansible.builtin.lineinfile:
+    path: /etc/environment
+    regexp: '^UV_SYSTEM_CERTS='
+    line: "UV_SYSTEM_CERTS=1"
+    create: true
+    mode: "0644"
+  become: true
+  when: base_http_proxy != ''
+  tags: [base]
+
 - name: Create Flatpak system overrides directory
   ansible.builtin.file:
     path: /var/lib/flatpak/overrides

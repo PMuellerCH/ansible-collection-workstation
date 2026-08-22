@@ -12,3 +12,30 @@
         state: present
         update_cache: true
       become: true
+
+    - name: Create ~/.claude directory
+      ansible.builtin.file:
+        path: "{{ ansible_facts['env']['HOME'] }}/.claude"
+        state: directory
+        mode: "0755"
+      become: false
+
+    - name: Seed ~/.claude.json with a manually-registered MCP server
+      # Simulates a server added outside this role (e.g. `claude mcp add`,
+      # or `aws configure agent-toolkit`'s aws-mcp) — verify.yml asserts
+      # this survives converge, proving the role merges onto mcpServers
+      # rather than replacing it wholesale.
+      ansible.builtin.copy:
+        dest: "{{ ansible_facts['env']['HOME'] }}/.claude.json"
+        mode: "0600"
+        content: |
+          {
+            "mcpServers": {
+              "aws-mcp": {
+                "type": "stdio",
+                "command": "uvx",
+                "args": ["mcp-proxy-for-aws@latest"]
+              }
+            }
+          }
+      become: false

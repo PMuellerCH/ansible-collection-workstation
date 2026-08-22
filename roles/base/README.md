@@ -26,7 +26,9 @@ slice — see [Tags](#tags).
   the Flatpak sandbox global override (Spotify), `/etc/environment`, `~/.npmrc`,
   and GNOME dconf (`base_desktop_environment == 'gnome'` only); installs the
   corporate proxy CA certificate into the system trust store and syncs it to a
-  Flatpak-accessible bundle.
+  Flatpak-accessible bundle; sets `NODE_EXTRA_CA_CERTS` and `UV_SYSTEM_CERTS`
+  in `/etc/environment` so Node.js and `uv`/`uvx` (neither of which reads the
+  OS trust store by default) trust the corporate CA too.
 - Installs git and configures global identity/editor/pull-push defaults, plus
   optional SSH-based commit/tag signing.
 - Creates `~/.ssh/` and `~/.config/ssh/`, deploys a config that routes GitHub SSH
