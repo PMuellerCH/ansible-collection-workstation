@@ -46,6 +46,15 @@
       ansible.builtin.assert:
         that: "code_quality_tools_trivy_version in _code_quality_tools_trivy_version.stdout"
 
+    - name: Check actionlint runs
+      ansible.builtin.command: actionlint -version
+      register: _code_quality_tools_actionlint_version
+      changed_when: false
+
+    - name: Assert actionlint reports the pinned version
+      ansible.builtin.assert:
+        that: "code_quality_tools_actionlint_version in _code_quality_tools_actionlint_version.stdout"
+
     - name: Check pipx bootstrap produced pipx >= 1.7.0
       ansible.builtin.command: "{{ _code_quality_tools_local_bin }}/pipx --version"
       register: _code_quality_tools_pipx_version

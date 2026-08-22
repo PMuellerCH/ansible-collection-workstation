@@ -45,6 +45,50 @@
   when: code_quality_tools_trivy_enabled and not ansible_check_mode
   tags: [trivy, code_quality_tools]
 
+# actionlint — static linter for GitHub Actions workflow YAML (catches
+# syntax errors, invalid expressions, shellcheck integration for `run:`
+# steps), so problems in a workflow are caught locally before pushing
+# instead of only surfacing in CI.
+- name: Get installed actionlint version
+  ansible.builtin.command: actionlint -version
+  register: code_quality_tools_actionlint_current_version
+  changed_when: false
+  failed_when: false
+  when: code_quality_tools_actionlint_enabled
+  tags: [actionlint, code_quality_tools]
+
+- name: Download actionlint archive
+  ansible.builtin.get_url:
+    url: "{{ code_quality_tools_actionlint_download_base }}/actionlint_{{ code_quality_tools_actionlint_version }}_linux_amd64.tar.gz"
+    dest: "/tmp/actionlint_{{ code_quality_tools_actionlint_version }}_linux_amd64.tar.gz"
+    # rhysd/actionlint publishes an aggregate, version-named checksums.txt per
+    # release — get_url fetches it and matches the entry by the source URL's
+    # basename, so there's no static checksum to keep in sync by hand when
+    # Renovate bumps code_quality_tools_actionlint_version.
+    checksum: "sha256:{{ code_quality_tools_actionlint_download_base }}/actionlint_{{ code_quality_tools_actionlint_version }}_checksums.txt"
+    mode: "0644"
+  when: >-
+    code_quality_tools_actionlint_enabled and
+    (code_quality_tools_actionlint_current_version.rc != 0 or
+     code_quality_tools_actionlint_version not in code_quality_tools_actionlint_current_version.stdout)
+  tags: [actionlint, code_quality_tools]
+
+- name: Install actionlint binary to /usr/local/bin
+  ansible.builtin.unarchive:
+    src: "/tmp/actionlint_{{ code_quality_tools_actionlint_version }}_linux_amd64.tar.gz"
+    dest: /usr/local/bin/
+    include:
+      - actionlint
+    remote_src: true
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and
+    code_quality_tools_actionlint_enabled and
+    (code_quality_tools_actionlint_current_version.rc != 0 or
+     code_quality_tools_actionlint_version not in code_quality_tools_actionlint_current_version.stdout)
+  tags: [actionlint, code_quality_tools]
+
 # pre-commit (apt)
 - name: Install pre-commit via apt
   ansible.builtin.apt:

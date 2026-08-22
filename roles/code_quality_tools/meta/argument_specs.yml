@@ -10,6 +10,11 @@ argument_specs:
         required: false
         default: true
         description: Whether to install trivy.
+      code_quality_tools_actionlint_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install actionlint.
       code_quality_tools_pre_commit_enabled:
         type: bool
         required: false
@@ -47,6 +52,16 @@ argument_specs:
         required: false
         default: "https://github.com/aquasecurity/trivy/releases/download/v{{ code_quality_tools_trivy_version }}"
         description: Base URL the trivy .deb and its checksums file are downloaded from, before the filename.
+      code_quality_tools_actionlint_version:
+        type: str
+        required: false
+        default: "1.7.12"
+        description: actionlint version (github-releases rhysd/actionlint), installed from a checksum-verified tar.gz.
+      code_quality_tools_actionlint_download_base:
+        type: str
+        required: false
+        default: "https://github.com/rhysd/actionlint/releases/download/v{{ code_quality_tools_actionlint_version }}"
+        description: Base URL the actionlint archive and its checksums file are downloaded from, before the filename.
       code_quality_tools_pre_commit_version:
         type: str
         required: false

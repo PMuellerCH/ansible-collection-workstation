@@ -1,12 +1,13 @@
 # swisstopo.workstation.code_quality_tools
 
 Installs code-quality and security tooling used across repos: `trivy`
-(container/IaC vulnerability scanner), `pre-commit` (git hook framework),
-and the pipx-based tools `pre-commit` hooks commonly shell out to —
-`detect-secrets`, `yamllint`, `checkov`, `ansible-lint` (with `ansible-core`
-injected into its venv so `ansible-lint` can actually parse plays). Bundled
-together because they're all "tools a repo's pre-commit config invokes" —
-the same category of tool a developer reaches for regardless of language.
+(container/IaC vulnerability scanner), `actionlint` (GitHub Actions workflow
+linter), `pre-commit` (git hook framework), and the pipx-based tools
+`pre-commit` hooks commonly shell out to — `detect-secrets`, `yamllint`,
+`checkov`, `ansible-lint` (with `ansible-core` injected into its venv so
+`ansible-lint` can actually parse plays). Bundled together because they're
+all "tools a repo's pre-commit config invokes" — the same category of tool a
+developer reaches for regardless of language.
 
 This role is **tools-only**. It does not wire up git hooks (`pre-commit
 install`, `pre-commit install --hook-type commit-msg`) or generate a
@@ -17,6 +18,7 @@ do. Wire those up in the consuming repo's own playbook.
 ## What it does
 
 - Installs `trivy` from a GitHub-released `.deb`.
+- Installs `actionlint` from a GitHub-released, checksum-verified tar.gz.
 - Installs the `pre-commit` apt package.
 - Bootstraps an adequate `pipx` (see "pipx bootstrap" below) and, through it,
   installs `detect-secrets`, `yamllint`, `checkov`, and `ansible-lint` (with
@@ -36,6 +38,7 @@ a real workstation, run `base` first, per the root README.
 | Variable | Default | Description |
 | --- | --- | --- |
 | `code_quality_tools_trivy_enabled` | `true` | Install trivy |
+| `code_quality_tools_actionlint_enabled` | `true` | Install actionlint |
 | `code_quality_tools_pre_commit_enabled` | `true` | Install the pre-commit apt package |
 | `code_quality_tools_detect_secrets_enabled` | `true` | Install detect-secrets via pipx |
 | `code_quality_tools_yamllint_enabled` | `true` | Install yamllint via pipx |
@@ -43,6 +46,8 @@ a real workstation, run `base` first, per the root README.
 | `code_quality_tools_ansible_lint_enabled` | `true` | Install ansible-lint via pipx, with ansible-core injected |
 | `code_quality_tools_trivy_version` | see `defaults/main.yml` | trivy version (github-releases: `aquasecurity/trivy`) |
 | `code_quality_tools_trivy_download_base` | see `defaults/main.yml` | Base URL the trivy `.deb`/checksums file are downloaded from |
+| `code_quality_tools_actionlint_version` | see `defaults/main.yml` | actionlint version (github-releases: `rhysd/actionlint`) |
+| `code_quality_tools_actionlint_download_base` | see `defaults/main.yml` | Base URL the actionlint archive/checksums file are downloaded from |
 | `code_quality_tools_pre_commit_version` | see `defaults/main.yml` | Exact apt version of pre-commit |
 | `code_quality_tools_detect_secrets_version` | see `defaults/main.yml` | detect-secrets version (pypi) |
 | `code_quality_tools_yamllint_version` | see `defaults/main.yml` | yamllint version (pypi) |
@@ -68,6 +73,7 @@ tool:
 | Tool | Tags |
 | --- | --- |
 | trivy | `trivy`, `code_quality_tools` |
+| actionlint | `actionlint`, `code_quality_tools` |
 | pre-commit (apt package) | `pre_commit`, `code_quality_tools` |
 | pipx bootstrap | `detect_secrets`, `yamllint`, `checkov`, `ansible_lint`, `code_quality_tools` (runs if any of those tools is enabled) |
 | detect-secrets | `detect_secrets`, `code_quality_tools` |
@@ -85,6 +91,11 @@ tag cascades to every task in the role and defeats this per-tool filtering.
   `sha256sum`-format file, fed directly to `get_url`'s `checksum:` param —
   no custom fetch/parse tasks needed). The installed version is checked
   before downloading, for idempotency.
+- `actionlint` is downloaded from GitHub releases the same way, checksum-
+  verified against its own aggregate `actionlint_<version>_checksums.txt`,
+  and extracted straight to `/usr/local/bin/actionlint` (the release tar.gz
+  is flat, no subdirectory to strip — same shape as lazygit's archive in
+  `cli_dev_env`).
 - `pre-commit` is a plain pinned apt package (Ubuntu ships one), held after
   install like every other pinned apt package in this collection.
 

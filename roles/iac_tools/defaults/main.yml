@@ -2,6 +2,7 @@
 # Per-tool enable flags — preserve original per-role identity within the merged role.
 iac_tools_ansible_enabled: true
 iac_tools_docker_enabled: true
+iac_tools_act_enabled: true
 iac_tools_aws_enabled: true
 iac_tools_terraform_enabled: true
 iac_tools_kubernetes_tools_enabled: true
@@ -35,6 +36,11 @@ iac_tools_hvac_version: "2.4.0"
 # ── docker ───────────────────────────────────────────────────────────────
 # renovate: datasource=github-releases depName=moby/moby extractVersion=^docker-v(?<version>.*)$
 iac_tools_docker_version: "29.7.2"
+
+# ── act ──────────────────────────────────────────────────────────────────
+# renovate: datasource=github-releases depName=nektos/act extractVersion=^v(?<version>.*)$
+iac_tools_act_version: "0.2.89"
+iac_tools_act_download_base: "https://github.com/nektos/act/releases/download/v{{ iac_tools_act_version }}"
 
 # ── aws ──────────────────────────────────────────────────────────────────
 # renovate: datasource=github-tags depName=aws/aws-cli

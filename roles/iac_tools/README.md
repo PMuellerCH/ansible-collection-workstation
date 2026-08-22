@@ -1,11 +1,12 @@
 # swisstopo.workstation.iac_tools
 
 Installs infra/cloud CLI tooling a cloud engineer reaches for together:
-`ansible-core` (pipx) with Galaxy collections, Docker CE, AWS CLI v2 +
-session-manager-plugin, Terraform + Vault + tfswitch/tflint/terraform-docs,
-and a full Kubernetes toolchain (kubectl, k9s, helm, kubectx/kubens, stern,
-krew, kubeconform, kube-linter). Bundled together because they're the same
-category of tool for provisioning and operating cloud infrastructure.
+`ansible-core` (pipx) with Galaxy collections, Docker CE, `act` (run GitHub
+Actions workflows locally), AWS CLI v2 + session-manager-plugin, Terraform +
+Vault + tfswitch/tflint/terraform-docs, and a full Kubernetes toolchain
+(kubectl, k9s, helm, kubectx/kubens, stern, krew, kubeconform, kube-linter).
+Bundled together because they're the same category of tool for provisioning
+and operating cloud infrastructure.
 
 ## What it does
 
@@ -13,6 +14,9 @@ category of tool for provisioning and operating cloud infrastructure.
   `molecule-plugins` into its venv, and installs the collection's own
   requirements (Galaxy collections).
 - **docker**: installs Docker CE from its official apt repository.
+- **act**: installs `act` from a checksum-verified GitHub release tar.gz —
+  runs a workflow job locally via Docker rather than just linting it (see
+  `code_quality_tools`' `actionlint` for the linting half).
 - **aws**: installs AWS CLI v2 and `session-manager-plugin` from GitHub
   releases, and renders `~/.aws/config` from `iac_tools_aws_profiles`.
 - **terraform**: installs Terraform, Vault, tfswitch, tflint, and
@@ -36,6 +40,7 @@ a real workstation, run `base` first, per the root README.
 | --- | --- | --- |
 | `iac_tools_ansible_enabled` | `true` | Install ansible-core + Galaxy collections |
 | `iac_tools_docker_enabled` | `true` | Install Docker CE |
+| `iac_tools_act_enabled` | `true` | Install act (requires a working Docker daemon to actually run anything) |
 | `iac_tools_aws_enabled` | `true` | Install AWS CLI v2 + session-manager-plugin |
 | `iac_tools_terraform_enabled` | `true` | Install Terraform/Vault/tfswitch/tflint/terraform-docs |
 | `iac_tools_kubernetes_tools_enabled` | `true` | Install the Kubernetes toolchain |
@@ -49,6 +54,8 @@ a real workstation, run `base` first, per the root README.
 | `iac_tools_ansible_molecule_plugins_version` | see `defaults/main.yml` | molecule-plugins[docker] version (pypi), injected into the ansible-core venv |
 | `iac_tools_hvac_version` | see `defaults/main.yml` | hvac version (pypi), injected into the ansible-core venv by both `ansible` and `kubernetes_tools` |
 | `iac_tools_docker_version` | see `defaults/main.yml` | Docker CE version (github-releases: `moby/moby`) |
+| `iac_tools_act_version` | see `defaults/main.yml` | act version (github-releases: `nektos/act`) |
+| `iac_tools_act_download_base` | see `defaults/main.yml` | Base URL the act archive/checksums.txt are downloaded from |
 | `iac_tools_aws_cli_version` | see `defaults/main.yml` | AWS CLI v2 version (github-tags: `aws/aws-cli`) |
 | `iac_tools_aws_boto3_version` | see `defaults/main.yml` | boto3 version (pypi), injected into the ansible-core venv |
 | `iac_tools_aws_session_manager_plugin_version` | see `defaults/main.yml` | session-manager-plugin version (github-releases: `aws/session-manager-plugin`) |
@@ -105,6 +112,7 @@ so a consuming playbook can filter to a single sub-role:
 | --- | --- |
 | ansible-core, Galaxy collections | `ansible`, `iac_tools` |
 | Docker CE | `docker`, `iac_tools` |
+| act | `act`, `iac_tools` |
 | AWS CLI, session-manager-plugin | `aws`, `iac_tools` |
 | Terraform, Vault, tfswitch, tflint, terraform-docs | `terraform`, `iac_tools` |
 | kubectl, k9s, helm, kubectx/kubens, stern, krew, kubeconform, kube-linter | `kubernetes_tools`, `iac_tools` |
@@ -211,6 +219,12 @@ every inject) is gated with `when: not ansible_check_mode`.
 
 ## Notes
 
+- **act** is downloaded from a pinned GitHub release and checksum-verified
+  against upstream's own aggregate `checksums.txt` (tier-1), extracted
+  straight to `/usr/local/bin/act` (the release tar.gz is flat, no
+  subdirectory to strip). Installing the binary doesn't require Docker to
+  already be present, but it needs a working Docker daemon at runtime to
+  actually execute anything.
 - **kubectl** is checksum-verified against its published `.sha256` from
   `dl.k8s.io`.
 - **AWS CLI v2 installer** and **session-manager-plugin** only publish a GPG

@@ -87,6 +87,16 @@
       ansible.builtin.assert:
         that: "'docker' in _iac_tools_docker_group_check.stdout"
 
+    # ── act ──────────────────────────────────────────────────────────────
+    - name: Check act reports the pinned version
+      ansible.builtin.command: act --version
+      register: _iac_tools_act_check
+      changed_when: false
+
+    - name: Assert act reports the pinned version
+      ansible.builtin.assert:
+        that: "iac_tools_act_version in _iac_tools_act_check.stdout"
+
     # ── aws ──────────────────────────────────────────────────────────────
     - name: Check AWS CLI reports the pinned version
       ansible.builtin.command: aws --version

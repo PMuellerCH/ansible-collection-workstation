@@ -16,6 +16,15 @@ argument_specs:
         required: false
         default: true
         description: Whether to install Docker CE.
+      iac_tools_act_enabled:
+        type: bool
+        required: false
+        default: true
+        description: >-
+          Whether to install act (runs GitHub Actions workflows locally via
+          Docker). Installing the binary doesn't itself require
+          iac_tools_docker_enabled, but act needs a working Docker daemon to
+          run anything.
       iac_tools_aws_enabled:
         type: bool
         required: false
@@ -90,6 +99,16 @@ argument_specs:
         required: false
         default: "29.7.1"
         description: Docker CE version (github-releases moby/moby), installed from the official apt repo.
+      iac_tools_act_version:
+        type: str
+        required: false
+        default: "0.2.89"
+        description: act version (github-releases nektos/act), installed from a checksum-verified tar.gz.
+      iac_tools_act_download_base:
+        type: str
+        required: false
+        default: "https://github.com/nektos/act/releases/download/v{{ iac_tools_act_version }}"
+        description: Base URL the act archive and its checksums.txt are downloaded from, before the filename.
       iac_tools_aws_cli_version:
         type: str
         required: false
