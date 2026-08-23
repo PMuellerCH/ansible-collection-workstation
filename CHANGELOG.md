@@ -1,5 +1,23 @@
 # Changelog
 
+## [1.1.0](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/1.0.1...1.1.0) (2026-08-22)
+
+
+### Features
+
+* add actionlint and act for local GitHub Actions validation ([#150](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/150)) ([2366289](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/23662893efe9811aec555ee3ffceae9ca95cc69f))
+
+
+### Bug Fixes
+
+* install Claude Code CLI in user context instead of root-owned global ([#149](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/149)) ([b56615a](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/b56615ae1843963a0ba41567bb2707196e89ae89))
+* trust corporate CA for uv/uvx, merge instead of replace mcpServers ([#151](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/151)) ([8e22558](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/8e22558f84ef9ae0e095405d48631963371a22e4)), closes [#141](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/141)
+
+
+### Miscellaneous
+
+* **deps:** update dependency @anthropic-ai/claude-code to v2.1.240 ([#134](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/134)) ([9d19545](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/9d195457ca6b0fa3fb695ee24118fb72bd8d8016))
+
 ## [1.0.1](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/1.0.0...1.0.1) (2026-08-22)
 
 
