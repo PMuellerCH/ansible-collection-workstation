@@ -146,10 +146,12 @@ tag cascades to every task in the role and defeats this per-tool filtering.
   windows each get their own independent, unnamed session rather than
   attaching to the shared `main` session — deliberate, not a bug (see the
   inline comment on the task).
-- **TPM plugins are NOT auto-installed by Ansible** — after first setup,
-  press `prefix + I` inside tmux to install plugins
-  (`tmux-sensible`, `tmux-resurrect`, `tmux-continuum`, `tmux-yank`,
-  `tmux-open`).
+- TPM's headless installer (`~/.tmux/plugins/tpm/bin/install_plugins`) runs
+  automatically after `tmux.conf` is deployed, installing the declared
+  plugins (`tmux-sensible`, `tmux-resurrect`, `tmux-continuum`, `tmux-yank`,
+  `tmux-open`) to `~/.config/tmux/plugins/` — no manual `prefix + I` needed
+  on first setup. Re-running it is skipped once those plugin directories
+  already exist; use `prefix + U` inside tmux to update them afterward.
 - **tmux-resurrect** saves pane layout and running programs; restore with
   `prefix + Ctrl-r`.
 - **tmux-continuum** auto-saves every 15 minutes and restores the last
