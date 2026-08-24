@@ -344,11 +344,22 @@
   tags: [claude-code, cli_dev_env]
 
 - name: Remove Node.js if installed major version does not match configured LTS
+  # not ansible_check_mode is required here, not just on the tasks below:
+  # the "Check installed Node.js major version" command task above doesn't
+  # skip under --check, it returns a *simulated* result (rc: 0, empty
+  # stdout, "Command would have run if not in check mode") — without this
+  # guard, that empty stdout never starts with 'v<major>.', so this task
+  # concludes the version doesn't match even when it does, and actually
+  # attempts removal — apt's own check-mode simulation still hard-fails on
+  # a held package (apt refuses to build a resolution plan for one at all,
+  # real or simulated, without --allow-change-held-packages), so no removal
+  # actually happens either way, but the run does.
   ansible.builtin.apt:
     name: nodejs
     state: absent
   become: true
   when: >-
+    not ansible_check_mode and
     cli_dev_env_claude_code_enabled and
     cli_dev_env_claude_code_node_installed_version.rc == 0 and
     not cli_dev_env_claude_code_node_installed_version.stdout.startswith('v' + cli_dev_env_claude_code_nodejs_major_version | string + '.')
