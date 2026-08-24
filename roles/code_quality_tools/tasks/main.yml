@@ -189,3 +189,34 @@
   become: false
   when: not ansible_check_mode and code_quality_tools_ansible_lint_enabled
   tags: [ansible_lint, code_quality_tools]
+
+- name: Get installed ansible-core version in the ansible-lint pipx venv
+  # community.general.pipx's `state: inject` idempotency check only looks at
+  # whether *a* version of ansible-core is present in the venv, not whether
+  # it matches the pin above — so a Renovate bump to
+  # code_quality_tools_ansible_core_version silently has no effect on a
+  # machine that already had an older version injected. This check (and the
+  # force-reinstall task below) close that gap. Uses `python3 -m pipx`
+  # rather than a `pipx` PATH lookup, same reasoning as the pipx bootstrap
+  # itself (see README).
+  ansible.builtin.command: python3 -m pipx runpip ansible-lint show ansible-core
+  register: code_quality_tools_ansible_core_installed
+  become: false
+  changed_when: false
+  failed_when: false
+  when: code_quality_tools_ansible_lint_enabled and not ansible_check_mode
+  tags: [ansible_lint, code_quality_tools]
+
+- name: Force-reinstall ansible-core in the ansible-lint pipx venv when the pinned version drifted
+  ansible.builtin.command:
+    cmd: >-
+      python3 -m pipx runpip ansible-lint install --force-reinstall
+      "ansible-core=={{ code_quality_tools_ansible_core_version }}"
+  become: false
+  changed_when: true
+  when: >-
+    not ansible_check_mode and
+    code_quality_tools_ansible_lint_enabled and
+    code_quality_tools_ansible_core_installed.rc == 0 and
+    ('Version: ' + code_quality_tools_ansible_core_version) not in code_quality_tools_ansible_core_installed.stdout_lines
+  tags: [ansible_lint, code_quality_tools]

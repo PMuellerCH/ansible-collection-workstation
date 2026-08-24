@@ -136,3 +136,18 @@ is gated with `when: not ansible_check_mode`, so a `--check` run degrades
 gracefully on a box that has never had an adequate pipx instead of hard
 failing when the tool-install tasks try to introspect pipx state that was
 never actually created.
+
+### ansible-core injection version enforcement
+
+`community.general.pipx`'s `state: inject` idempotency check only looks at
+whether *a* version of `ansible-core` is already present in the ansible-lint
+pipx venv, not whether it matches `code_quality_tools_ansible_core_version`
+— so on a machine that already had an older version injected, a Renovate
+bump to that variable silently had no effect (the inject task reported no
+change, and the stale version stayed installed). To close that gap, a
+version-check task (`python3 -m pipx runpip ansible-lint show ansible-core`)
+runs after the inject task and, when the installed version doesn't match the
+pin, force-reinstalls it (`python3 -m pipx runpip ansible-lint install
+--force-reinstall "ansible-core==<pinned version>"`). Uses `python3 -m pipx`
+rather than a `pipx` `$PATH` lookup, same reasoning as the pipx bootstrap
+above.
