@@ -97,6 +97,7 @@
     name: flameshot
     selection: hold
   become: true
+  when: not ansible_check_mode
   tags: [flameshot, desktop_customization]
 
 - name: Create autostart directory

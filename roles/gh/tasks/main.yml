@@ -13,4 +13,5 @@
     name: gh
     selection: hold
   become: true
+  when: not ansible_check_mode
   tags: gh

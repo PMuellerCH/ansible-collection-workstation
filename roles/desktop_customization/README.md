@@ -123,7 +123,10 @@ own to keep `--tags flameshot` self-sufficient.
 ## Flameshot
 
 - Installed via apt, exact version pinned (`desktop_customization_flameshot_version`)
-  and held afterward so unattended `apt upgrade` can't drift it.
+  and held afterward so unattended `apt upgrade` can't drift it. The hold task
+  is gated with `when: not ansible_check_mode` — on a fresh machine under
+  `--check` the install above is a no-op, so flameshot has no dpkg record yet
+  and `dpkg_selections` would otherwise hard-fail.
 - An XDG autostart entry is deployed to `~/.config/autostart/flameshot.desktop`
   so Flameshot starts at login.
 

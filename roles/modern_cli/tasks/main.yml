@@ -15,7 +15,7 @@
     name: bat
     selection: hold
   become: true
-  when: modern_cli_bat_enabled
+  when: modern_cli_bat_enabled and not ansible_check_mode
   tags: [bat, modern_cli]
 
 - name: Create bat config and themes directories
@@ -65,7 +65,7 @@
     name: btop
     selection: hold
   become: true
-  when: modern_cli_btop_enabled
+  when: modern_cli_btop_enabled and not ansible_check_mode
   tags: [btop, modern_cli]
 
 - name: Create btop themes directory
@@ -138,7 +138,7 @@
     name: htop
     selection: hold
   become: true
-  when: modern_cli_htop_enabled
+  when: modern_cli_htop_enabled and not ansible_check_mode
   tags: [htop, modern_cli]
 
 # eza
@@ -157,7 +157,7 @@
     name: eza
     selection: hold
   become: true
-  when: modern_cli_eza_enabled
+  when: modern_cli_eza_enabled and not ansible_check_mode
   tags: [cli-tools, modern_cli]
 
 # fd
@@ -176,7 +176,7 @@
     name: fd-find
     selection: hold
   become: true
-  when: modern_cli_fd_enabled
+  when: modern_cli_fd_enabled and not ansible_check_mode
   tags: [cli-tools, modern_cli]
 
 - name: Create /usr/local/bin/fd symlink (fd-find installs as fdfind on Debian/Ubuntu)
@@ -206,7 +206,7 @@
     name: ripgrep
     selection: hold
   become: true
-  when: modern_cli_ripgrep_enabled
+  when: modern_cli_ripgrep_enabled and not ansible_check_mode
   tags: [cli-tools, modern_cli]
 
 # zoxide
@@ -225,7 +225,7 @@
     name: zoxide
     selection: hold
   become: true
-  when: modern_cli_zoxide_enabled
+  when: modern_cli_zoxide_enabled and not ansible_check_mode
   tags: [cli-tools, modern_cli]
 
 # fzf
@@ -356,7 +356,10 @@
     - nodejs
     - npm
   become: true
-  when: modern_cli_presenterm_enabled and modern_cli_npm_check.rc != 0
+  when: >-
+    modern_cli_presenterm_enabled and
+    modern_cli_npm_check.rc != 0 and
+    not ansible_check_mode
   tags: [presenterm, modern_cli]
 
 - name: Install mermaid-cli globally via npm

@@ -138,3 +138,7 @@ cascades to every task in the role and defeats this per-tool filtering.
   left over from before — but only if its content is still the old
   single-line `export VAULT_ADDR=...` snippet, never an `iac_tools`-managed
   `vault.zsh`.
+- Every `dpkg_selections: hold` task is gated with `when: not ansible_check_mode`
+  — on a fresh machine under `--check`, the preceding apt install is itself a
+  no-op, so the package has no dpkg record yet and `dpkg_selections` would
+  hard-fail instead of degrading gracefully.

@@ -137,3 +137,11 @@ be independently runnable, `modern_cli` bootstraps its own adequate pipx
 (`pip install --user pipx=={{ modern_cli_pipx_min_version }}`) rather than
 assuming a consumer already upgraded the system pipx — identical to the
 pattern used by the `code_quality_tools` role.
+
+## Check-mode
+
+Every apt-installed tool's `dpkg_selections: hold` task is gated with
+`when: ... and not ansible_check_mode` — on a fresh machine under `--check`
+the preceding apt install is itself a no-op, so the package has no dpkg
+record yet and `dpkg_selections` would hard-fail instead of degrading
+gracefully.

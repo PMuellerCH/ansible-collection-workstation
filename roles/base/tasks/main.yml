@@ -33,6 +33,7 @@
     - pwgen
     - openssl
     - direnv
+  when: not ansible_check_mode
   tags: [base]
 
 - name: Install open-vm-tools (VMware guest utilities)
@@ -48,7 +49,7 @@
     name: open-vm-tools
     selection: hold
   become: true
-  when: ansible_virtualization_type == "VMware"
+  when: ansible_virtualization_type == "VMware" and not ansible_check_mode
   tags: [base]
 
 - name: Create autostart directory
@@ -121,6 +122,7 @@
     - locales
     - hunspell-de-ch
     - hunspell-en-us
+  when: not ansible_check_mode
   tags: [base]
 
 - name: Generate format locale
@@ -450,6 +452,7 @@
     name: git
     selection: hold
   become: true
+  when: not ansible_check_mode
   tags: [git]
 
 - name: Configure git user name
@@ -647,6 +650,7 @@
     - build-essential
     - python3-pip
     - python3-venv
+  when: not ansible_check_mode
   tags: [python]
 
 - name: Get installed uv version
@@ -704,6 +708,7 @@
   loop:
     - fontconfig
     - unzip
+  when: not ansible_check_mode
   tags: [fonts]
 
 - name: Create user fonts directory
