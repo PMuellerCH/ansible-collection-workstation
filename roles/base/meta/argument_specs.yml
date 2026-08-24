@@ -53,72 +53,58 @@ argument_specs:
       base_curl_version:
         type: str
         required: false
-        default: "8.5.0-2ubuntu10.11"
         description: curl apt package version.
       base_jq_version:
         type: str
         required: false
-        default: "1.7.1-3ubuntu0.24.04.2"
         description: jq apt package version.
       base_yq_version:
         type: str
         required: false
-        default: "3.1.0-3"
         description: yq apt package version.
       base_unzip_version:
         type: str
         required: false
-        default: "6.0-28ubuntu4.1"
         description: unzip apt package version.
       base_dnsutils_version:
         type: str
         required: false
-        default: "1:9.18.39-0ubuntu0.24.04.5"
         description: dnsutils apt package version.
       base_cifs_utils_version:
         type: str
         required: false
-        default: "2:7.0-2ubuntu0.5"
         description: cifs-utils apt package version.
       base_pwgen_version:
         type: str
         required: false
-        default: "2.08-2build2"
         description: pwgen apt package version.
       base_openssl_version:
         type: str
         required: false
-        default: "3.0.13-0ubuntu3.11"
         description: openssl apt package version.
       base_direnv_version:
         type: str
         required: false
-        default: "2.32.1-2ubuntu0.24.04.3"
         description: direnv apt package version.
       base_open_vm_tools_version:
         type: str
         required: false
-        default: "2:13.0.10-0ubuntu0.24.04.1"
         description: open-vm-tools apt package version (only installed when running under VMware).
       base_locales_version:
         type: str
         required: false
-        default: "2.39-0ubuntu8.7"
         description: locales apt package version.
       base_hunspell_de_ch_version:
         type: str
         required: false
-        default: "20161207-12"
         description: hunspell-de-ch apt package version.
       base_hunspell_en_us_version:
         type: str
         required: false
-        default: "1:2020.12.07-2"
         description: hunspell-en-us apt package version.
       base_git_version:
         type: str
         required: false
-        default: "1:2.43.0-1ubuntu7.3"
         description: Exact apt package version of git to install (held after install).
       base_git_user_name:
         type: str
@@ -181,35 +167,28 @@ argument_specs:
       base_python_uv_version:
         type: str
         required: false
-        default: "0.11.31"
         description: uv version (github-releases astral-sh/uv).
       base_python_build_essential_version:
         type: str
         required: false
-        default: "12.10ubuntu1"
         description: build-essential apt package version.
       base_python_pip_version:
         type: str
         required: false
-        default: "24.0+dfsg-1ubuntu1.3"
         description: python3-pip apt package version.
       base_python_venv_version:
         type: str
         required: false
-        default: "3.12.3-0ubuntu2.1"
         description: python3-venv apt package version.
       base_fonts_fontconfig_version:
         type: str
         required: false
-        default: "2.15.0-1.1ubuntu2"
         description: fontconfig apt package version.
       base_fonts_unzip_version:
         type: str
         required: false
-        default: "6.0-28ubuntu4.1"
         description: unzip apt package version (installed independently of base_unzip_version so --tags fonts is self-sufficient).
       base_fonts_nerd_font_version:
         type: str
         required: false
-        default: "3.4.0"
         description: Nerd Fonts release version (github-releases ryanoasis/nerd-fonts).

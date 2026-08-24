@@ -16,7 +16,6 @@ argument_specs:
       desktop_customization_flameshot_version:
         type: str
         required: false
-        default: "12.1.0-2build2"
         description: flameshot apt package version (deb datasource, Ubuntu Noble).
       desktop_customization_smile_enabled:
         type: bool

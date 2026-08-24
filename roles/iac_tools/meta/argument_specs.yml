@@ -66,7 +66,6 @@ argument_specs:
       iac_tools_pipx_min_version:
         type: str
         required: false
-        default: "1.7.1"
         description: >-
           pipx version (pypi) bootstrapped via `pip install --user` to satisfy
           community.general.pipx's >= 1.7.0 requirement, since Ubuntu 24.04's
@@ -74,22 +73,18 @@ argument_specs:
       iac_tools_ansible_core_version:
         type: str
         required: false
-        default: "2.21.2"
         description: ansible-core version (pypi), installed via pipx.
       iac_tools_ansible_molecule_version:
         type: str
         required: false
-        default: "26.6.0"
         description: molecule version (pypi), injected into the ansible-core pipx venv.
       iac_tools_ansible_molecule_plugins_version:
         type: str
         required: false
-        default: "26.7.15"
         description: molecule-plugins[docker] version (pypi), injected into the ansible-core pipx venv.
       iac_tools_hvac_version:
         type: str
         required: false
-        default: "2.4.0"
         description: >-
           hvac version (pypi), injected into the ansible-core pipx venv by
           both the ansible and kubernetes_tools sub-roles (shared version to
@@ -97,12 +92,10 @@ argument_specs:
       iac_tools_docker_version:
         type: str
         required: false
-        default: "29.7.1"
         description: Docker CE version (github-releases moby/moby), installed from the official apt repo.
       iac_tools_act_version:
         type: str
         required: false
-        default: "0.2.89"
         description: act version (github-releases nektos/act), installed from a checksum-verified tar.gz.
       iac_tools_act_download_base:
         type: str
@@ -112,17 +105,14 @@ argument_specs:
       iac_tools_aws_cli_version:
         type: str
         required: false
-        default: "2.36.16"
         description: AWS CLI v2 version (github-tags aws/aws-cli), installed from the official installer.
       iac_tools_aws_boto3_version:
         type: str
         required: false
-        default: "1.43.27"
         description: boto3 version (pypi), injected into the ansible-core pipx venv.
       iac_tools_aws_session_manager_plugin_version:
         type: str
         required: false
-        default: "1.2.814.0"
         description: session-manager-plugin version (github-releases aws/session-manager-plugin), installed from a .deb.
       iac_tools_aws_profiles:
         type: list
@@ -136,22 +126,18 @@ argument_specs:
       iac_tools_terraform_version:
         type: str
         required: false
-        default: "1.15.8-1"
         description: Terraform apt package version (deb datasource, HashiCorp apt repo).
       iac_tools_vault_version:
         type: str
         required: false
-        default: "2.0.4-1"
         description: Vault apt package version (deb datasource, HashiCorp apt repo).
       iac_tools_tflint_version:
         type: str
         required: false
-        default: "0.64.0"
         description: tflint binary version (github-releases terraform-linters/tflint).
       iac_tools_terraform_docs_version:
         type: str
         required: false
-        default: "0.24.0"
         description: terraform-docs binary version (github-releases terraform-docs/terraform-docs).
       iac_tools_terraform_docs_archive:
         type: str
@@ -161,7 +147,6 @@ argument_specs:
       iac_tools_tfswitch_version:
         type: str
         required: false
-        default: "1.19.0"
         description: tfswitch binary version (github-releases warrensbox/terraform-switcher), installed from a checksum-verified archive.
       iac_tools_tfswitch_archive:
         type: str
@@ -192,7 +177,6 @@ argument_specs:
       iac_tools_kubectl_version:
         type: str
         required: false
-        default: "1.36.3"
         description: kubectl version (github-releases kubernetes/kubernetes), checksum-verified against dl.k8s.io.
       iac_tools_kubectl_url:
         type: str
@@ -207,17 +191,14 @@ argument_specs:
       iac_tools_k9s_version:
         type: str
         required: false
-        default: "0.50.18"
         description: k9s version (github-releases derailed/k9s).
       iac_tools_helm_version:
         type: str
         required: false
-        default: "4.2.3"
         description: helm version (github-releases helm/helm).
       iac_tools_kubectx_version:
         type: str
         required: false
-        default: "0.11.0"
         description: kubectx/kubens version (github-releases ahmetb/kubectx).
       iac_tools_kubectx_archive:
         type: str
@@ -232,37 +213,30 @@ argument_specs:
       iac_tools_stern_version:
         type: str
         required: false
-        default: "1.34.0"
         description: stern version (github-releases stern/stern).
       iac_tools_krew_version:
         type: str
         required: false
-        default: "0.5.0"
         description: krew version (github-releases kubernetes-sigs/krew).
       iac_tools_kubeconform_version:
         type: str
         required: false
-        default: "0.8.0"
         description: kubeconform version (github-releases yannh/kubeconform).
       iac_tools_kube_linter_version:
         type: str
         required: false
-        default: "0.8.3"
         description: kube-linter version (github-releases stackrox/kube-linter).
       iac_tools_kubernetes_pip_kubernetes_version:
         type: str
         required: false
-        default: "36.0.3"
         description: Python `kubernetes` library version (pypi), for non-Ubuntu targets only.
       iac_tools_kubernetes_pip_jsonpatch_version:
         type: str
         required: false
-        default: "1.33"
         description: Python `jsonpatch` library version (pypi), for non-Ubuntu targets only.
       iac_tools_kubernetes_pip_pyhcl_version:
         type: str
         required: false
-        default: "0.4.5"
         description: Python `pyhcl` library version (pypi), for non-Ubuntu targets only.
       iac_tools_kubernetes_clusters:
         type: list

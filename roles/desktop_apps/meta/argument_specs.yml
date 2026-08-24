@@ -18,7 +18,6 @@ argument_specs:
       desktop_apps_onlyoffice_version:
         type: str
         required: false
-        default: "9.4.0-129"
         description: >-
           onlyoffice-desktopeditors apt package version (deb datasource:
           OnlyOffice's own apt repository), installed from OnlyOffice's

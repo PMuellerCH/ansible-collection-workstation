@@ -35,12 +35,10 @@ argument_specs:
       clipboard_tools_wl_clipboard_version:
         type: str
         required: false
-        default: "2.2.1-1build1"
         description: Exact apt package version of wl-clipboard to install (held after install).
       clipboard_tools_cliphist_version:
         type: str
         required: false
-        default: "0.7.0"
         description: cliphist version (github-releases sentriz/cliphist), installed from a checksum-verified binary.
       clipboard_tools_cliphist_checksum:
         type: str
@@ -55,7 +53,6 @@ argument_specs:
       clipboard_tools_clipse_version:
         type: str
         required: false
-        default: "1.2.1"
         description: clipse version (github-releases savedra1/clipse), installed from a checksum-verified archive.
       clipboard_tools_clipse_archive:
         type: str

@@ -18,7 +18,6 @@ argument_specs:
       chat_clients_teams_version:
         type: str
         required: false
-        default: "2.13.0"
         description: teams-for-linux version (github-releases IsmaelMartinez/teams-for-linux).
       chat_clients_teams_download_base:
         type: str
