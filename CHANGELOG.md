@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.1.1](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/1.1.0...1.1.1) (2026-08-24)
+
+
+### Bug Fixes
+
+* guard Node.js removal task against check-mode false positive ([#155](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/155)) ([12c73a8](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/12c73a83ba3e821bcc5e16d2a3cb770cc820a5e0))
+* stop cli_dev_env's npm prefix from fighting base's ~/.npmrc ([#157](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/157)) ([8a7a6bb](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/8a7a6bb5e7125c054904cd60352d0485bac4f268)), closes [#156](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/156)
+
+
+### Miscellaneous
+
+* **deps:** update dependency @anthropic-ai/claude-code to v2.1.241 ([#153](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/153)) ([67b596b](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/67b596bdb3f98c89dbe4379e12b6db31f94bdbb9))
+
 ## [1.1.0](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/1.0.1...1.1.0) (2026-08-22)
 
 
