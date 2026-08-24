@@ -202,14 +202,20 @@ installs and configures the CLI; it does not (and cannot) authenticate it.
 The npm install itself (`community.general.npm`, `global: true`) runs
 **without `become`**. npm's default global prefix is root-owned on a
 NodeSource install (e.g. `/usr/lib/node_modules`), so a plain `global: true`
-install would need root — instead, a `prefix=` line is added to the
-invoking user's own `~/.npmrc` (via `lineinfile`, so any other settings the
-user already has there are preserved) pointing at `~/.local`. The `claude`
-binary ends up in `~/.local/bin`, which `terminal_env`'s `.zshrc` already
-puts ahead of `/usr/bin` on `PATH`. This means Claude Code can self-update
-(`claude update` / auto-update) without root, and a re-run of this role
-doesn't need root for the CLI itself either (Node.js/npm's own apt install
-still does).
+install would need root — instead, `NPM_CONFIG_PREFIX` is pointed at
+`~/.local`, both as a task-level `environment:` override on the install
+task itself, and persistently via
+`~/.config/environment.d/npm-prefix.conf` (systemd user session env) for
+the user's own future interactive `npm install -g`/Claude Code self-update
+calls. **Not** a `prefix=` line in `~/.npmrc`: `base`'s own npm proxy-config
+task fully overwrites that file on every run (when `base_http_proxy` is
+set), so anything else writing into the same file fights it forever — found
+live as a perpetual non-idempotency loop, same class of bug as `base`
+colliding with `iac_tools` over `vault.zsh`. The `claude` binary ends up in
+`~/.local/bin`, which `terminal_env`'s `.zshrc` already puts ahead of
+`/usr/bin` on `PATH`. This means Claude Code can self-update (`claude
+update` / auto-update) without root, and a re-run of this role doesn't need
+root for the CLI itself either (Node.js/npm's own apt install still does).
 
 If a machine already has the old root-owned global install from a previous
 version of this role, it's detected (`stat

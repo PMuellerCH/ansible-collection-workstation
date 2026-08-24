@@ -146,6 +146,17 @@
       ansible.builtin.assert:
         that: "cli_dev_env_claude_code_version in _cli_dev_env_claude_code_version.stdout"
 
+    - name: Read npm prefix environment.d config
+      ansible.builtin.slurp:
+        src: "{{ ansible_facts['env']['HOME'] }}/.config/environment.d/npm-prefix.conf"
+      register: _cli_dev_env_npm_prefix_conf_raw
+
+    - name: Assert npm prefix environment.d config points at ~/.local (not a ~/.npmrc prefix= line)
+      ansible.builtin.assert:
+        that: >-
+          ('NPM_CONFIG_PREFIX=' + ansible_facts['env']['HOME'] + '/.local')
+          in (_cli_dev_env_npm_prefix_conf_raw.content | b64decode)
+
     - name: Read Claude Code global config
       ansible.builtin.slurp:
         src: "{{ ansible_facts['env']['HOME'] }}/.claude.json"

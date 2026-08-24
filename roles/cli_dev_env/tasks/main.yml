@@ -408,7 +408,7 @@
   # Older versions of this role installed Claude Code as a root-owned global
   # npm package (become: true, default npm prefix on a NodeSource install is
   # /usr). This role now installs it under the invoking user's own npm
-  # prefix instead (see the ~/.npmrc task below), so a fresh `claude` on
+  # prefix instead (see NPM_CONFIG_PREFIX below), so a fresh `claude` on
   # PATH no longer needs root to self-update — but a machine that already
   # ran the old version has a stale root-owned copy left on disk. It no
   # longer wins on PATH (the user prefix's bin dir is prepended ahead of
@@ -425,33 +425,51 @@
     not ansible_check_mode
   tags: [claude-code, cli_dev_env]
 
-- name: Ensure npm global installs go to the user's own prefix
-  # Without this, the global install below would need become: true (npm's
-  # default global prefix is root-owned on a NodeSource install, e.g.
-  # /usr/lib/node_modules) — install Claude Code as the invoking user
-  # instead, so it doesn't need root and can self-update without root
-  # either. lineinfile (not copy) so any other settings a user has in their
-  # own ~/.npmrc (e.g. registry auth) are preserved. mode 0600 (not the repo
-  # default 0644) since ~/.npmrc can hold credentials — same mode the base
-  # role already uses for its own ~/.npmrc proxy-config task, and a
-  # narrower mode: here would otherwise relax an existing 0600 file's
-  # permissions on every run.
-  ansible.builtin.lineinfile:
-    path: "{{ ansible_facts['env']['HOME'] }}/.npmrc"
-    regexp: "^prefix="
-    line: "prefix={{ ansible_facts['env']['HOME'] }}/.local"
-    create: true
-    mode: "0600"
+- name: Create environment.d directory
+  # Not assuming base already created this — role independence (this role
+  # must be runnable standalone, see README/collection conventions).
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/environment.d"
+    state: directory
+    mode: "0755"
+  become: false
+  when: cli_dev_env_claude_code_enabled
+  tags: [claude-code, cli_dev_env]
+
+- name: Deploy npm prefix environment.d config
+  # Not a ~/.npmrc prefix= line: base's own "Deploy npm proxy configuration
+  # (~/.npmrc)" task fully overwrites that file on every run it's enabled
+  # (base_http_proxy != ''), so a prefix= line added there by lineinfile
+  # would fight it forever — base removes it, this task re-adds it, next
+  # run repeats indefinitely (found live; same class of bug as #124's
+  # base/iac_tools vault.zsh collision, just no shared-filename escape hatch
+  # here since ~/.npmrc's name is fixed by npm itself). A systemd user
+  # session env var in its own file sidesteps the collision entirely, and
+  # — unlike a task-scoped environment: override on the install task alone —
+  # also covers the user's own future interactive `npm install -g`/Claude
+  # Code self-update calls, not just this Ansible-driven install.
+  ansible.builtin.copy:
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/environment.d/npm-prefix.conf"
+    mode: "0644"
+    content: |
+      NPM_CONFIG_PREFIX={{ ansible_facts['env']['HOME'] }}/.local
   become: false
   when: cli_dev_env_claude_code_enabled
   tags: [claude-code, cli_dev_env]
 
 - name: Install Claude Code CLI globally via npm
+  # NPM_CONFIG_PREFIX here too, not just via the environment.d file above:
+  # environment.d only takes effect for new systemd user sessions started
+  # after this file is deployed, not for this ansible-playbook run itself
+  # (which inherited whatever environment the user's current session had at
+  # invocation time, e.g. before a first-ever run).
   community.general.npm:
     name: "@anthropic-ai/claude-code"
     version: "{{ cli_dev_env_claude_code_version }}"
     global: true
     state: present
+  environment:
+    NPM_CONFIG_PREFIX: "{{ ansible_facts['env']['HOME'] }}/.local"
   become: false
   when: cli_dev_env_claude_code_enabled and not ansible_check_mode
   tags: [claude-code, cli_dev_env]
