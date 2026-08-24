@@ -30,7 +30,7 @@ cli_dev_env_claude_code_nodejs_version: "24.18.0-1nodesource1"
 # renovate: datasource=deb depName=build-essential registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
 cli_dev_env_claude_code_build_essential_version: "12.10ubuntu1"
 # renovate: datasource=npm depName=@anthropic-ai/claude-code
-cli_dev_env_claude_code_version: "2.1.240"
+cli_dev_env_claude_code_version: "2.1.241"
 cli_dev_env_claude_code_aws_profile: "default"
 cli_dev_env_claude_code_aws_region: "eu-central-1"
 cli_dev_env_claude_code_github_token: ""
