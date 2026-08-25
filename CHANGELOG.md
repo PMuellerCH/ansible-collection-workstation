@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.2](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/1.2.1...1.2.2) (2026-08-25)
+
+
+### Bug Fixes
+
+* allow held packages to be changed for still-pinned local .deb installs ([#182](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/182)) ([7c2acef](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/7c2acef597ad72ede2e7b6e5e2186561a10174a1))
+
 ## [1.2.1](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/1.2.0...1.2.1) (2026-08-25)
 
 
