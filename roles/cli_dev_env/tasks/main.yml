@@ -430,10 +430,7 @@
   # stdout, "Command would have run if not in check mode") — without this
   # guard, that empty stdout never starts with 'v<major>.', so this task
   # concludes the version doesn't match even when it does, and actually
-  # attempts removal — apt's own check-mode simulation still hard-fails on
-  # a held package (apt refuses to build a resolution plan for one at all,
-  # real or simulated, without --allow-change-held-packages), so no removal
-  # actually happens either way, but the run does.
+  # attempts removal.
   ansible.builtin.apt:
     name: nodejs
     state: absent
@@ -448,33 +445,14 @@
 - name: Install Node.js and build tools
   ansible.builtin.apt:
     name:
-      - "nodejs={{ cli_dev_env_claude_code_nodejs_version }}"
-      - "build-essential={{ cli_dev_env_claude_code_build_essential_version }}"
+      - nodejs
+      - build-essential
     state: present
     update_cache: true
   become: true
   when: >-
     not ansible_check_mode and
     cli_dev_env_claude_code_enabled
-  tags: [claude-code, cli_dev_env]
-
-- name: Hold nodejs and build-essential package versions
-  # Same pattern as every other version-pinned apt package in this
-  # collection (e.g. modern_cli's nodejs/npm, iac_tools' docker-ce,
-  # code_quality_tools' trivy): without a hold, a plain `apt upgrade` on the
-  # host could silently drift these past the pinned version. Guarded by
-  # not ansible_check_mode for the same reason as code_quality_tools' trivy
-  # hold task — dpkg_selections hard-fails if the package isn't actually
-  # present in dpkg's database yet, which is the case under --check since
-  # the install task above is itself skipped in check mode.
-  ansible.builtin.dpkg_selections:
-    name: "{{ item }}"
-    selection: hold
-  loop:
-    - nodejs
-    - build-essential
-  become: true
-  when: cli_dev_env_claude_code_enabled and not ansible_check_mode
   tags: [claude-code, cli_dev_env]
 
 - name: Check for legacy root-owned global Claude Code install

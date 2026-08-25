@@ -24,16 +24,11 @@ the `cli_dev_env` role's own neovim plugin management. Likewise `emoji-fzf`
 covers only the CLI/TUI emoji picker — the GUI picker (`smile`, via Flatpak)
 belongs to the `desktop_customization` role.
 
-The `nodejs`/`npm` apt install (pinned via `modern_cli_presenterm_nodejs_version`
-/ `_npm_version`, held afterward) only runs when no working `npm` is already
-on `$PATH` (checked via `npm --version`). mermaid-cli only needs *some*
-working Node/npm, not this exact version — if another role already provided
-one (e.g. a newer NodeSource install), pinning and holding our own older apt
-version would force an unwanted downgrade of a shared system runtime other
-tools may depend on at a specific major version. This is different from
-every other exact-pin-and-hold task in this role: those (bat, btop, eza,
-etc.) each own their package outright, so a downgrade there only affects
-that one tool.
+The `nodejs`/`npm` apt install only runs when no working `npm` is already on
+`$PATH` (checked via `npm --version`) — mermaid-cli only needs *some*
+working Node/npm, not a specific version, so this role defers to whatever
+another role (e.g. `cli_dev_env`'s NodeSource install) already provided
+rather than installing a second, older apt-archive copy alongside it.
 
 ## What it does
 
@@ -100,22 +95,13 @@ take effect.
 | `modern_cli_jaq_enabled` | `true` | Install jaq |
 | `modern_cli_moor_enabled` | `true` | Install moor (the tool formerly known as "moar" — upstream renamed it) |
 | `modern_cli_yazi_enabled` | `true` | Install yazi (from a GitHub-released `.deb`) |
-| `modern_cli_bat_version` | see `defaults/main.yml` | Exact apt version of bat |
-| `modern_cli_btop_version` | see `defaults/main.yml` | Exact apt version of btop |
 | `modern_cli_btop_catppuccin_version` | see `defaults/main.yml` | `catppuccin/btop` release tag for the theme archive |
 | `modern_cli_emoji_fzf_version` | see `defaults/main.yml` | emoji-fzf PyPI package version, installed via pipx |
-| `modern_cli_eza_version` | see `defaults/main.yml` | Exact apt version of eza |
-| `modern_cli_fd_version` | see `defaults/main.yml` | Exact apt version of fd-find |
 | `modern_cli_fzf_version` | see `defaults/main.yml` | fzf binary version (github-releases: `junegunn/fzf`) |
-| `modern_cli_htop_version` | see `defaults/main.yml` | Exact apt version of htop |
 | `modern_cli_presenterm_version` | see `defaults/main.yml` | presenterm binary version (github-releases: `mfontanini/presenterm`) |
 | `modern_cli_presenterm_download_base` | see `defaults/main.yml` | Base URL the presenterm archive and its `.sha512` checksum are downloaded from |
 | `modern_cli_presenterm_archive` | see `defaults/main.yml` | Filename of the presenterm release archive |
 | `modern_cli_presenterm_mermaid_cli_version` | see `defaults/main.yml` | `@mermaid-js/mermaid-cli` npm version for mermaid rendering |
-| `modern_cli_presenterm_nodejs_version` | see `defaults/main.yml` | Exact apt version of nodejs, required for mermaid-cli |
-| `modern_cli_presenterm_npm_version` | see `defaults/main.yml` | Exact apt version of npm (not pulled in automatically by nodejs — only a Suggests, not a Depends) |
-| `modern_cli_ripgrep_version` | see `defaults/main.yml` | Exact apt version of ripgrep |
-| `modern_cli_zoxide_version` | see `defaults/main.yml` | Exact apt version of zoxide |
 | `modern_cli_pipx_min_version` | see `defaults/main.yml` | pipx version bootstrapped via `pip --user` so `community.general.pipx` (needs >=1.7.0) works on Ubuntu 24.04's apt-provided pipx 1.4.3. Only used when `modern_cli_emoji_fzf_enabled` |
 | `modern_cli_yazi_version` | see `defaults/main.yml` | yazi binary version (github-releases: `sxyazi/yazi`) |
 | `modern_cli_yazi_checksum` | see `defaults/main.yml` | Checksum of the yazi `.deb`, verified by `get_url` |
@@ -125,13 +111,8 @@ take effect.
 | `modern_cli_bat_theme_ref` | see `defaults/main.yml` | Pinned commit of `catppuccin/bat` the theme file is downloaded from |
 | `modern_cli_bat_theme_checksum` | see `defaults/main.yml` | Checksum of the bat theme file, verified by `get_url` |
 | `modern_cli_btop_catppuccin_checksum` | see `defaults/main.yml` | Checksum of the btop themes archive, verified by `get_url` |
-| `modern_cli_sd_version` | see `defaults/main.yml` | Exact apt version of sd |
-| `modern_cli_duf_version` | see `defaults/main.yml` | Exact apt version of duf |
-| `modern_cli_delta_version` | see `defaults/main.yml` | Exact apt version of git-delta |
 | `modern_cli_delta_catppuccin_ref` | see `defaults/main.yml` | Pinned commit of `catppuccin/delta` the theme gitconfig is downloaded from (no releases/tags published upstream) |
 | `modern_cli_delta_catppuccin_checksum` | see `defaults/main.yml` | Checksum of the catppuccin.gitconfig file, verified by `get_url` |
-| `modern_cli_gping_version` | see `defaults/main.yml` | Exact apt version of gping |
-| `modern_cli_hexyl_version` | see `defaults/main.yml` | Exact apt version of hexyl |
 | `modern_cli_procs_version` | see `defaults/main.yml` | procs binary version (github-releases: `dalance/procs`) |
 | `modern_cli_procs_checksum` | see `defaults/main.yml` | Checksum of the procs zip archive, verified by `get_url` |
 | `modern_cli_dust_version` | see `defaults/main.yml` | dust binary version (github-releases: `bootandy/dust`) |
@@ -221,10 +202,14 @@ alongside the other aliases: it wraps `yazi` so exiting it also `cd`s your
 shell to whatever directory you navigated to inside the file manager
 (yazi's own documented pattern, not custom to this role).
 
-## Check-mode
+## apt package versions
 
-Every apt-installed tool's `dpkg_selections: hold` task is gated with
-`when: ... and not ansible_check_mode` — on a fresh machine under `--check`
-the preceding apt install is itself a no-op, so the package has no dpkg
-record yet and `dpkg_selections` would hard-fail instead of degrading
-gracefully.
+Apt-installed tools in this role (`bat`, `btop`, `duf`, `eza`, `fd-find`,
+`gping`, `hexyl`, `htop`, `git-delta`, `nodejs`/`npm`, `ripgrep`, `sd`,
+`zoxide`) install unpinned (`state: present`) — see the
+[root README](../../README.md#apt-package-versions-are-unpinned) for why.
+`dust` and `yazi` are downloaded as pinned, checksum-verified local `.deb`
+files (their exact version determines which GitHub release artifact is
+fetched) but, like every other package in this role, are no longer
+dpkg-held after install — a held package blocks even a legitimate reinstall
+of a newer pinned `.deb`.

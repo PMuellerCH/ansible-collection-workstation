@@ -74,21 +74,9 @@ argument_specs:
         default: "24"
         description: >-
           Node.js LTS major version installed from NodeSource for the
-          Claude Code CLI. Not Renovate-managed — see
-          cli_dev_env_claude_code_nodejs_version.
-      cli_dev_env_claude_code_nodejs_version:
-        type: str
-        required: false
-        default: "24.18.0-1nodesource1"
-        description: >-
-          Exact NodeSource nodejs apt package version pinned alongside
-          cli_dev_env_claude_code_nodejs_major_version. Not
-          Renovate-managed — NodeSource version strings are incompatible
-          with the deb datasource; update manually when upgrading Node.js.
-      cli_dev_env_claude_code_build_essential_version:
-        type: str
-        required: false
-        description: build-essential apt package version (deb datasource), required to build native npm dependencies.
+          Claude Code CLI (selects which deb.nodesource.com/node_{major}.x
+          repo to add). nodejs and build-essential themselves are installed
+          unpinned — see the root README.
       cli_dev_env_claude_code_version:
         type: str
         required: false

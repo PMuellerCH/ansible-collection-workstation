@@ -41,7 +41,6 @@ into a graphical GNOME session, not over a headless SSH connection.
 | Variable | Default | Description |
 | --- | --- | --- |
 | `desktop_customization_desktop_environment` | `gnome` | Desktop environment in use (`gnome` or `cosmic`). Controls which task set is applied. |
-| `desktop_customization_flameshot_version` | see `defaults/main.yml` | flameshot apt package version (deb datasource: Ubuntu Noble), held after install. |
 | `desktop_customization_smile_enabled` | `true` | Whether to install the `smile` emoji picker. Also gates the Flatpak/Flathub bootstrap (the only consumer of Flatpak in this role). |
 
 ## Example Playbook
@@ -122,11 +121,8 @@ own to keep `--tags flameshot` self-sufficient.
 
 ## Flameshot
 
-- Installed via apt, exact version pinned (`desktop_customization_flameshot_version`)
-  and held afterward so unattended `apt upgrade` can't drift it. The hold task
-  is gated with `when: not ansible_check_mode` — on a fresh machine under
-  `--check` the install above is a no-op, so flameshot has no dpkg record yet
-  and `dpkg_selections` would otherwise hard-fail.
+- Installed via apt, unpinned — see the
+  [root README](../../README.md#apt-package-versions-are-unpinned) for why.
 - An XDG autostart entry is deployed to `~/.config/autostart/flameshot.desktop`
   so Flameshot starts at login.
 

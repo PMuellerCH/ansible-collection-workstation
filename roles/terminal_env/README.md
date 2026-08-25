@@ -44,15 +44,12 @@ no-op-if-exists safety net, in case the task order is ever changed.
 
 | Variable | Default | Description |
 | --- | --- | --- |
-| `terminal_env_zsh_version` | see `defaults/main.yml` | zsh apt package version (deb datasource: Ubuntu Noble) |
 | `terminal_env_zsh_omz_commit` | see `defaults/main.yml` | Pinned commit SHA of `ohmyzsh/ohmyzsh` used to fetch `install.sh` (no tags/releases published upstream; not Renovate-tracked, same posture as `modern_cli_bat_theme_ref`) |
 | `terminal_env_zsh_powerlevel10k_version` | see `defaults/main.yml` | powerlevel10k theme version (github-tags: `romkatv/powerlevel10k`) |
 | `terminal_env_zsh_fzf_tab_version` | see `defaults/main.yml` | fzf-tab plugin version (github-tags: `Aloxaf/fzf-tab`) |
 | `terminal_env_zsh_autosuggestions_version` | see `defaults/main.yml` | zsh-autosuggestions plugin version (github-tags: `zsh-users/zsh-autosuggestions`) |
 | `terminal_env_zsh_syntax_highlighting_version` | see `defaults/main.yml` | zsh-syntax-highlighting plugin version (github-tags: `zsh-users/zsh-syntax-highlighting`) |
-| `terminal_env_tmux_version` | see `defaults/main.yml` | tmux apt package version (deb datasource: Ubuntu Noble) |
 | `terminal_env_tmux_catppuccin_version` | see `defaults/main.yml` | Catppuccin tmux plugin version (github-releases: `catppuccin/tmux`) |
-| `terminal_env_kitty_version` | see `defaults/main.yml` | kitty apt package version (deb datasource: Ubuntu Noble) |
 
 ## Example Playbook
 
@@ -78,9 +75,8 @@ tag cascades to every task in the role and defeats this per-tool filtering.
 
 ## zsh
 
-- Installed via apt, exact version pinned and held afterward
-  (`allow_downgrade: true` so a machine with a newer stock zsh already
-  installed doesn't hard-fail apt's default downgrade refusal).
+- Installed via apt, unpinned — see the
+  [root README](../../README.md#apt-package-versions-are-unpinned) for why.
 - oh-my-zsh is installed via its shell script installer
   (`# noqa: command-instead-of-module` — no Ansible module alternative
   exists), fetched from a pinned commit SHA of `ohmyzsh/ohmyzsh` rather than
@@ -115,8 +111,8 @@ tag cascades to every task in the role and defeats this per-tool filtering.
 
 ## kitty
 
-- Installed via apt, exact version pinned and held afterward
-  (`allow_downgrade: true`, same reasoning as zsh above).
+- Installed via apt, unpinned — see the
+  [root README](../../README.md#apt-package-versions-are-unpinned) for why.
 - Configuration (Catppuccin Mocha, embedded in `kitty.conf`) is deployed to
   `~/.config/kitty/kitty.conf` with `force: false` so local edits survive
   re-runs.
@@ -125,8 +121,8 @@ tag cascades to every task in the role and defeats this per-tool filtering.
 
 ## tmux
 
-- Installed via apt, exact version pinned and held afterward
-  (`allow_downgrade: true`, same reasoning as zsh above).
+- Installed via apt, unpinned — see the
+  [root README](../../README.md#apt-package-versions-are-unpinned) for why.
 - TPM (Tmux Plugin Manager) is cloned to `~/.tmux/plugins/tpm`.
 - The Catppuccin Mocha theme plugin is cloned to
   `~/.config/tmux/plugins/catppuccin/tmux` at the pinned version (manual

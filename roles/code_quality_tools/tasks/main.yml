@@ -31,20 +31,6 @@
      code_quality_tools_trivy_current_version.stdout != code_quality_tools_trivy_version)
   tags: [trivy, code_quality_tools]
 
-- name: Hold trivy package version
-  # dpkg_selections hard-fails ("Failed to find package... to perform
-  # selection") if the package isn't actually present in dpkg's database yet
-  # — which is the case under --check on a machine where trivy has never
-  # really been installed, since the "Install trivy" task above is itself
-  # explicitly skipped in check mode (not merely simulated by apt). Same
-  # class of chained-task check-mode gap as the download itself.
-  ansible.builtin.dpkg_selections:
-    name: trivy
-    selection: hold
-  become: true
-  when: code_quality_tools_trivy_enabled and not ansible_check_mode
-  tags: [trivy, code_quality_tools]
-
 # actionlint — static linter for GitHub Actions workflow YAML (catches
 # syntax errors, invalid expressions, shellcheck integration for `run:`
 # steps), so problems in a workflow are caught locally before pushing
@@ -92,21 +78,12 @@
 # pre-commit (apt)
 - name: Install pre-commit via apt
   ansible.builtin.apt:
-    name: "pre-commit={{ code_quality_tools_pre_commit_version }}"
+    name: pre-commit
     state: present
     update_cache: true
     cache_valid_time: 3600
   become: true
   when: code_quality_tools_pre_commit_enabled
-  tags: [pre_commit, code_quality_tools]
-
-- name: Hold pre-commit package version
-  # Same check-mode gap as trivy's hold task above.
-  ansible.builtin.dpkg_selections:
-    name: pre-commit
-    selection: hold
-  become: true
-  when: code_quality_tools_pre_commit_enabled and not ansible_check_mode
   tags: [pre_commit, code_quality_tools]
 
 # pipx bootstrap — community.general.pipx requires pipx >= 1.7.0, but Ubuntu

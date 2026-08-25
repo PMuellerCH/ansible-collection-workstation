@@ -32,26 +32,6 @@
           - "'du-dust' in ansible_facts.packages"
           - "'yazi' in ansible_facts.packages"
 
-    - name: Get dpkg selections for held apt packages
-      ansible.builtin.command: "dpkg --get-selections {{ item }}"
-      register: _modern_cli_dpkg_selections
-      changed_when: false
-      loop:
-        - htop
-        - sd
-        - duf
-        - git-delta
-        - gping
-        - hexyl
-        - du-dust
-
-    - name: Assert held apt packages are held
-      ansible.builtin.assert:
-        that: "'hold' in item.stdout"
-      loop: "{{ _modern_cli_dpkg_selections.results }}"
-      loop_control:
-        label: "{{ item.item }}"
-
     - name: Stat fd symlink
       ansible.builtin.stat:
         path: /usr/local/bin/fd
@@ -211,15 +191,6 @@
       loop: "{{ _modern_cli_yazi_versions.results }}"
       loop_control:
         label: "{{ item.item }}"
-
-    - name: Get dpkg selection for yazi
-      ansible.builtin.command: dpkg --get-selections yazi
-      register: _modern_cli_yazi_selection
-      changed_when: false
-
-    - name: Assert yazi package version is held
-      ansible.builtin.assert:
-        that: "'hold' in _modern_cli_yazi_selection.stdout"
 
     - name: Stat yazi Catppuccin theme
       ansible.builtin.stat:

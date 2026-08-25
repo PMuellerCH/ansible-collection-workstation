@@ -2,20 +2,12 @@
 # bat
 - name: Install bat
   ansible.builtin.apt:
-    name: "bat={{ modern_cli_bat_version }}"
+    name: bat
     state: present
     update_cache: true
     cache_valid_time: 3600
   become: true
   when: modern_cli_bat_enabled
-  tags: [bat, modern_cli]
-
-- name: Hold bat package version
-  ansible.builtin.dpkg_selections:
-    name: bat
-    selection: hold
-  become: true
-  when: modern_cli_bat_enabled and not ansible_check_mode
   tags: [bat, modern_cli]
 
 - name: Create bat config and themes directories
@@ -52,20 +44,12 @@
 # btop
 - name: Install btop
   ansible.builtin.apt:
-    name: "btop={{ modern_cli_btop_version }}"
+    name: btop
     state: present
     update_cache: true
     cache_valid_time: 3600
   become: true
   when: modern_cli_btop_enabled
-  tags: [btop, modern_cli]
-
-- name: Hold btop package version
-  ansible.builtin.dpkg_selections:
-    name: btop
-    selection: hold
-  become: true
-  when: modern_cli_btop_enabled and not ansible_check_mode
   tags: [btop, modern_cli]
 
 - name: Create btop themes directory
@@ -125,7 +109,7 @@
 # htop
 - name: Install htop
   ansible.builtin.apt:
-    name: "htop={{ modern_cli_htop_version }}"
+    name: htop
     state: present
     update_cache: true
     cache_valid_time: 3600
@@ -133,18 +117,10 @@
   when: modern_cli_htop_enabled
   tags: [htop, modern_cli]
 
-- name: Hold htop package version
-  ansible.builtin.dpkg_selections:
-    name: htop
-    selection: hold
-  become: true
-  when: modern_cli_htop_enabled and not ansible_check_mode
-  tags: [htop, modern_cli]
-
 # eza
 - name: Install eza
   ansible.builtin.apt:
-    name: "eza={{ modern_cli_eza_version }}"
+    name: eza
     state: present
     update_cache: true
     cache_valid_time: 3600
@@ -152,31 +128,15 @@
   when: modern_cli_eza_enabled
   tags: [cli-tools, modern_cli]
 
-- name: Hold eza package version
-  ansible.builtin.dpkg_selections:
-    name: eza
-    selection: hold
-  become: true
-  when: modern_cli_eza_enabled and not ansible_check_mode
-  tags: [cli-tools, modern_cli]
-
 # fd
 - name: Install fd-find
   ansible.builtin.apt:
-    name: "fd-find={{ modern_cli_fd_version }}"
+    name: fd-find
     state: present
     update_cache: true
     cache_valid_time: 3600
   become: true
   when: modern_cli_fd_enabled
-  tags: [cli-tools, modern_cli]
-
-- name: Hold fd-find package version
-  ansible.builtin.dpkg_selections:
-    name: fd-find
-    selection: hold
-  become: true
-  when: modern_cli_fd_enabled and not ansible_check_mode
   tags: [cli-tools, modern_cli]
 
 - name: Create /usr/local/bin/fd symlink (fd-find installs as fdfind on Debian/Ubuntu)
@@ -193,7 +153,7 @@
 # ripgrep
 - name: Install ripgrep
   ansible.builtin.apt:
-    name: "ripgrep={{ modern_cli_ripgrep_version }}"
+    name: ripgrep
     state: present
     update_cache: true
     cache_valid_time: 3600
@@ -201,31 +161,15 @@
   when: modern_cli_ripgrep_enabled
   tags: [cli-tools, modern_cli]
 
-- name: Hold ripgrep package version
-  ansible.builtin.dpkg_selections:
-    name: ripgrep
-    selection: hold
-  become: true
-  when: modern_cli_ripgrep_enabled and not ansible_check_mode
-  tags: [cli-tools, modern_cli]
-
 # zoxide
 - name: Install zoxide
   ansible.builtin.apt:
-    name: "zoxide={{ modern_cli_zoxide_version }}"
+    name: zoxide
     state: present
     update_cache: true
     cache_valid_time: 3600
   become: true
   when: modern_cli_zoxide_enabled
-  tags: [cli-tools, modern_cli]
-
-- name: Hold zoxide package version
-  ansible.builtin.dpkg_selections:
-    name: zoxide
-    selection: hold
-  become: true
-  when: modern_cli_zoxide_enabled and not ansible_check_mode
   tags: [cli-tools, modern_cli]
 
 # fzf
@@ -339,27 +283,13 @@
   # already installed npm (e.g. via NodeSource).
   ansible.builtin.apt:
     name:
-      - "nodejs={{ modern_cli_presenterm_nodejs_version }}"
-      - "npm={{ modern_cli_presenterm_npm_version }}"
+      - nodejs
+      - npm
     state: present
     update_cache: true
     cache_valid_time: 3600
   become: true
   when: modern_cli_presenterm_enabled and modern_cli_npm_check.rc != 0
-  tags: [presenterm, modern_cli]
-
-- name: Hold nodejs and npm package versions
-  ansible.builtin.dpkg_selections:
-    name: "{{ item }}"
-    selection: hold
-  loop:
-    - nodejs
-    - npm
-  become: true
-  when: >-
-    modern_cli_presenterm_enabled and
-    modern_cli_npm_check.rc != 0 and
-    not ansible_check_mode
   tags: [presenterm, modern_cli]
 
 - name: Install mermaid-cli globally via npm
@@ -430,7 +360,7 @@
 # sd
 - name: Install sd
   ansible.builtin.apt:
-    name: "sd={{ modern_cli_sd_version }}"
+    name: sd
     state: present
     update_cache: true
     cache_valid_time: 3600
@@ -438,18 +368,10 @@
   when: modern_cli_sd_enabled
   tags: [cli-tools, modern_cli]
 
-- name: Hold sd package version
-  ansible.builtin.dpkg_selections:
-    name: sd
-    selection: hold
-  become: true
-  when: modern_cli_sd_enabled and not ansible_check_mode
-  tags: [cli-tools, modern_cli]
-
 # duf
 - name: Install duf
   ansible.builtin.apt:
-    name: "duf={{ modern_cli_duf_version }}"
+    name: duf
     state: present
     update_cache: true
     cache_valid_time: 3600
@@ -457,18 +379,10 @@
   when: modern_cli_duf_enabled
   tags: [cli-tools, modern_cli]
 
-- name: Hold duf package version
-  ansible.builtin.dpkg_selections:
-    name: duf
-    selection: hold
-  become: true
-  when: modern_cli_duf_enabled and not ansible_check_mode
-  tags: [cli-tools, modern_cli]
-
 # gping
 - name: Install gping
   ansible.builtin.apt:
-    name: "gping={{ modern_cli_gping_version }}"
+    name: gping
     state: present
     update_cache: true
     cache_valid_time: 3600
@@ -476,18 +390,10 @@
   when: modern_cli_gping_enabled
   tags: [cli-tools, modern_cli]
 
-- name: Hold gping package version
-  ansible.builtin.dpkg_selections:
-    name: gping
-    selection: hold
-  become: true
-  when: modern_cli_gping_enabled and not ansible_check_mode
-  tags: [cli-tools, modern_cli]
-
 # hexyl
 - name: Install hexyl
   ansible.builtin.apt:
-    name: "hexyl={{ modern_cli_hexyl_version }}"
+    name: hexyl
     state: present
     update_cache: true
     cache_valid_time: 3600
@@ -495,33 +401,17 @@
   when: modern_cli_hexyl_enabled
   tags: [cli-tools, modern_cli]
 
-- name: Hold hexyl package version
-  ansible.builtin.dpkg_selections:
-    name: hexyl
-    selection: hold
-  become: true
-  when: modern_cli_hexyl_enabled and not ansible_check_mode
-  tags: [cli-tools, modern_cli]
-
 # delta (apt package name git-delta, binary name delta) — includes Catppuccin
 # Mocha theming via git config, since delta only has meaningful theming once
 # wired into git itself (unlike bat/btop, which have standalone config files).
 - name: Install delta
   ansible.builtin.apt:
-    name: "git-delta={{ modern_cli_delta_version }}"
+    name: git-delta
     state: present
     update_cache: true
     cache_valid_time: 3600
   become: true
   when: modern_cli_delta_enabled
-  tags: [delta, modern_cli]
-
-- name: Hold delta package version
-  ansible.builtin.dpkg_selections:
-    name: git-delta
-    selection: hold
-  become: true
-  when: modern_cli_delta_enabled and not ansible_check_mode
   tags: [delta, modern_cli]
 
 - name: Create git conf.d directory
@@ -644,14 +534,6 @@
     modern_cli_dust_enabled and
     (modern_cli_dust_current_version.rc != 0 or
      modern_cli_dust_version not in modern_cli_dust_current_version.stdout)
-  tags: [dust, modern_cli]
-
-- name: Hold dust package version
-  ansible.builtin.dpkg_selections:
-    name: du-dust
-    selection: hold
-  become: true
-  when: modern_cli_dust_enabled and not ansible_check_mode
   tags: [dust, modern_cli]
 
 # viddy (github release, per-asset .sha256 file — dynamic checksum)
@@ -856,14 +738,6 @@
     modern_cli_yazi_enabled and
     (modern_cli_yazi_current_version.rc != 0 or
      modern_cli_yazi_version not in modern_cli_yazi_current_version.stdout)
-  tags: [yazi, modern_cli]
-
-- name: Hold yazi package version
-  ansible.builtin.dpkg_selections:
-    name: yazi
-    selection: hold
-  become: true
-  when: modern_cli_yazi_enabled and not ansible_check_mode
   tags: [yazi, modern_cli]
 
 - name: Create yazi config directory

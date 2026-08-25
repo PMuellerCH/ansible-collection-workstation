@@ -34,10 +34,6 @@ iac_tools_ansible_molecule_plugins_version: "26.7.15"
 # avoids two tasks fighting over different versions of the same package.
 iac_tools_hvac_version: "2.4.0"
 
-# ── docker ───────────────────────────────────────────────────────────────
-# renovate: datasource=github-releases depName=moby/moby extractVersion=^docker-v(?<version>.*)$
-iac_tools_docker_version: "29.7.2"
-
 # ── act ──────────────────────────────────────────────────────────────────
 # renovate: datasource=github-releases depName=nektos/act extractVersion=^v(?<version>.*)$
 iac_tools_act_version: "0.2.89"
@@ -62,10 +58,6 @@ iac_tools_aws_session_manager_plugin_version: "1.2.814.0"
 iac_tools_aws_profiles: []
 
 # ── terraform ────────────────────────────────────────────────────────────
-# renovate: datasource=deb depName=terraform registryUrl=https://apt.releases.hashicorp.com?suite=noble&components=main&binaryArch=amd64
-iac_tools_terraform_version: "1.15.9-1"
-# renovate: datasource=deb depName=vault registryUrl=https://apt.releases.hashicorp.com?suite=noble&components=main&binaryArch=amd64
-iac_tools_vault_version: "2.0.4-1"
 # renovate: datasource=github-releases depName=terraform-linters/tflint extractVersion=^v(?<version>.*)$
 iac_tools_tflint_version: "0.64.0"
 # renovate: datasource=github-releases depName=terraform-docs/terraform-docs extractVersion=^v(?<version>.*)$

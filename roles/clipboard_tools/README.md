@@ -22,7 +22,8 @@ just topically similar:
 
 ## What it does
 
-- Installs `wl-clipboard` via apt.
+- Installs `wl-clipboard` via apt, unpinned — see the
+  [root README](../../README.md#apt-package-versions-are-unpinned) for why.
 - Installs `cliphist` from GitHub releases and deploys an XDG autostart entry
   that runs `wl-paste --watch cliphist store`.
 - Installs `clipse` from GitHub releases.
@@ -48,7 +49,6 @@ take effect.
 | `clipboard_tools_wl_clipboard_enabled` | `true` | Install wl-clipboard |
 | `clipboard_tools_cliphist_enabled` | `true` | Install cliphist and deploy its autostart entry |
 | `clipboard_tools_clipse_enabled` | `true` | Install clipse |
-| `clipboard_tools_wl_clipboard_version` | see `defaults/main.yml` | Exact apt version of wl-clipboard (held after install) |
 | `clipboard_tools_cliphist_version` | see `defaults/main.yml` | cliphist binary version (github-releases: `sentriz/cliphist`) |
 | `clipboard_tools_cliphist_checksum` | see `defaults/main.yml` | Static sha256 checksum for the pinned cliphist binary (see "Checksum verification" below) |
 | `clipboard_tools_clipse_version` | see `defaults/main.yml` | clipse archive version (github-releases: `savedra1/clipse`) |

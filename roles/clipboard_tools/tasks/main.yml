@@ -2,24 +2,12 @@
 # ---- wl-clipboard ----
 - name: Install wl-clipboard
   ansible.builtin.apt:
-    name: "wl-clipboard={{ clipboard_tools_wl_clipboard_version }}"
+    name: wl-clipboard
     state: present
     update_cache: true
     cache_valid_time: 3600
   become: true
   when: clipboard_tools_wl_clipboard_enabled
-  tags: [wl-clipboard, clipboard_tools]
-
-- name: Hold wl-clipboard package version
-  ansible.builtin.dpkg_selections:
-    name: wl-clipboard
-    selection: hold
-  become: true
-  # dpkg_selections hard-fails if the package has no dpkg record yet — on a
-  # fresh host under --check, the apt task above never actually installs it,
-  # so this must be skipped rather than run, same pattern as terminal_env's
-  # dpkg_selections hold tasks.
-  when: clipboard_tools_wl_clipboard_enabled and not ansible_check_mode
   tags: [wl-clipboard, clipboard_tools]
 
 # ---- cliphist ----

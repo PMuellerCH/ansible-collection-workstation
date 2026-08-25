@@ -183,27 +183,15 @@
 - name: Install Docker packages
   ansible.builtin.apt:
     name:
-      - "docker-ce=5:{{ iac_tools_docker_version }}-1~ubuntu.24.04~noble"
-      - "docker-ce-cli=5:{{ iac_tools_docker_version }}-1~ubuntu.24.04~noble"
-      - "docker-ce-rootless-extras=5:{{ iac_tools_docker_version }}-1~ubuntu.24.04~noble"
+      - docker-ce
+      - docker-ce-cli
+      - docker-ce-rootless-extras
       - containerd.io
       - docker-buildx-plugin
       - docker-compose-plugin
     state: present
     update_cache: true
   become: true
-  when: iac_tools_docker_enabled and not ansible_check_mode
-  tags: [docker, iac_tools]
-
-- name: Hold Docker package versions
-  ansible.builtin.dpkg_selections:
-    name: "{{ item }}"
-    selection: hold
-  become: true
-  loop:
-    - docker-ce
-    - docker-ce-cli
-    - docker-ce-rootless-extras
   when: iac_tools_docker_enabled and not ansible_check_mode
   tags: [docker, iac_tools]
 
@@ -522,23 +510,12 @@
 - name: Install terraform and vault
   ansible.builtin.apt:
     name:
-      - "terraform={{ iac_tools_terraform_version }}"
-      - "vault={{ iac_tools_vault_version }}"
+      - terraform
+      - vault
     state: present
     update_cache: true
   become: true
   when: not ansible_check_mode and iac_tools_terraform_enabled
-  tags: [terraform, iac_tools]
-
-- name: Hold terraform and vault package versions
-  ansible.builtin.dpkg_selections:
-    name: "{{ item }}"
-    selection: hold
-  become: true
-  loop:
-    - terraform
-    - vault
-  when: iac_tools_terraform_enabled and not ansible_check_mode
   tags: [terraform, iac_tools]
 
 - name: Get installed tflint version

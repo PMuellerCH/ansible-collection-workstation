@@ -54,9 +54,6 @@ Pop!_OS / most Ubuntu desktop images).
 | `desktop_apps_firefox_enabled` | `true` | Deploy system-wide Firefox policies |
 | `desktop_apps_brave_enabled` | `false` | Install Brave (opt-in alternative browser) |
 | `desktop_apps_librewolf_enabled` | `false` | Install LibreWolf (opt-in alternative browser) |
-| `desktop_apps_onlyoffice_version` | see `defaults/main.yml` | `onlyoffice-desktopeditors` apt package version (deb datasource: OnlyOffice's own apt repository) |
-| `desktop_apps_brave_version` | see `defaults/main.yml` | `brave-browser` apt package version (deb datasource: Brave's own apt repository) |
-| `desktop_apps_librewolf_version` | see `defaults/main.yml` | `librewolf` apt package version (deb datasource: LibreWolf's apt repository via extrepo) |
 
 Firefox has no configurable variables beyond its enable toggle — the policy
 content is fixed. `de-CH` is swisstopo's standard locale, not something
@@ -96,12 +93,11 @@ tag cascades to every task in the role and defeats this per-app filtering.
 - Repository added as `/etc/apt/sources.list.d/onlyoffice.sources` (deb822
   format), suite `squeeze` — this is OnlyOffice's actual apt suite name
   regardless of Ubuntu version, not a stale or incorrect value.
-- Installed via apt, exact version pinned
-  (`desktop_apps_onlyoffice_version`) and held afterward so unattended
-  `apt upgrade` can't drift it.
-- The full chain (GPG key download → apt repository → package install →
-  version hold) depends on each previous step having actually happened for
-  real. `get_url` and a first-run `python3-debian` install both report
+- Installed via apt, unpinned — see the
+  [root README](../../README.md#apt-package-versions-are-unpinned) for why.
+- The full chain (GPG key download → apt repository → package install)
+  depends on each previous step having actually happened for real. `get_url`
+  and a first-run `python3-debian` install both report
   `changed` under `ansible-playbook --check` without doing anything for
   real, so every task downstream of them is skipped under check mode
   (`when: ... and not ansible_check_mode`) rather than tolerated via
@@ -130,8 +126,8 @@ existing consumer.
   GPG-key-download-then-`deb822_repository` pattern as OnlyOffice above
   (`/usr/share/keyrings/brave-browser-archive-keyring.gpg`,
   `/etc/apt/sources.list.d/brave-browser-release.sources`, suite `stable`).
-- Installed via apt, exact version pinned (`desktop_apps_brave_version`) and
-  held afterward.
+- Installed via apt, unpinned — see the
+  [root README](../../README.md#apt-package-versions-are-unpinned) for why.
 - Managed policy deployed to `/etc/brave/policies/managed/policies.json`
   (Chromium enterprise policy format, distinct from Firefox's schema):
   - `BraveWalletDisabled` / `BraveRewardsDisabled`: disables Brave's
@@ -160,8 +156,8 @@ false`) — same posture as Brave above.
   `ansible.builtin.command` — idempotency is handled by a `stat` check
   against the resulting `.sources` file rather than relying on the
   command's own output, so it only ever runs once per machine.
-- Installed via apt, exact version pinned (`desktop_apps_librewolf_version`)
-  and held afterward.
+- Installed via apt, unpinned — see the
+  [root README](../../README.md#apt-package-versions-are-unpinned) for why.
 - Deploys the **same** `/etc/librewolf/policies/policies.json` file as
   Firefox above, unmodified — LibreWolf is a Firefox fork and reads the
   identical Mozilla policy schema from its own config path.

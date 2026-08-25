@@ -23,31 +23,16 @@ modern_cli_jaq_enabled: true
 modern_cli_moor_enabled: true
 modern_cli_yazi_enabled: true
 
-# renovate: datasource=deb depName=bat registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
-modern_cli_bat_version: "0.24.0-1build1"
-
 # Pinned commit of catppuccin/bat (theme is fetched from an immutable ref, not the mutable "main" branch)
 modern_cli_bat_theme_ref: "6810349b28055dce54076712fc05fc68da4b8ec0"  # pragma: allowlist secret
 modern_cli_bat_theme_checksum: "sha256:395566f08ceb301b936b91c077690ef94f7aeb651b121553f201c99c2bd4aa77"
-
-# renovate: datasource=deb depName=btop registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
-modern_cli_btop_version: "1.3.0-1"
 
 # renovate: datasource=github-releases depName=catppuccin/btop
 modern_cli_btop_catppuccin_version: "1.0.0"
 modern_cli_btop_catppuccin_checksum: "sha256:5331e055f239d2b42a15496905c6f357493940e1213cc91acfcba67b3fd7a281"
 
-# renovate: datasource=deb depName=eza registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
-modern_cli_eza_version: "0.18.2-1"
-
-# renovate: datasource=deb depName=fd-find registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
-modern_cli_fd_version: "9.0.0-1"
-
 # renovate: datasource=github-releases depName=junegunn/fzf extractVersion=^v(?<version>.*)$
 modern_cli_fzf_version: "0.74.3"
-
-# renovate: datasource=deb depName=htop registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
-modern_cli_htop_version: "3.3.0-4build1"
 
 # renovate: datasource=github-releases depName=mfontanini/presenterm extractVersion=^v(?<version>.*)$
 modern_cli_presenterm_version: "0.16.1"
@@ -56,18 +41,6 @@ modern_cli_presenterm_archive: "presenterm-{{ modern_cli_presenterm_version }}-x
 
 # renovate: datasource=npm depName=@mermaid-js/mermaid-cli
 modern_cli_presenterm_mermaid_cli_version: "11.16.0"
-
-# renovate: datasource=deb depName=nodejs registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
-modern_cli_presenterm_nodejs_version: "18.19.1+dfsg-6ubuntu5"
-
-# renovate: datasource=deb depName=npm registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
-modern_cli_presenterm_npm_version: "9.2.0~ds1-2"
-
-# renovate: datasource=deb depName=ripgrep registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
-modern_cli_ripgrep_version: "14.1.0-1"
-
-# renovate: datasource=deb depName=zoxide registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
-modern_cli_zoxide_version: "0.9.3-1"
 
 # renovate: datasource=pypi depName=emoji-fzf
 modern_cli_emoji_fzf_version: "0.12.0"
@@ -79,25 +52,10 @@ modern_cli_emoji_fzf_version: "0.12.0"
 # renovate: datasource=pypi depName=pipx
 modern_cli_pipx_min_version: "1.16.7"
 
-# renovate: datasource=deb depName=sd registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
-modern_cli_sd_version: "1.0.0-2"
-
-# renovate: datasource=deb depName=duf registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble-updates&components=main,universe&binaryArch=amd64
-modern_cli_duf_version: "0.8.1-1ubuntu0.24.04.3"
-
-# renovate: datasource=deb depName=git-delta registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
-modern_cli_delta_version: "0.16.5-5"
-
 # Pinned commit of catppuccin/delta (no releases/tags published — theme is
 # fetched from an immutable ref, not the mutable "main" branch).
 modern_cli_delta_catppuccin_ref: "011516f5d14f66b771b3e716f29c77231e008c74"  # pragma: allowlist secret
 modern_cli_delta_catppuccin_checksum: "sha256:f0580ada6b1e3767b718b25116a2ababec314474a12d1a796c917ef93d63b455"
-
-# renovate: datasource=deb depName=gping registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
-modern_cli_gping_version: "1.16.0-1"
-
-# renovate: datasource=deb depName=hexyl registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
-modern_cli_hexyl_version: "0.8.0-2"
 
 # renovate: datasource=github-releases depName=dalance/procs extractVersion=^v(?<version>.*)$
 modern_cli_procs_version: "0.14.12"

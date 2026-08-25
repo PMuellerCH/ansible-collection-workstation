@@ -50,62 +50,6 @@ argument_specs:
         default: gnome
         choices: [gnome, cosmic]
         description: Desktop environment in use. Controls which proxy integration path is applied.
-      base_curl_version:
-        type: str
-        required: false
-        description: curl apt package version.
-      base_jq_version:
-        type: str
-        required: false
-        description: jq apt package version.
-      base_yq_version:
-        type: str
-        required: false
-        description: yq apt package version.
-      base_unzip_version:
-        type: str
-        required: false
-        description: unzip apt package version.
-      base_dnsutils_version:
-        type: str
-        required: false
-        description: dnsutils apt package version.
-      base_cifs_utils_version:
-        type: str
-        required: false
-        description: cifs-utils apt package version.
-      base_pwgen_version:
-        type: str
-        required: false
-        description: pwgen apt package version.
-      base_openssl_version:
-        type: str
-        required: false
-        description: openssl apt package version.
-      base_direnv_version:
-        type: str
-        required: false
-        description: direnv apt package version.
-      base_open_vm_tools_version:
-        type: str
-        required: false
-        description: open-vm-tools apt package version (only installed when running under VMware).
-      base_locales_version:
-        type: str
-        required: false
-        description: locales apt package version.
-      base_hunspell_de_ch_version:
-        type: str
-        required: false
-        description: hunspell-de-ch apt package version.
-      base_hunspell_en_us_version:
-        type: str
-        required: false
-        description: hunspell-en-us apt package version.
-      base_git_version:
-        type: str
-        required: false
-        description: Exact apt package version of git to install (held after install).
       base_git_user_name:
         type: str
         required: true
@@ -168,26 +112,6 @@ argument_specs:
         type: str
         required: false
         description: uv version (github-releases astral-sh/uv).
-      base_python_build_essential_version:
-        type: str
-        required: false
-        description: build-essential apt package version.
-      base_python_pip_version:
-        type: str
-        required: false
-        description: python3-pip apt package version.
-      base_python_venv_version:
-        type: str
-        required: false
-        description: python3-venv apt package version.
-      base_fonts_fontconfig_version:
-        type: str
-        required: false
-        description: fontconfig apt package version.
-      base_fonts_unzip_version:
-        type: str
-        required: false
-        description: unzip apt package version (installed independently of base_unzip_version so --tags fonts is self-sufficient).
       base_fonts_nerd_font_version:
         type: str
         required: false

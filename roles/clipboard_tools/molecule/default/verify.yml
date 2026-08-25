@@ -27,15 +27,6 @@
       ansible.builtin.assert:
         that: "'wl-clipboard' in ansible_facts.packages"
 
-    - name: Check wl-clipboard dpkg selection
-      ansible.builtin.command: dpkg --get-selections wl-clipboard
-      register: _clipboard_tools_wl_clipboard_selection
-      changed_when: false
-
-    - name: Assert wl-clipboard package is held
-      ansible.builtin.assert:
-        that: "'hold' in _clipboard_tools_wl_clipboard_selection.stdout"
-
     - name: Check cliphist runs
       ansible.builtin.command: cliphist version
       register: _clipboard_tools_cliphist_version

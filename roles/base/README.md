@@ -71,16 +71,13 @@ consuming playbook runs.
 | `base_git_signing_key` | `{{ ansible_facts['env']['HOME'] }}/.ssh/id_ed25519.pub` | Path to the SSH public key used as git's `user.signingkey` |
 | `base_ssh_extra_hosts` | `[]` | Extra SSH host blocks (`name`, `hostname`, `user`, optional `identity_file`) |
 | `base_python_uv_version` | see `defaults/main.yml` | `uv` version (github-releases `astral-sh/uv`) |
-| `base_python_build_essential_version` | see `defaults/main.yml` | `build-essential` apt package version |
-| `base_python_pip_version` | see `defaults/main.yml` | `python3-pip` apt package version |
-| `base_python_venv_version` | see `defaults/main.yml` | `python3-venv` apt package version |
-| `base_fonts_fontconfig_version` | see `defaults/main.yml` | `fontconfig` apt package version |
-| `base_fonts_unzip_version` | see `defaults/main.yml` | `unzip` apt package version (pinned independently of `base_unzip_version` so `--tags fonts` is self-sufficient) |
 | `base_fonts_nerd_font_version` | see `defaults/main.yml` | Nerd Fonts release version (github-releases `ryanoasis/nerd-fonts`) |
 
-All other apt-pinned base packages (`curl`, `jq`, `yq`, `unzip`, `dnsutils`, `cifs-utils`,
-`pwgen`, `openssl`, `direnv`, `open-vm-tools`, `locales`, `hunspell-de-ch`,
-`hunspell-en-us`) have their own `base_<pkg>_version` variables — see `defaults/main.yml`.
+All other packages installed by this role (`curl`, `jq`, `yq`, `unzip`, `dnsutils`,
+`cifs-utils`, `pwgen`, `openssl`, `direnv`, `open-vm-tools`, `locales`,
+`hunspell-de-ch`, `hunspell-en-us`, `git`, `build-essential`, `python3-pip`,
+`python3-venv`, `fontconfig`) are installed unpinned from the Ubuntu apt
+archive — see [Notes](#notes) for why.
 
 ## Example Playbook
 
@@ -138,7 +135,15 @@ cascades to every task in the role and defeats this per-tool filtering.
   left over from before — but only if its content is still the old
   single-line `export VAULT_ADDR=...` snippet, never an `iac_tools`-managed
   `vault.zsh`.
-- Every `dpkg_selections: hold` task is gated with `when: not ansible_check_mode`
-  — on a fresh machine under `--check`, the preceding apt install is itself a
-  no-op, so the package has no dpkg record yet and `dpkg_selections` would
-  hard-fail instead of degrading gracefully.
+- All apt-installed packages (see the note under Role Variables above) are
+  installed unpinned via `state: present`, not exact-version-pinned and
+  dpkg-held. Pinning+holding an apt package breaks the next version bump on
+  any machine that already ran the playbook once — apt refuses to change a
+  held package's version without `--allow-change-held-packages` — and a
+  subset of pins also rotted out of the Ubuntu archive entirely (point-release
+  patches only live in the `-updates`/`-security` pockets, not the base
+  release pocket). Ongoing security patching for these packages is the host's
+  own `apt upgrade`/unattended-upgrades responsibility, outside this role's
+  remit; `uv`/`uvx` and Nerd Fonts stay pinned+checksummed since those are
+  downloaded release artifacts, not apt-repo packages, and don't have this
+  failure mode.

@@ -11,15 +11,6 @@
       ansible.builtin.assert:
         that: "'flameshot' in ansible_facts.packages"
 
-    - name: Check flameshot dpkg selection
-      ansible.builtin.command: dpkg --get-selections flameshot
-      register: _desktop_customization_flameshot_selection
-      changed_when: false
-
-    - name: Assert flameshot package is held
-      ansible.builtin.assert:
-        that: "'hold' in _desktop_customization_flameshot_selection.stdout"
-
     - name: Check flameshot autostart entry was deployed
       ansible.builtin.stat:
         path: "{{ ansible_facts['env']['HOME'] }}/.config/autostart/flameshot.desktop"

@@ -131,14 +131,6 @@ argument_specs:
         required: false
         default: true
         description: Whether to install yazi (from a GitHub-released .deb).
-      modern_cli_bat_version:
-        type: str
-        required: false
-        description: Exact apt package version of bat to install (held after install).
-      modern_cli_btop_version:
-        type: str
-        required: false
-        description: Exact apt package version of btop to install (held after install).
       modern_cli_bat_theme_ref:
         type: str
         required: false
@@ -158,26 +150,6 @@ argument_specs:
         required: false
         default: "sha256:5331e055f239d2b42a15496905c6f357493940e1213cc91acfcba67b3fd7a281"
         description: Checksum of the themes.tar.gz archive at modern_cli_btop_catppuccin_version, verified by get_url.
-      modern_cli_eza_version:
-        type: str
-        required: false
-        description: Exact apt package version of eza to install (held after install).
-      modern_cli_fd_version:
-        type: str
-        required: false
-        description: Exact apt package version of fd-find to install (held after install).
-      modern_cli_htop_version:
-        type: str
-        required: false
-        description: Exact apt package version of htop to install (held after install).
-      modern_cli_ripgrep_version:
-        type: str
-        required: false
-        description: Exact apt package version of ripgrep to install (held after install).
-      modern_cli_zoxide_version:
-        type: str
-        required: false
-        description: Exact apt package version of zoxide to install (held after install).
       modern_cli_fzf_version:
         type: str
         required: false
@@ -200,14 +172,6 @@ argument_specs:
         type: str
         required: false
         description: "@mermaid-js/mermaid-cli npm version, installed globally for presenterm's mermaid diagram rendering."
-      modern_cli_presenterm_nodejs_version:
-        type: str
-        required: false
-        description: Exact apt package version of nodejs to install (held after install), required for mermaid-cli.
-      modern_cli_presenterm_npm_version:
-        type: str
-        required: false
-        description: Exact apt package version of npm to install (held after install); not pulled in automatically by nodejs (only a Suggests, not a Depends).
       modern_cli_emoji_fzf_version:
         type: str
         required: false
@@ -219,18 +183,6 @@ argument_specs:
           pipx version (pypi) installed via pip --user to satisfy
           community.general.pipx's >= 1.7.0 requirement, since Ubuntu 24.04's
           apt-provided pipx is only 1.4.3. Only used when modern_cli_emoji_fzf_enabled.
-      modern_cli_sd_version:
-        type: str
-        required: false
-        description: Exact apt package version of sd to install (held after install).
-      modern_cli_duf_version:
-        type: str
-        required: false
-        description: Exact apt package version of duf to install (held after install).
-      modern_cli_delta_version:
-        type: str
-        required: false
-        description: Exact apt package version of git-delta to install (held after install).
       modern_cli_delta_catppuccin_ref:
         type: str
         required: false
@@ -239,14 +191,6 @@ argument_specs:
         type: str
         required: false
         description: Checksum of the catppuccin.gitconfig file at modern_cli_delta_catppuccin_ref, verified by get_url.
-      modern_cli_gping_version:
-        type: str
-        required: false
-        description: Exact apt package version of gping to install (held after install).
-      modern_cli_hexyl_version:
-        type: str
-        required: false
-        description: Exact apt package version of hexyl to install (held after install).
       modern_cli_procs_version:
         type: str
         required: false

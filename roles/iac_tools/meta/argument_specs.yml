@@ -99,10 +99,6 @@ argument_specs:
           hvac version (pypi), injected into the ansible-core pipx venv by
           both the ansible and kubernetes_tools sub-roles (shared version to
           avoid two tasks disagreeing on what's installed in the same venv).
-      iac_tools_docker_version:
-        type: str
-        required: false
-        description: Docker CE version (github-releases moby/moby), installed from the official apt repo.
       iac_tools_act_version:
         type: str
         required: false
@@ -133,14 +129,6 @@ argument_specs:
           AWS SSO profiles rendered into ~/.aws/config. Empty by default — no
           file is deployed until a consumer supplies real profile data. See
           README for the exact dict shape.
-      iac_tools_terraform_version:
-        type: str
-        required: false
-        description: Terraform apt package version (deb datasource, HashiCorp apt repo).
-      iac_tools_vault_version:
-        type: str
-        required: false
-        description: Vault apt package version (deb datasource, HashiCorp apt repo).
       iac_tools_tflint_version:
         type: str
         required: false

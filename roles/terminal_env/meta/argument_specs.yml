@@ -6,10 +6,6 @@ argument_specs:
       oh-my-zsh, powerlevel10k, and plugins), tmux (with TPM), and kitty —
       all Catppuccin Mocha themed.
     options:
-      terminal_env_zsh_version:
-        type: str
-        required: false
-        description: zsh apt package version (deb datasource, Ubuntu Noble).
       terminal_env_zsh_omz_commit:
         type: str
         required: false
@@ -33,15 +29,7 @@ argument_specs:
         type: str
         required: false
         description: zsh-syntax-highlighting plugin version (github-tags zsh-users/zsh-syntax-highlighting).
-      terminal_env_tmux_version:
-        type: str
-        required: false
-        description: tmux apt package version (deb datasource, Ubuntu Noble).
       terminal_env_tmux_catppuccin_version:
         type: str
         required: false
         description: Catppuccin tmux plugin version (github-releases catppuccin/tmux).
-      terminal_env_kitty_version:
-        type: str
-        required: false
-        description: kitty apt package version (deb datasource, Ubuntu Noble).

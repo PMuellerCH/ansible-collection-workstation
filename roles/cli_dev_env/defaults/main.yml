@@ -28,13 +28,10 @@ cli_dev_env_neovim_version: "0.12.4"
 # manual review of the new release before the bump lands), not a bug.
 cli_dev_env_neovim_checksum: "sha256:012bf3fcac5ade43914df3f174668bf64d05e049a4f032a388c027b1ebd78628"
 
-# Renovate cannot auto-update these — NodeSource version strings are
-# incompatible with the deb datasource. Update manually when upgrading
-# Node.js.
+# Selects which NodeSource major-version apt repo to add
+# (deb.nodesource.com/node_{{ major }}.x) — nodejs/build-essential
+# themselves are installed unpinned, see the root README.
 cli_dev_env_claude_code_nodejs_major_version: "24"
-cli_dev_env_claude_code_nodejs_version: "24.18.0-1nodesource1"
-# renovate: datasource=deb depName=build-essential registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
-cli_dev_env_claude_code_build_essential_version: "12.10ubuntu1"
 # renovate: datasource=npm depName=@anthropic-ai/claude-code
 cli_dev_env_claude_code_version: "2.1.245"
 cli_dev_env_claude_code_aws_profile: "default"

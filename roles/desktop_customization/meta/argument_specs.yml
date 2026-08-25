@@ -13,10 +13,6 @@ argument_specs:
         default: gnome
         choices: [gnome, cosmic]
         description: Desktop environment in use. Controls which task set is applied.
-      desktop_customization_flameshot_version:
-        type: str
-        required: false
-        description: flameshot apt package version (deb datasource, Ubuntu Noble).
       desktop_customization_smile_enabled:
         type: bool
         required: false

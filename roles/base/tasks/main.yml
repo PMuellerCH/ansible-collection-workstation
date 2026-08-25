@@ -3,53 +3,27 @@
 - name: Install base packages
   ansible.builtin.apt:
     name:
-      - "curl={{ base_curl_version }}"
-      - "jq={{ base_jq_version }}"
-      - "yq={{ base_yq_version }}"
-      - "unzip={{ base_unzip_version }}"
-      - "dnsutils={{ base_dnsutils_version }}"
-      - "cifs-utils={{ base_cifs_utils_version }}"
-      - "pwgen={{ base_pwgen_version }}"
-      - "openssl={{ base_openssl_version }}"
-      - "direnv={{ base_direnv_version }}"
+      - curl
+      - jq
+      - yq
+      - unzip
+      - dnsutils
+      - cifs-utils
+      - pwgen
+      - openssl
+      - direnv
     state: present
     update_cache: true
     cache_valid_time: 3600
   become: true
   tags: [base]
 
-- name: Hold base package versions
-  ansible.builtin.dpkg_selections:
-    name: "{{ item }}"
-    selection: hold
-  become: true
-  loop:
-    - curl
-    - jq
-    - yq
-    - unzip
-    - dnsutils
-    - cifs-utils
-    - pwgen
-    - openssl
-    - direnv
-  when: not ansible_check_mode
-  tags: [base]
-
 - name: Install open-vm-tools (VMware guest utilities)
   ansible.builtin.apt:
-    name: "open-vm-tools={{ base_open_vm_tools_version }}"
+    name: open-vm-tools
     state: present
   become: true
   when: ansible_virtualization_type == "VMware"
-  tags: [base]
-
-- name: Hold open-vm-tools package version
-  ansible.builtin.dpkg_selections:
-    name: open-vm-tools
-    selection: hold
-  become: true
-  when: ansible_virtualization_type == "VMware" and not ansible_check_mode
   tags: [base]
 
 - name: Create autostart directory
@@ -106,23 +80,11 @@
 - name: Install locale packages
   ansible.builtin.apt:
     name:
-      - "locales={{ base_locales_version }}"
-      - "hunspell-de-ch={{ base_hunspell_de_ch_version }}"
-      - "hunspell-en-us={{ base_hunspell_en_us_version }}"
+      - locales
+      - hunspell-de-ch
+      - hunspell-en-us
     state: present
   become: true
-  tags: [base]
-
-- name: Hold locale package versions
-  ansible.builtin.dpkg_selections:
-    name: "{{ item }}"
-    selection: hold
-  become: true
-  loop:
-    - locales
-    - hunspell-de-ch
-    - hunspell-en-us
-  when: not ansible_check_mode
   tags: [base]
 
 - name: Generate format locale
@@ -440,19 +402,11 @@
 # ---- git ----
 - name: Install git
   ansible.builtin.apt:
-    name: "git={{ base_git_version }}"
+    name: git
     state: present
     update_cache: true
     cache_valid_time: 3600
   become: true
-  tags: [git]
-
-- name: Hold git package version
-  ansible.builtin.dpkg_selections:
-    name: git
-    selection: hold
-  become: true
-  when: not ansible_check_mode
   tags: [git]
 
 - name: Configure git user name
@@ -632,25 +586,13 @@
 - name: Install Python toolchain
   ansible.builtin.apt:
     name:
-      - "build-essential={{ base_python_build_essential_version }}"
-      - "python3-pip={{ base_python_pip_version }}"
-      - "python3-venv={{ base_python_venv_version }}"
+      - build-essential
+      - python3-pip
+      - python3-venv
     state: present
     update_cache: true
     cache_valid_time: 3600
   become: true
-  tags: [python]
-
-- name: Hold Python toolchain package versions
-  ansible.builtin.dpkg_selections:
-    name: "{{ item }}"
-    selection: hold
-  become: true
-  loop:
-    - build-essential
-    - python3-pip
-    - python3-venv
-  when: not ansible_check_mode
   tags: [python]
 
 - name: Get installed uv version
@@ -692,23 +634,12 @@
 - name: Install font dependencies
   ansible.builtin.apt:
     name:
-      - "fontconfig={{ base_fonts_fontconfig_version }}"
-      - "unzip={{ base_fonts_unzip_version }}"
+      - fontconfig
+      - unzip
     state: present
     update_cache: true
     cache_valid_time: 3600
   become: true
-  tags: [fonts]
-
-- name: Hold font dependency package versions
-  ansible.builtin.dpkg_selections:
-    name: "{{ item }}"
-    selection: hold
-  become: true
-  loop:
-    - fontconfig
-    - unzip
-  when: not ansible_check_mode
   tags: [fonts]
 
 - name: Create user fonts directory

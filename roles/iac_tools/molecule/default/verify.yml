@@ -69,15 +69,6 @@
           - "'docker-ce-cli' in ansible_facts.packages"
           - "'containerd.io' in ansible_facts.packages"
 
-    - name: Get dpkg selection for docker-ce
-      ansible.builtin.command: dpkg --get-selections docker-ce
-      register: _iac_tools_docker_selection
-      changed_when: false
-
-    - name: Assert docker-ce package version is held
-      ansible.builtin.assert:
-        that: "'hold' in _iac_tools_docker_selection.stdout"
-
     - name: Check docker user is in the docker group
       ansible.builtin.command: "id -nG {{ ansible_facts['user_id'] }}"
       register: _iac_tools_docker_group_check
@@ -128,25 +119,14 @@
           - "'sso_account_id = 123456789012' in (_iac_tools_aws_config_slurp.content | b64decode)"
 
     # ── terraform ────────────────────────────────────────────────────────
-    - name: Check terraform reports the pinned version
+    - name: Check terraform runs
       ansible.builtin.command: terraform version
       register: _iac_tools_terraform_check
       changed_when: false
 
-    - name: Assert terraform reports the pinned version
+    - name: Assert terraform reports a version
       ansible.builtin.assert:
-        # iac_tools_terraform_version carries a deb revision suffix (e.g. "-1")
-        # that `terraform version` doesn't print, so match on the part before it.
-        that: "iac_tools_terraform_version.split('-')[0] in _iac_tools_terraform_check.stdout"
-
-    - name: Get dpkg selection for terraform
-      ansible.builtin.command: dpkg --get-selections terraform
-      register: _iac_tools_terraform_selection
-      changed_when: false
-
-    - name: Assert terraform package version is held
-      ansible.builtin.assert:
-        that: "'hold' in _iac_tools_terraform_selection.stdout"
+        that: "'Terraform v' in _iac_tools_terraform_check.stdout"
 
     - name: Check tflint reports the pinned version
       ansible.builtin.command: tflint --version

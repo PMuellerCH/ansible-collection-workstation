@@ -15,9 +15,6 @@ code_quality_tools_trivy_download_base: "https://github.com/aquasecurity/trivy/r
 code_quality_tools_actionlint_version: "1.7.12"
 code_quality_tools_actionlint_download_base: "https://github.com/rhysd/actionlint/releases/download/v{{ code_quality_tools_actionlint_version }}"
 
-# renovate: datasource=deb depName=pre-commit registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
-code_quality_tools_pre_commit_version: "3.6.2-1"
-
 # renovate: datasource=pypi depName=detect-secrets
 code_quality_tools_detect_secrets_version: "1.5.0"
 

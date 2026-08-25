@@ -5,12 +5,3 @@ desktop_apps_firefox_enabled: true
 # for every consumer of this role unless explicitly toggled on.
 desktop_apps_brave_enabled: false
 desktop_apps_librewolf_enabled: false
-
-# renovate: datasource=deb depName=onlyoffice-desktopeditors registryUrl=https://download.onlyoffice.com/repo/debian?suite=squeeze&components=main&binaryArch=amd64
-desktop_apps_onlyoffice_version: "9.4.0-129"
-
-# renovate: datasource=deb depName=brave-browser registryUrl=https://brave-browser-apt-release.s3.brave.com/?suite=stable&components=main&binaryArch=amd64
-desktop_apps_brave_version: "1.93.138"
-
-# renovate: datasource=deb depName=librewolf registryUrl=https://repo.librewolf.net/?suite=librewolf&components=main&binaryArch=amd64
-desktop_apps_librewolf_version: "154.0-2"

@@ -2,8 +2,4 @@
 argument_specs:
   main:
     short_description: Install the GitHub CLI (gh) via apt
-    options:
-      gh_version:
-        type: str
-        required: false
-        description: Exact apt package version of gh to install (held after install).
+    options: {}

@@ -3,9 +3,6 @@ clipboard_tools_wl_clipboard_enabled: true
 clipboard_tools_cliphist_enabled: true
 clipboard_tools_clipse_enabled: true
 
-# renovate: datasource=deb depName=wl-clipboard registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
-clipboard_tools_wl_clipboard_version: "2.2.1-1build1"
-
 # renovate: datasource=github-releases depName=sentriz/cliphist extractVersion=^v(?<version>.*)$
 clipboard_tools_cliphist_version: "0.7.0"
 # sentriz/cliphist publishes only raw platform binaries per release (e.g.

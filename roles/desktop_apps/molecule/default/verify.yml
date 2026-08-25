@@ -2,31 +2,14 @@
 - name: Verify
   hosts: all
   gather_facts: true
-  # Load the role's own defaults so the pinned version asserted below tracks
-  # desktop_apps_onlyoffice_version as its single source of truth, rather
-  # than a second hardcoded literal that would silently go stale whenever
-  # Renovate bumps defaults/main.yml.
-  vars_files:
-    - ../../defaults/main.yml
   tasks:
     - name: Gather package facts
       ansible.builtin.package_facts:
         manager: apt
 
-    - name: Assert onlyoffice-desktopeditors is installed at the pinned version
+    - name: Assert onlyoffice-desktopeditors is installed
       ansible.builtin.assert:
-        that:
-          - "'onlyoffice-desktopeditors' in ansible_facts.packages"
-          - "ansible_facts.packages['onlyoffice-desktopeditors'][0].version == desktop_apps_onlyoffice_version"
-
-    - name: Get dpkg selection for onlyoffice-desktopeditors
-      ansible.builtin.command: dpkg --get-selections onlyoffice-desktopeditors
-      register: _desktop_apps_onlyoffice_selection
-      changed_when: false
-
-    - name: Assert onlyoffice-desktopeditors package version is held
-      ansible.builtin.assert:
-        that: "'hold' in _desktop_apps_onlyoffice_selection.stdout"
+        that: "'onlyoffice-desktopeditors' in ansible_facts.packages"
 
     - name: Stat Firefox policies file
       ansible.builtin.stat:
@@ -59,20 +42,9 @@
           - _desktop_apps_firefox_policies.policies.ExtensionSettings['{446900e4-71c2-419f-a6a7-df9c091e268b}'].installation_mode == 'force_installed'
           - "'de-CH@dictionaries.addons.mozilla.org' in _desktop_apps_firefox_policies.policies.ExtensionSettings"
 
-    - name: Assert brave-browser is installed at the pinned version
+    - name: Assert brave-browser is installed
       ansible.builtin.assert:
-        that:
-          - "'brave-browser' in ansible_facts.packages"
-          - "ansible_facts.packages['brave-browser'][0].version == desktop_apps_brave_version"
-
-    - name: Get dpkg selection for brave-browser
-      ansible.builtin.command: dpkg --get-selections brave-browser
-      register: _desktop_apps_brave_selection
-      changed_when: false
-
-    - name: Assert brave-browser package version is held
-      ansible.builtin.assert:
-        that: "'hold' in _desktop_apps_brave_selection.stdout"
+        that: "'brave-browser' in ansible_facts.packages"
 
     - name: Slurp Brave policies file
       ansible.builtin.slurp:
@@ -92,20 +64,9 @@
           - "'nngceckbapebfimnlniiiahkandclblb' in _desktop_apps_brave_policies.ExtensionSettings"
           - _desktop_apps_brave_policies.ExtensionSettings['nngceckbapebfimnlniiiahkandclblb'].installation_mode == 'force_installed'
 
-    - name: Assert librewolf is installed at the pinned version
+    - name: Assert librewolf is installed
       ansible.builtin.assert:
-        that:
-          - "'librewolf' in ansible_facts.packages"
-          - "ansible_facts.packages['librewolf'][0].version == desktop_apps_librewolf_version"
-
-    - name: Get dpkg selection for librewolf
-      ansible.builtin.command: dpkg --get-selections librewolf
-      register: _desktop_apps_librewolf_selection
-      changed_when: false
-
-    - name: Assert librewolf package version is held
-      ansible.builtin.assert:
-        that: "'hold' in _desktop_apps_librewolf_selection.stdout"
+        that: "'librewolf' in ansible_facts.packages"
 
     - name: Slurp LibreWolf policies file
       ansible.builtin.slurp:

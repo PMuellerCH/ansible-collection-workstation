@@ -51,9 +51,7 @@ first. No collection role is otherwise required to have run first.
 | `cli_dev_env_lazygit_download_base` | see `defaults/main.yml` | Base URL the lazygit archive and its `checksums.txt` are downloaded from |
 | `cli_dev_env_neovim_version` | see `defaults/main.yml` | Neovim version (github-releases: `neovim/neovim`) |
 | `cli_dev_env_neovim_checksum` | see `defaults/main.yml` | Static sha256 checksum for the pinned neovim archive (see below) |
-| `cli_dev_env_claude_code_nodejs_major_version` | `"24"` | Node.js LTS major version installed from NodeSource. Not Renovate-managed (see below) |
-| `cli_dev_env_claude_code_nodejs_version` | see `defaults/main.yml` | Exact NodeSource `nodejs` apt package version. Not Renovate-managed (see below) |
-| `cli_dev_env_claude_code_build_essential_version` | see `defaults/main.yml` | `build-essential` apt package version (deb datasource) |
+| `cli_dev_env_claude_code_nodejs_major_version` | `"24"` | Node.js LTS major version — selects which NodeSource apt repo to add. `nodejs`/`build-essential` themselves install unpinned, see [root README](../../README.md#apt-package-versions-are-unpinned) |
 | `cli_dev_env_claude_code_version` | see `defaults/main.yml` | `@anthropic-ai/claude-code` npm package version (npm datasource) |
 | `cli_dev_env_claude_code_aws_profile` | `default` | `AWS_PROFILE` passed to the `awslabs.core` MCP server |
 | `cli_dev_env_claude_code_aws_region` | `eu-central-1` | `AWS_REGION` passed to the `awslabs.core` MCP server |
@@ -272,17 +270,13 @@ rather than Ubuntu's apt repository, to track a current LTS major version:
   Any legacy `/etc/apt/sources.list.d/nodesource.list` (the pre-`deb822`
   NodeSource setup format) is removed first.
 - The installed `node --version` is checked; if a different major version is
-  already installed, `nodejs` is removed before reinstalling at the pinned
-  `cli_dev_env_claude_code_nodejs_version` — this guards against a stale
-  major version surviving a `cli_dev_env_claude_code_nodejs_major_version`
-  bump. `build-essential` is installed alongside it (native npm dependency
-  builds).
-- **Not Renovate-managed**: `cli_dev_env_claude_code_nodejs_major_version`
-  and `cli_dev_env_claude_code_nodejs_version` carry no `# renovate:` comment
-  and must be updated by hand. NodeSource's version string format
-  (`24.18.0-1nodesource1`) is incompatible with Renovate's `deb` datasource,
-  which expects standard Debian/Ubuntu archive versioning — there is no
-  datasource that can track NodeSource releases automatically.
+  already installed, `nodejs` is removed before reinstalling unpinned from
+  the newly-added NodeSource repo — this guards against a stale major
+  version surviving a `cli_dev_env_claude_code_nodejs_major_version` bump.
+  `build-essential` is installed alongside it (native npm dependency
+  builds), also unpinned — see the
+  [root README](../../README.md#apt-package-versions-are-unpinned) for why
+  neither is exact-version-pinned or dpkg-held.
 - **Out of scope for this role**: the `modern_cli` role also installs
   `nodejs`/`npm` from Ubuntu's apt repository (for `mermaid-cli`, guarded by
   its own "skip if npm already works" check). This role's NodeSource install

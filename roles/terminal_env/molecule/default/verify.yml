@@ -18,22 +18,6 @@
           - "'tmux' in ansible_facts.packages"
           - "'kitty' in ansible_facts.packages"
 
-    - name: Check dpkg selections for zsh, tmux, kitty
-      ansible.builtin.command: "dpkg --get-selections {{ item }}"
-      register: _terminal_env_dpkg_selections
-      changed_when: false
-      loop:
-        - zsh
-        - tmux
-        - kitty
-
-    - name: Assert zsh, tmux, kitty packages are held
-      ansible.builtin.assert:
-        that: "'hold' in item.stdout"
-      loop: "{{ _terminal_env_dpkg_selections.results }}"
-      loop_control:
-        label: "{{ item.item }}"
-
     # --- zsh ---
     - name: Check oh-my-zsh is installed
       ansible.builtin.stat:

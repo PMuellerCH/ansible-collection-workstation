@@ -32,10 +32,6 @@ argument_specs:
         required: false
         default: true
         description: Whether to install clipse (clipboard history TUI).
-      clipboard_tools_wl_clipboard_version:
-        type: str
-        required: false
-        description: Exact apt package version of wl-clipboard to install (held after install).
       clipboard_tools_cliphist_version:
         type: str
         required: false

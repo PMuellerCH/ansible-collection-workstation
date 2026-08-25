@@ -85,19 +85,11 @@
 # --- flameshot: install ---
 - name: Install flameshot
   ansible.builtin.apt:
-    name: "flameshot={{ desktop_customization_flameshot_version }}"
+    name: flameshot
     state: present
     update_cache: true
     cache_valid_time: 3600
   become: true
-  tags: [flameshot, desktop_customization]
-
-- name: Hold flameshot package version
-  ansible.builtin.dpkg_selections:
-    name: flameshot
-    selection: hold
-  become: true
-  when: not ansible_check_mode
   tags: [flameshot, desktop_customization]
 
 - name: Create autostart directory

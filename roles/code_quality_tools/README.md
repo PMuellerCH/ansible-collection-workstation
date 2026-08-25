@@ -48,7 +48,6 @@ a real workstation, run `base` first, per the root README.
 | `code_quality_tools_trivy_download_base` | see `defaults/main.yml` | Base URL the trivy `.deb`/checksums file are downloaded from |
 | `code_quality_tools_actionlint_version` | see `defaults/main.yml` | actionlint version (github-releases: `rhysd/actionlint`) |
 | `code_quality_tools_actionlint_download_base` | see `defaults/main.yml` | Base URL the actionlint archive/checksums file are downloaded from |
-| `code_quality_tools_pre_commit_version` | see `defaults/main.yml` | Exact apt version of pre-commit |
 | `code_quality_tools_detect_secrets_version` | see `defaults/main.yml` | detect-secrets version (pypi) |
 | `code_quality_tools_yamllint_version` | see `defaults/main.yml` | yamllint version (pypi) |
 | `code_quality_tools_checkov_version` | see `defaults/main.yml` | checkov version (pypi) |
@@ -96,8 +95,11 @@ tag cascades to every task in the role and defeats this per-tool filtering.
   and extracted straight to `/usr/local/bin/actionlint` (the release tar.gz
   is flat, no subdirectory to strip — same shape as lazygit's archive in
   `cli_dev_env`).
-- `pre-commit` is a plain pinned apt package (Ubuntu ships one), held after
-  install like every other pinned apt package in this collection.
+- `pre-commit` is a plain apt package (Ubuntu ships one), installed unpinned
+  — see the [root README](../../README.md#apt-package-versions-are-unpinned)
+  for why. `trivy` stays exact-pinned (it determines which GitHub release
+  artifact to download) but is no longer dpkg-held, since a held package
+  blocks even a legitimate reinstall of a newer pinned `.deb`.
 
 ### pipx bootstrap
 

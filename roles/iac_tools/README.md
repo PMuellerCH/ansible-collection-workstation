@@ -58,15 +58,12 @@ a real workstation, run `base` first, per the root README.
 | `iac_tools_ansible_molecule_version` | see `defaults/main.yml` | molecule version (pypi), injected into the ansible-core venv |
 | `iac_tools_ansible_molecule_plugins_version` | see `defaults/main.yml` | molecule-plugins[docker] version (pypi), injected into the ansible-core venv |
 | `iac_tools_hvac_version` | see `defaults/main.yml` | hvac version (pypi), injected into the ansible-core venv by both `ansible` and `kubernetes_tools` |
-| `iac_tools_docker_version` | see `defaults/main.yml` | Docker CE version (github-releases: `moby/moby`) |
 | `iac_tools_act_version` | see `defaults/main.yml` | act version (github-releases: `nektos/act`) |
 | `iac_tools_act_download_base` | see `defaults/main.yml` | Base URL the act archive/checksums.txt are downloaded from |
 | `iac_tools_aws_cli_version` | see `defaults/main.yml` | AWS CLI v2 version (github-tags: `aws/aws-cli`) |
 | `iac_tools_aws_boto3_version` | see `defaults/main.yml` | boto3 version (pypi), injected into the ansible-core venv |
 | `iac_tools_aws_session_manager_plugin_version` | see `defaults/main.yml` | session-manager-plugin version (github-releases: `aws/session-manager-plugin`) |
 | `iac_tools_aws_profiles` | `[]` | AWS SSO profiles rendered into `~/.aws/config` — see below |
-| `iac_tools_terraform_version` | see `defaults/main.yml` | Terraform apt package version (deb: HashiCorp apt) |
-| `iac_tools_vault_version` | see `defaults/main.yml` | Vault apt package version (deb: HashiCorp apt) |
 | `iac_tools_tflint_version` | see `defaults/main.yml` | tflint binary version (github-releases) |
 | `iac_tools_terraform_docs_version` | see `defaults/main.yml` | terraform-docs binary version (github-releases) |
 | `iac_tools_terraform_docs_archive` | see `defaults/main.yml` | Filename of the terraform-docs release archive |

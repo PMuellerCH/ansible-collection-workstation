@@ -1,7 +1,4 @@
 ---
 desktop_customization_desktop_environment: gnome
 
-# renovate: datasource=deb depName=flameshot registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
-desktop_customization_flameshot_version: "12.1.0-2build2"
-
 desktop_customization_smile_enabled: true

@@ -56,7 +56,7 @@
 
 - name: Install OnlyOffice Desktop Editors
   ansible.builtin.apt:
-    name: "onlyoffice-desktopeditors={{ desktop_apps_onlyoffice_version }}"
+    name: onlyoffice-desktopeditors
     state: present
     update_cache: true
   become: true
@@ -66,17 +66,6 @@
   # above) — so this must be skipped too, not merely tolerated via
   # ignore_errors. See "Check-mode guards for chained download→consume
   # tasks" in this collection's conventions.
-  when: desktop_apps_onlyoffice_enabled and not ansible_check_mode
-  tags: [onlyoffice, desktop_apps]
-
-- name: Hold onlyoffice-desktopeditors package version
-  # dpkg_selections hard-fails if the package isn't present in dpkg's
-  # database yet, which is the case on a fresh box under --check since the
-  # install task above is effectively a no-op there (see comment above).
-  ansible.builtin.dpkg_selections:
-    name: onlyoffice-desktopeditors
-    selection: hold
-  become: true
   when: desktop_apps_onlyoffice_enabled and not ansible_check_mode
   tags: [onlyoffice, desktop_apps]
 
@@ -157,17 +146,9 @@
 
 - name: Install Brave
   ansible.builtin.apt:
-    name: "brave-browser={{ desktop_apps_brave_version }}"
+    name: brave-browser
     state: present
     update_cache: true
-  become: true
-  when: desktop_apps_brave_enabled and not ansible_check_mode
-  tags: [brave, desktop_apps]
-
-- name: Hold brave-browser package version
-  ansible.builtin.dpkg_selections:
-    name: brave-browser
-    selection: hold
   become: true
   when: desktop_apps_brave_enabled and not ansible_check_mode
   tags: [brave, desktop_apps]
@@ -231,17 +212,9 @@
 
 - name: Install LibreWolf
   ansible.builtin.apt:
-    name: "librewolf={{ desktop_apps_librewolf_version }}"
+    name: librewolf
     state: present
     update_cache: true
-  become: true
-  when: desktop_apps_librewolf_enabled and not ansible_check_mode
-  tags: [librewolf, desktop_apps]
-
-- name: Hold librewolf package version
-  ansible.builtin.dpkg_selections:
-    name: librewolf
-    selection: hold
   become: true
   when: desktop_apps_librewolf_enabled and not ansible_check_mode
   tags: [librewolf, desktop_apps]

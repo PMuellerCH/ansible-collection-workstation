@@ -33,6 +33,38 @@ Every role uses per-tool Ansible tags (in addition to an umbrella
 `<role_name>` tag) so a consuming playbook can select a single tool with
 `--tags <tool>` — see each role's own README for its tag table.
 
+## apt package versions are unpinned
+
+Packages installed via `ansible.builtin.apt` from a real, enabled repository
+(Ubuntu archive, or a vendor's own apt repo — Docker, HashiCorp, GitHub CLI,
+Brave, OnlyOffice, LibreWolf-via-extrepo) are installed unpinned
+(`state: present`), not exact-version-pinned and dpkg-held. This is a
+deliberate departure from this collection's usual "pin everything, Renovate
+tracks it" convention, for apt packages specifically:
+
+- **Holding breaks every future version bump.** apt refuses to change a
+  dpkg-held package's version without `--allow-change-held-packages`, which
+  none of this collection's tasks pass. Any Renovate bump (or manual fix)
+  of a pinned+held package's version failed to apply on any machine that had
+  already run the playbook once, with `Held packages were changed and -y was
+  used without --allow-change-held-packages` — confirmed in both `--check`
+  and real runs.
+- **Pins rot out of the archive independently.** A subset of these pins also
+  tracked a Renovate `registryUrl` pointed at the base release pocket
+  (`suite=noble`), which never receives point-release/security patches —
+  those only live in `noble-updates`/`noble-security`. A pin set from a real
+  machine's installed version could silently go stale and become
+  uninstallable once the archive rotated past it, with no automated way for
+  Renovate to notice or propose a fix.
+
+Ongoing security patching for these packages is the host's own
+`apt upgrade`/unattended-upgrades responsibility, outside this collection's
+remit — its job is ensuring the tooling exists, not being the system's
+ongoing patch mechanism. Tools downloaded as release artifacts (GitHub
+releases, vendor-published binaries/tarballs/`.deb` files fetched directly
+by URL) are unaffected and stay exact-pinned + checksum-verified as usual;
+only real apt-repo-installed packages changed.
+
 ## Continuous Integration
 
 Lint (`ci.yml`), Molecule (`molecule.yml`), and release (`release-please.yml`) all run

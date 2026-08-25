@@ -21,22 +21,6 @@
           - "'trivy' in ansible_facts.packages"
           - "'pre-commit' in ansible_facts.packages"
 
-    - name: Get dpkg selection for trivy
-      ansible.builtin.command: dpkg --get-selections trivy
-      register: _code_quality_tools_trivy_selection
-      changed_when: false
-
-    - name: Get dpkg selection for pre-commit
-      ansible.builtin.command: dpkg --get-selections pre-commit
-      register: _code_quality_tools_pre_commit_selection
-      changed_when: false
-
-    - name: Assert trivy and pre-commit package versions are held
-      ansible.builtin.assert:
-        that:
-          - "'hold' in _code_quality_tools_trivy_selection.stdout"
-          - "'hold' in _code_quality_tools_pre_commit_selection.stdout"
-
     - name: Check trivy runs
       ansible.builtin.command: trivy --version
       register: _code_quality_tools_trivy_version

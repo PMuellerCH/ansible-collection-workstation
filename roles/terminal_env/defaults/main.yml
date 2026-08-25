@@ -1,8 +1,5 @@
 ---
 # zsh
-# renovate: datasource=deb depName=zsh registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
-terminal_env_zsh_version: "5.9-6ubuntu2"
-
 # oh-my-zsh publishes no tags/releases (rolling project by design) — pinned
 # to an immutable commit SHA instead of tracking the mutable "master"
 # branch. Not Renovate-tracked (no versioned datasource exists for this);
@@ -20,12 +17,5 @@ terminal_env_zsh_autosuggestions_version: "0.7.1"
 terminal_env_zsh_syntax_highlighting_version: "0.8.0"
 
 # tmux
-# renovate: datasource=deb depName=tmux registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble-updates&components=main,universe&binaryArch=amd64
-terminal_env_tmux_version: "3.4-1ubuntu0.1"
-
 # renovate: datasource=github-releases depName=catppuccin/tmux extractVersion=^v(?<version>.*)$
 terminal_env_tmux_catppuccin_version: "2.3.0"
-
-# kitty
-# renovate: datasource=deb depName=kitty registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble-updates&components=main,universe&binaryArch=amd64
-terminal_env_kitty_version: "0.32.2-1ubuntu0.4"

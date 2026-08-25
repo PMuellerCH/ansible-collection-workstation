@@ -4,23 +4,11 @@
 # mechanism that the tmux section's auto-start snippet plugs into.
 - name: Install zsh
   ansible.builtin.apt:
-    name: "zsh={{ terminal_env_zsh_version }}"
+    name: zsh
     state: present
     update_cache: true
     cache_valid_time: 3600
-    # A machine may already have a newer zsh than the currently pinned
-    # version (e.g. stock Ubuntu point-release updates applied before this
-    # role ever ran); apt refuses to downgrade by default.
-    allow_downgrade: true
   become: true
-  tags: [zsh, terminal_env]
-
-- name: Hold zsh package version
-  ansible.builtin.dpkg_selections:
-    name: zsh
-    selection: hold
-  become: true
-  when: not ansible_check_mode
   tags: [zsh, terminal_env]
 
 - name: Check if oh-my-zsh is already installed
@@ -281,20 +269,11 @@
 # --- kitty ---
 - name: Install kitty
   ansible.builtin.apt:
-    name: "kitty={{ terminal_env_kitty_version }}"
+    name: kitty
     state: present
     update_cache: true
     cache_valid_time: 3600
-    allow_downgrade: true
   become: true
-  tags: [kitty, terminal_env]
-
-- name: Hold kitty package version
-  ansible.builtin.dpkg_selections:
-    name: kitty
-    selection: hold
-  become: true
-  when: not ansible_check_mode
   tags: [kitty, terminal_env]
 
 - name: Create kitty config directory
@@ -317,20 +296,11 @@
 # --- tmux ---
 - name: Install tmux
   ansible.builtin.apt:
-    name: "tmux={{ terminal_env_tmux_version }}"
+    name: tmux
     state: present
     update_cache: true
     cache_valid_time: 3600
-    allow_downgrade: true
   become: true
-  tags: [tmux, terminal_env]
-
-- name: Hold tmux package version
-  ansible.builtin.dpkg_selections:
-    name: tmux
-    selection: hold
-  become: true
-  when: not ansible_check_mode
   tags: [tmux, terminal_env]
 
 - name: Check if tpm is already installed

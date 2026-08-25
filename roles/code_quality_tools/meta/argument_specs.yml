@@ -60,10 +60,6 @@ argument_specs:
         required: false
         default: "https://github.com/rhysd/actionlint/releases/download/v{{ code_quality_tools_actionlint_version }}"
         description: Base URL the actionlint archive and its checksums file are downloaded from, before the filename.
-      code_quality_tools_pre_commit_version:
-        type: str
-        required: false
-        description: Exact apt package version of pre-commit to install (held after install).
       code_quality_tools_detect_secrets_version:
         type: str
         required: false

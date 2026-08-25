@@ -1,17 +1,9 @@
 ---
 - name: Install GitHub CLI
   ansible.builtin.apt:
-    name: "gh={{ gh_version }}"
+    name: gh
     state: present
     update_cache: true
     cache_valid_time: 3600
   become: true
-  tags: gh
-
-- name: Hold gh package version
-  ansible.builtin.dpkg_selections:
-    name: gh
-    selection: hold
-  become: true
-  when: not ansible_check_mode
   tags: gh

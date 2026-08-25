@@ -33,18 +33,3 @@ argument_specs:
           Whether to install LibreWolf as an opt-in alternative browser
           (via extrepo). Default false — Firefox stays the default for
           every consumer of this role unless explicitly toggled on.
-      desktop_apps_onlyoffice_version:
-        type: str
-        required: false
-        description: >-
-          onlyoffice-desktopeditors apt package version (deb datasource:
-          OnlyOffice's own apt repository), installed from OnlyOffice's
-          official apt repository.
-      desktop_apps_brave_version:
-        type: str
-        required: false
-        description: brave-browser apt package version (deb datasource, Brave's own apt repository).
-      desktop_apps_librewolf_version:
-        type: str
-        required: false
-        description: librewolf apt package version (deb datasource, LibreWolf's apt repository via extrepo).
