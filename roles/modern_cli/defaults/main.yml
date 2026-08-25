@@ -82,7 +82,7 @@ modern_cli_pipx_min_version: "1.16.7"
 # renovate: datasource=deb depName=sd registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
 modern_cli_sd_version: "1.0.0-2"
 
-# renovate: datasource=deb depName=duf registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
+# renovate: datasource=deb depName=duf registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble-updates&components=main,universe&binaryArch=amd64
 modern_cli_duf_version: "0.8.1-1ubuntu0.24.04.3"
 
 # renovate: datasource=deb depName=git-delta registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
