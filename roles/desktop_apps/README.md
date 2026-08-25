@@ -2,9 +2,11 @@
 
 Installs standard/mainstream desktop applications that don't share any
 functional state with each other: OnlyOffice Desktop Editors (office suite,
-installed from its own apt repository) and system-wide Firefox policies
+installed from its own apt repository), system-wide Firefox policies
 (Bitwarden extension force-installed, de-CH dictionary force-installed,
-native password manager disabled).
+native password manager disabled), and Brave/LibreWolf as opt-in
+alternative browsers (default **disabled** — Firefox stays the default for
+every consumer of this role unless explicitly toggled on).
 
 This is a deliberate **category-level bundle** — the same precedent as this
 collection's `code_quality_tools` role (trivy, pre-commit, yamllint, checkov,
@@ -26,6 +28,12 @@ functional coupling like `desktop_customization`'s `gui-customization`+
   Firefox password manager, force-installs the Bitwarden extension pinned
   to the navigation bar, force-installs the Swiss German (`de-CH`)
   dictionary, and sets it as the default spellcheck language.
+- Installs Brave from its own apt repository (opt-in, disabled by default);
+  disables Brave Wallet and Brave Rewards via managed policy, force-installs
+  the Bitwarden extension, and disables the native password manager.
+- Installs LibreWolf via `extrepo` (opt-in, disabled by default); deploys
+  the same Firefox `policies.json` (LibreWolf reads the identical Mozilla
+  policy schema).
 
 ## Requirements
 
@@ -44,7 +52,11 @@ Pop!_OS / most Ubuntu desktop images).
 | --- | --- | --- |
 | `desktop_apps_onlyoffice_enabled` | `true` | Install OnlyOffice Desktop Editors |
 | `desktop_apps_firefox_enabled` | `true` | Deploy system-wide Firefox policies |
+| `desktop_apps_brave_enabled` | `false` | Install Brave (opt-in alternative browser) |
+| `desktop_apps_librewolf_enabled` | `false` | Install LibreWolf (opt-in alternative browser) |
 | `desktop_apps_onlyoffice_version` | see `defaults/main.yml` | `onlyoffice-desktopeditors` apt package version (deb datasource: OnlyOffice's own apt repository) |
+| `desktop_apps_brave_version` | see `defaults/main.yml` | `brave-browser` apt package version (deb datasource: Brave's own apt repository) |
+| `desktop_apps_librewolf_version` | see `defaults/main.yml` | `librewolf` apt package version (deb datasource: LibreWolf's apt repository via extrepo) |
 
 Firefox has no configurable variables beyond its enable toggle — the policy
 content is fixed. `de-CH` is swisstopo's standard locale, not something
@@ -67,6 +79,8 @@ Every task carries its own tag(s) in addition to the umbrella
 | --- | --- |
 | OnlyOffice Desktop Editors | `onlyoffice`, `desktop_apps` |
 | Firefox policies | `firefox`, `desktop_apps` |
+| Brave | `brave`, `desktop_apps` |
+| LibreWolf | `librewolf`, `desktop_apps` |
 
 **Do not** put an outer `tags:` on the role invocation in your play — that
 tag cascades to every task in the role and defeats this per-app filtering.
@@ -105,3 +119,49 @@ tag cascades to every task in the role and defeats this per-app filtering.
   force-installed.
 - The default spellcheck language is set to `de-CH` via
   `Preferences.spellchecker.dictionary`.
+
+## Brave
+
+Opt-in alternative browser, disabled by default (`desktop_apps_brave_enabled:
+false`) — installing this role does not change the default browser for any
+existing consumer.
+
+- Added via Brave's own signed apt repository, same
+  GPG-key-download-then-`deb822_repository` pattern as OnlyOffice above
+  (`/usr/share/keyrings/brave-browser-archive-keyring.gpg`,
+  `/etc/apt/sources.list.d/brave-browser-release.sources`, suite `stable`).
+- Installed via apt, exact version pinned (`desktop_apps_brave_version`) and
+  held afterward.
+- Managed policy deployed to `/etc/brave/policies/managed/policies.json`
+  (Chromium enterprise policy format, distinct from Firefox's schema):
+  - `BraveWalletDisabled` / `BraveRewardsDisabled`: disables Brave's
+    crypto wallet and BAT rewards features.
+  - `PasswordManagerEnabled: false`: same posture as Firefox above.
+  - The Bitwarden extension (Chrome Web Store ID
+    `nngceckbapebfimnlniiiahkandclblb`) is force-installed via
+    `ExtensionSettings`, mirroring Firefox's Bitwarden force-install.
+- Same check-mode chain-dependency reasoning as OnlyOffice: the GPG key
+  download, apt repository, and package install are skipped under `--check`
+  since each depends on the previous step having happened for real.
+
+## LibreWolf
+
+Opt-in alternative browser, disabled by default (`desktop_apps_librewolf_enabled:
+false`) — same posture as Brave above.
+
+- Installed via [extrepo](https://packages.debian.org/extrepo) rather than a
+  hand-rolled GPG-key-plus-sources-file pair like OnlyOffice/Brave —
+  LibreWolf's own current install documentation recommends `extrepo` over a
+  manual repository setup. `extrepo enable librewolf` fetches the
+  repository's signed policy (URL + GPG key) from extrepo's own curated
+  index and writes `/etc/apt/sources.list.d/extrepo_librewolf.sources` in
+  one step; no separate key-download or `deb822_repository` task needed.
+- `extrepo` has no dedicated Ansible module, so `extrepo enable` runs via
+  `ansible.builtin.command` — idempotency is handled by a `stat` check
+  against the resulting `.sources` file rather than relying on the
+  command's own output, so it only ever runs once per machine.
+- Installed via apt, exact version pinned (`desktop_apps_librewolf_version`)
+  and held afterward.
+- Deploys the **same** `/etc/librewolf/policies/policies.json` file as
+  Firefox above, unmodified — LibreWolf is a Firefox fork and reads the
+  identical Mozilla policy schema from its own config path.

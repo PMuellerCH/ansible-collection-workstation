@@ -9,3 +9,8 @@
     HTTPS_PROXY: "{{ lookup('env', 'https_proxy') or lookup('env', 'http_proxy') }}"
   roles:
     - role: swisstopo.workstation.desktop_apps
+      vars:
+        # Opt-in and disabled by default for real consumers — enabled here
+        # so Molecule actually exercises these code paths.
+        desktop_apps_brave_enabled: true
+        desktop_apps_librewolf_enabled: true
