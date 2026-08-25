@@ -3,10 +3,10 @@
 Installs infra/cloud CLI tooling a cloud engineer reaches for together:
 `ansible-core` (pipx) with Galaxy collections, Docker CE, `act` (run GitHub
 Actions workflows locally), AWS CLI v2 + session-manager-plugin, Terraform +
-Vault + tfswitch/tflint/terraform-docs, and a full Kubernetes toolchain
-(kubectl, k9s, helm, kubectx/kubens, stern, krew, kubeconform, kube-linter).
-Bundled together because they're the same category of tool for provisioning
-and operating cloud infrastructure.
+Vault + tfswitch/tflint/terraform-docs, `floci` (local AWS emulator), and a
+full Kubernetes toolchain (kubectl, k9s, helm, kubectx/kubens, stern, krew,
+kubeconform, kube-linter). Bundled together because they're the same
+category of tool for provisioning and operating cloud infrastructure.
 
 ## What it does
 
@@ -21,6 +21,10 @@ and operating cloud infrastructure.
   releases, and renders `~/.aws/config` from `iac_tools_aws_profiles`.
 - **terraform**: installs Terraform, Vault, tfswitch, tflint, and
   terraform-docs.
+- **floci**: installs the `floci` CLI from a checksum-verified GitHub
+  release binary — a free, open-source local AWS emulator
+  (LocalStack-compatible) for validating Terraform/AWS changes without a
+  real AWS account.
 - **kubernetes_tools**: installs kubectl, k9s, helm, kubectx/kubens, stern,
   krew, kubeconform, and kube-linter, and renders `~/.kube/config` from
   `iac_tools_kubernetes_clusters`.
@@ -44,6 +48,7 @@ a real workstation, run `base` first, per the root README.
 | `iac_tools_aws_enabled` | `true` | Install AWS CLI v2 + session-manager-plugin |
 | `iac_tools_terraform_enabled` | `true` | Install Terraform/Vault/tfswitch/tflint/terraform-docs |
 | `iac_tools_kubernetes_tools_enabled` | `true` | Install the Kubernetes toolchain |
+| `iac_tools_floci_enabled` | `true` | Install the floci CLI (local AWS emulator) |
 | `iac_tools_http_proxy` | `""` | Corporate HTTP proxy URL. Leave empty on machines without a proxy |
 | `iac_tools_https_proxy` | `iac_tools_http_proxy` | Corporate HTTPS proxy URL |
 | `iac_tools_no_proxy` | `""` | Comma-separated proxy bypass list |
@@ -68,6 +73,7 @@ a real workstation, run `base` first, per the root README.
 | `iac_tools_tfswitch_version` | see `defaults/main.yml` | tfswitch binary version (github-releases: `warrensbox/terraform-switcher`), checksum-verified |
 | `iac_tools_tfswitch_archive` | see `defaults/main.yml` | Filename of the tfswitch release archive |
 | `iac_tools_tfswitch_download_base` | see `defaults/main.yml` | Base URL the tfswitch archive and its `checksums.txt` are downloaded from |
+| `iac_tools_floci_version` | see `defaults/main.yml` | floci CLI version (github-releases: `floci-io/floci-cli`), checksum-verified |
 | `iac_tools_terraform_cloud_token` | `""` | Terraform Cloud API token from the consumer's own secret store |
 | `iac_tools_terraform_vault_github_token` | `""` | GitHub PAT for `vault login --method=github`, from the consumer's own secret store |
 | `iac_tools_kubectl_version` | see `defaults/main.yml` | kubectl version (github-releases: `kubernetes/kubernetes`), checksum-verified |
@@ -115,6 +121,7 @@ so a consuming playbook can filter to a single sub-role:
 | act | `act`, `iac_tools` |
 | AWS CLI, session-manager-plugin | `aws`, `iac_tools` |
 | Terraform, Vault, tfswitch, tflint, terraform-docs | `terraform`, `iac_tools` |
+| floci | `floci`, `iac_tools` |
 | kubectl, k9s, helm, kubectx/kubens, stern, krew, kubeconform, kube-linter | `kubernetes_tools`, `iac_tools` |
 | pipx bootstrap | runs if `ansible`, `aws`, or `kubernetes_tools` is enabled — carries all three tags plus `iac_tools` |
 
@@ -216,6 +223,52 @@ Because the bootstrap's `pip3 install --user` step reports `changed` under
 `ansible-playbook --check` without actually installing anything, every
 pipx-based task downstream of it (the `ansible-core` install itself and
 every inject) is gated with `when: not ansible_check_mode`.
+
+## floci
+
+[floci](https://floci.io) is a free, open-source local AWS emulator
+(LocalStack-compatible, MIT licensed, no auth token or feature gates) that
+listens on `localhost:4566` and is compatible with the existing AWS
+CLI/SDK/Terraform AWS provider configuration — useful for validating
+Terraform/AWS changes locally before applying via CI, without a real AWS
+account.
+
+This role only installs the `floci` **CLI** (`floci-io/floci-cli`) to
+`/usr/local/bin/floci`. The actual emulator engine
+([`floci-io/floci`](https://github.com/floci-io/floci), a separate project
+with no GitHub release binaries of its own) ships only as a Docker image;
+`floci start` pulls and manages that container itself the first time it
+runs. This means `iac_tools_docker_enabled` must also be true (the
+default) for `floci start` to work — installing the CLI alone with Docker
+disabled leaves it unable to actually start anything.
+
+Usage:
+
+```bash
+floci start                       # pulls/starts the floci/floci Docker container
+eval $(floci env)                 # exports AWS_ENDPOINT_URL, AWS_DEFAULT_REGION, test credentials
+```
+
+To point a Terraform AWS provider at it for local validation, add an
+`endpoints` block (Terraform's standard mechanism for redirecting AWS API
+calls, not floci-specific):
+
+```hcl
+provider "aws" {
+  region                      = "us-east-1"
+  access_key                  = "test" # pragma: allowlist secret
+  secret_key                  = "test" # pragma: allowlist secret
+  skip_credentials_validation = true
+  skip_metadata_api_check     = true
+  skip_requesting_account_id  = true
+
+  endpoints {
+    s3  = "http://localhost:4566"
+    ec2 = "http://localhost:4566"
+    # ... one entry per AWS service exercised by the config under test
+  }
+}
+```
 
 ## Notes
 

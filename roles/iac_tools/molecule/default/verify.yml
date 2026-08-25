@@ -175,6 +175,15 @@
       ansible.builtin.assert:
         that: "iac_tools_tfswitch_version in _iac_tools_tfswitch_check.stdout"
 
+    - name: Check floci reports the pinned version
+      ansible.builtin.command: floci --version
+      register: _iac_tools_floci_check
+      changed_when: false
+
+    - name: Assert floci reports the pinned version
+      ansible.builtin.assert:
+        that: "iac_tools_floci_version in _iac_tools_floci_check.stdout"
+
     - name: Slurp deployed terraformrc
       ansible.builtin.slurp:
         src: "{{ ansible_facts['env']['HOME'] }}/.config/terraform/terraformrc"

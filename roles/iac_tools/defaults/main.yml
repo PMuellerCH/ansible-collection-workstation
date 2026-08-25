@@ -6,6 +6,7 @@ iac_tools_act_enabled: true
 iac_tools_aws_enabled: true
 iac_tools_terraform_enabled: true
 iac_tools_kubernetes_tools_enabled: true
+iac_tools_floci_enabled: true
 
 # Corporate proxy / Vault — role-scoped (a reusable role can't assume a
 # consumer's global base_* vars). Leave empty on machines without a proxy.
@@ -80,6 +81,13 @@ iac_tools_tfswitch_download_base: "https://github.com/warrensbox/terraform-switc
 # gracefully (no credentials block deployed) when unset.
 iac_tools_terraform_cloud_token: ""
 iac_tools_terraform_vault_github_token: ""
+
+# ── floci ─────────────────────────────────────────────────────────────────
+# Pinned against floci-io/floci-cli (the CLI wrapper), not floci-io/floci
+# (the emulator engine itself, which ships only as a Docker image with no
+# GitHub release binaries — floci start pulls and manages it directly).
+# renovate: datasource=github-releases depName=floci-io/floci-cli extractVersion=^(?<version>.*)$
+iac_tools_floci_version: "0.2.0"
 
 # ── kubernetes_tools ─────────────────────────────────────────────────────
 # renovate: datasource=github-releases depName=kubernetes/kubernetes extractVersion=^v(?<version>.*)$

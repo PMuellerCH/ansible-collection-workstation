@@ -3,8 +3,8 @@ argument_specs:
   main:
     short_description: >-
       Install infra/cloud CLI tooling: ansible-core, Docker CE, AWS CLI v2,
-      Terraform/Vault, and Kubernetes tools — each sub-role independently
-      toggleable.
+      Terraform/Vault, floci (local AWS emulator), and Kubernetes tools —
+      each sub-role independently toggleable.
     options:
       iac_tools_ansible_enabled:
         type: bool
@@ -40,6 +40,16 @@ argument_specs:
         required: false
         default: true
         description: Whether to install kubectl, k9s, helm, kubectx/kubens, stern, krew, kubeconform, kube-linter.
+      iac_tools_floci_enabled:
+        type: bool
+        required: false
+        default: true
+        description: >-
+          Whether to install the floci CLI (local AWS emulator for
+          validating Terraform/AWS changes without a real AWS account).
+          Only installs the CLI binary — floci start pulls and manages the
+          actual emulator engine as a Docker container itself, requiring a
+          working Docker daemon (iac_tools_docker_enabled) at runtime.
       iac_tools_http_proxy:
         type: str
         required: false
@@ -174,6 +184,10 @@ argument_specs:
           GitHub PAT used for `vault login --method=github` (from the
           consumer's own secret store). Empty by default — the credential
           file is not deployed when unset.
+      iac_tools_floci_version:
+        type: str
+        required: false
+        description: floci CLI version (github-releases floci-io/floci-cli), installed from a checksum-verified binary.
       iac_tools_kubectl_version:
         type: str
         required: false

@@ -743,6 +743,72 @@
   tags: [terraform, iac_tools]
 
 # ═══════════════════════════════════════════════════════════════════════════
+# floci — local AWS emulator (LocalStack-compatible) for validating
+# Terraform/AWS changes without a real AWS account. This installs only the
+# floci CLI (floci-io/floci-cli) to /usr/local/bin/floci; `floci start`
+# pulls and manages the actual emulator engine (floci-io/floci) as a Docker
+# container itself, so this depends on iac_tools_docker_enabled at runtime
+# (not installed by this section — see README).
+# ═══════════════════════════════════════════════════════════════════════════
+
+- name: Get installed floci version
+  ansible.builtin.command: floci --version
+  register: iac_tools_floci_current_version
+  become: false
+  changed_when: false
+  failed_when: false
+  when: iac_tools_floci_enabled
+  tags: [floci, iac_tools]
+
+- name: Download floci CLI checksums file
+  # floci-io/floci-cli's sha256sums.txt lists each entry as a directory-style
+  # path (e.g. "./floci-linux-amd64/floci-linux-amd64"), not a flat
+  # basename — get_url's checksum: URL fetcher only matches a checksum
+  # entry that's an exact match for the download URL's basename, so it
+  # can't resolve this format directly (unlike the flat checksums.txt files
+  # used elsewhere in this collection, e.g. tflint/terraform-docs/tfswitch
+  # above). Falls back to this collection's tier-2 pattern: fetch + parse
+  # manually instead of a static checksum, so there's still nothing to keep
+  # in sync by hand when Renovate bumps iac_tools_floci_version.
+  ansible.builtin.get_url:
+    url: "https://github.com/floci-io/floci-cli/releases/download/{{ iac_tools_floci_version }}/sha256sums.txt"
+    dest: "/tmp/floci-{{ iac_tools_floci_version }}-sha256sums.txt"
+    mode: "0644"
+  when: >-
+    iac_tools_floci_enabled and
+    (iac_tools_floci_current_version.rc != 0 or iac_tools_floci_version not in iac_tools_floci_current_version.stdout)
+  tags: [floci, iac_tools]
+
+- name: Slurp floci CLI checksums file
+  ansible.builtin.slurp:
+    src: "/tmp/floci-{{ iac_tools_floci_version }}-sha256sums.txt"
+  register: iac_tools_floci_checksums_raw
+  when: >-
+    not ansible_check_mode and
+    iac_tools_floci_enabled and
+    (iac_tools_floci_current_version.rc != 0 or iac_tools_floci_version not in iac_tools_floci_current_version.stdout)
+  tags: [floci, iac_tools]
+
+- name: Install floci CLI binary to /usr/local/bin
+  ansible.builtin.get_url:
+    url: "https://github.com/floci-io/floci-cli/releases/download/{{ iac_tools_floci_version }}/floci-linux-amd64"
+    dest: /usr/local/bin/floci
+    checksum: >-
+      sha256:{{
+        (iac_tools_floci_checksums_raw.content | b64decode).splitlines()
+        | select('search', 'floci-linux-amd64/floci-linux-amd64$')
+        | map('regex_replace', '^([0-9a-f]+)\s.*$', '\1')
+        | first
+      }}
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and
+    iac_tools_floci_enabled and
+    (iac_tools_floci_current_version.rc != 0 or iac_tools_floci_version not in iac_tools_floci_current_version.stdout)
+  tags: [floci, iac_tools]
+
+# ═══════════════════════════════════════════════════════════════════════════
 # kubernetes_tools — kubectl, k9s, helm, kubectx/kubens, stern, krew,
 # kubeconform, kube-linter, Python k8s libs (shared ansible-core venv)
 # ═══════════════════════════════════════════════════════════════════════════
