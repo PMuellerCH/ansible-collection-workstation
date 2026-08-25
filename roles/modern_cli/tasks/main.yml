@@ -528,6 +528,10 @@
 - name: Install dust
   ansible.builtin.apt:
     deb: "/tmp/du-dust_{{ modern_cli_dust_version }}_amd64.deb"
+    # A machine provisioned by an older version of this role may still have
+    # du-dust dpkg-held from before the hold task was removed — without
+    # this, apt refuses to install a newer pinned .deb over a held package.
+    allow_change_held_packages: true
   become: true
   when: >-
     not ansible_check_mode and
@@ -732,6 +736,10 @@
 - name: Install yazi
   ansible.builtin.apt:
     deb: "/tmp/yazi_{{ modern_cli_yazi_version }}_amd64.deb"
+    # A machine provisioned by an older version of this role may still have
+    # yazi dpkg-held from before the hold task was removed — without this,
+    # apt refuses to install a newer pinned .deb over a held package.
+    allow_change_held_packages: true
   become: true
   when: >-
     not ansible_check_mode and

@@ -43,12 +43,17 @@ deliberate departure from this collection's usual "pin everything, Renovate
 tracks it" convention, for apt packages specifically:
 
 - **Holding breaks every future version bump.** apt refuses to change a
-  dpkg-held package's version without `--allow-change-held-packages`, which
-  none of this collection's tasks pass. Any Renovate bump (or manual fix)
-  of a pinned+held package's version failed to apply on any machine that had
-  already run the playbook once, with `Held packages were changed and -y was
-  used without --allow-change-held-packages` — confirmed in both `--check`
-  and real runs.
+  dpkg-held package's version without `--allow-change-held-packages`. Any
+  Renovate bump (or manual fix) of a pinned+held package's version failed
+  to apply on any machine that had already run the playbook once, with
+  `Held packages were changed and -y was used without
+  --allow-change-held-packages` — confirmed in both `--check` and real
+  runs. The three packages that stay pinned (`trivy`, `dust`, `yazi` — see
+  below) now pass `allow_change_held_packages: true` on their own install
+  task specifically to survive a stale hold left by an older version of
+  this collection; every other apt-installed package here is unpinned
+  instead, so no version is ever requested that could conflict with a
+  hold in the first place.
 - **Pins rot out of the archive independently.** A subset of these pins also
   tracked a Renovate `registryUrl` pointed at the base release pocket
   (`suite=noble`), which never receives point-release/security patches —
@@ -57,13 +62,29 @@ tracks it" convention, for apt packages specifically:
   uninstallable once the archive rotated past it, with no automated way for
   Renovate to notice or propose a fix.
 
-Ongoing security patching for these packages is the host's own
-`apt upgrade`/unattended-upgrades responsibility, outside this collection's
-remit — its job is ensuring the tooling exists, not being the system's
-ongoing patch mechanism. Tools downloaded as release artifacts (GitHub
-releases, vendor-published binaries/tarballs/`.deb` files fetched directly
-by URL) are unaffected and stay exact-pinned + checksum-verified as usual;
-only real apt-repo-installed packages changed.
+Ongoing security patching for these packages is left to whatever update
+mechanism the host actually runs — this collection's job is ensuring the
+tooling exists, not being the system's ongoing patch mechanism. Note that
+the `base` role itself disables apt's periodic/unattended-upgrade timers
+(`/etc/apt/apt.conf.d/99disable-periodic`), so on a machine provisioned by
+this collection nothing patches these packages automatically unless the
+host owner re-enables that or runs `apt upgrade` by hand. Tools downloaded
+as release artifacts (GitHub releases, vendor-published binaries/tarballs/
+`.deb` files fetched directly by URL) are unaffected and stay exact-pinned
+and checksum-verified as usual; only real apt-repo-installed packages
+changed.
+
+**Migrating an already-provisioned machine:** a machine that already ran an
+older version of this collection has these packages `dpkg`-held from
+before this change — nothing in the new tasks ever unholds them, since a
+plain `state: present` install with no version never touches an
+already-held package's state. Run `sudo apt-mark unhold $(apt-mark showhold)`
+once (or list the specific packages) after upgrading to unblock both this
+collection's own installs and any future manual `apt upgrade`. The three
+packages that stay pinned (`trivy`, `dust`, `yazi` — see their roles) don't
+need this: their install tasks now pass `allow_change_held_packages: true`
+so a stale hold from an older role version can't block their own version
+bumps.
 
 ## Continuous Integration
 
