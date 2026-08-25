@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/1.2.0...1.2.1) (2026-08-25)
+
+
+### Bug Fixes
+
+* drop exact apt version pin and dpkg hold across the collection ([#179](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/179)) ([3c082f8](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/3c082f8b25407a06f0294fa5c3740ed742fc72b3)), closes [#175](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/175)
+
 ## [1.2.0](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/1.1.1...1.2.0) (2026-08-25)
 
 
