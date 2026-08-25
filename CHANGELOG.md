@@ -1,5 +1,32 @@
 # Changelog
 
+## [1.2.0](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/1.1.1...1.2.0) (2026-08-25)
+
+
+### Features
+
+* add 12 more modern CLI tool replacements to modern_cli ([#165](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/165)) ([91d061d](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/91d061d60ff1e30d148bd1b1b5ffe3c663fa25c4)), closes [#21](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/21)
+* add Brave and LibreWolf as opt-in alternative browsers ([#169](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/169)) ([4656bea](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/4656bea3c26d900db3015ace45055f8485e8fa5c)), closes [#144](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/144)
+* add floci CLI to iac_tools for local AWS emulation ([#170](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/170)) ([2d145bb](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/2d145bbe58ce60dc95b558f657318bd34a96dc67)), closes [#142](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/142)
+* add yazi file manager to modern_cli ([#167](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/167)) ([99091fa](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/99091fa02d239ba4b196d8acf6cc9d3f138189f5))
+* automate LazyVim plugin updates via headless lazy.nvim sync ([#168](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/168)) ([5f36421](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/5f364218ed66d2e2680800d46f9221c8755af3ba))
+
+
+### Bug Fixes
+
+* auto-install TPM-managed tmux plugins during provisioning ([#162](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/162)) ([1760088](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/1760088b2570298295d1e7574796c500c266fa46))
+* bump curl pin and fix Renovate registryUrl blind spot for patched packages ([#174](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/174)) ([3993acf](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/3993acf894b6dba60f33983cc41f5459987febf0)), closes [#173](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/173)
+* enforce pinned ansible-core version in ansible-lint pipx venv ([#163](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/163)) ([95d1b93](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/95d1b938301daf0cf117d35b95bdeace9fc3a1d4))
+* guard dpkg_selections hold tasks against check-mode hard-fail ([#161](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/161)) ([dfc576e](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/dfc576e31892e9d0335b136b810480e698666dc8))
+
+
+### Miscellaneous
+
+* **deps:** update dependency @anthropic-ai/claude-code to v2.1.245 ([#171](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/171)) ([f938919](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/f938919c5c610b8b2129beebaa3b543ab03e269f))
+* **deps:** update dependency aws/aws-cli to v2.36.30 ([#172](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/172)) ([31c3727](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/31c3727bb34fd73869e33675f89b7846ebe54998))
+* **deps:** update dependency ismaelmartinez/teams-for-linux to v2.17.1 ([#160](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/160)) ([b703f7a](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/b703f7a4fb8ed2f746851a1bf94d3352e5ec86db))
+* drop duplicated version defaults from argument_specs.yml ([#164](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/164)) ([5c28a58](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/5c28a580bd62e4b34f68cc9a41b394a652187e4b)), closes [#139](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/139)
+
 ## [1.1.1](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/1.1.0...1.1.1) (2026-08-24)
 
 
