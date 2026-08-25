@@ -5,14 +5,16 @@ Installs a set of modern CLI tool replacements: `bat` (cat), `btop` (top),
 picker), `eza` (ls), `fd`/`fd-find` (find), `fzf` (fuzzy finder), `gping`
 (ping), `hexyl` (hexdump/xxd), `htop` (top), `jaq` (jq), `moor` (less),
 `presenterm` (terminal presentations), `procs` (ps), `ripgrep` (grep), `sd`
-(sed), `viddy` (watch), `xcp` (cp), `zoxide` (cd). Each tool is independently
-toggleable and installed regardless of the others — this role is a single
-parameterized entry point for "modern CLI tool replacements" as a category.
+(sed), `viddy` (watch), `xcp` (cp), `yazi` (terminal file manager), `zoxide`
+(cd). Each tool is independently toggleable and installed regardless of the
+others — this role is a single parameterized entry point for "modern CLI
+tool replacements" as a category.
 
-`bat`, `btop`, `delta`, and `fzf` are additionally Catppuccin-Mocha-themed —
-the fixed collection-wide theme convention, not a variable (checked against
-the full `catppuccin` GitHub org; none of the other tools in this role have
-an official port). The other tools are installed only; they have no
+`bat`, `btop`, `delta`, `fzf`, and `yazi` are additionally
+Catppuccin-Mocha-themed — the fixed collection-wide theme convention, not a
+variable (checked against the full `catppuccin` GitHub org; none of the
+other tools in this role have an official port). The other tools are
+installed only; they have no
 themeable config file of their own.
 
 `presenterm` here covers only the binary and its mermaid-diagram rendering
@@ -36,14 +38,15 @@ that one tool.
 ## What it does
 
 - Installs `bat`, `btop`, `delta`, `duf`, `eza`, `fd-find`, `fzf`, `gping`,
-  `hexyl`, `htop`, `ripgrep`, `sd`, `zoxide` via apt.
+  `hexyl`, `htop`, `ripgrep`, `sd`, `yazi`, `zoxide` via apt/GitHub releases.
 - Installs `dust`, `doggo`, `jaq`, `moor`, `procs`, `viddy`, `xcp` from
   checksum-verified GitHub release binaries.
 - Installs `emoji-fzf` via pipx.
 - Installs `presenterm` (binary + mermaid-cli rendering dependency).
-- Deploys Catppuccin Mocha theming for `bat`, `btop`, `delta`, and `fzf`.
+- Deploys Catppuccin Mocha theming for `bat`, `btop`, `delta`, `fzf`, and
+  `yazi`.
 - Deploys `~/.config/zsh/conf.d/modern_cli.zsh` with aliases for enabled
-  tools.
+  tools, including a `y` shell wrapper (cd to yazi's last directory on exit).
 
 ## Requirements
 
@@ -96,6 +99,7 @@ take effect.
 | `modern_cli_doggo_enabled` | `true` | Install doggo |
 | `modern_cli_jaq_enabled` | `true` | Install jaq |
 | `modern_cli_moor_enabled` | `true` | Install moor (the tool formerly known as "moar" — upstream renamed it) |
+| `modern_cli_yazi_enabled` | `true` | Install yazi (from a GitHub-released `.deb`) |
 | `modern_cli_bat_version` | see `defaults/main.yml` | Exact apt version of bat |
 | `modern_cli_btop_version` | see `defaults/main.yml` | Exact apt version of btop |
 | `modern_cli_btop_catppuccin_version` | see `defaults/main.yml` | `catppuccin/btop` release tag for the theme archive |
@@ -113,6 +117,10 @@ take effect.
 | `modern_cli_ripgrep_version` | see `defaults/main.yml` | Exact apt version of ripgrep |
 | `modern_cli_zoxide_version` | see `defaults/main.yml` | Exact apt version of zoxide |
 | `modern_cli_pipx_min_version` | see `defaults/main.yml` | pipx version bootstrapped via `pip --user` so `community.general.pipx` (needs >=1.7.0) works on Ubuntu 24.04's apt-provided pipx 1.4.3. Only used when `modern_cli_emoji_fzf_enabled` |
+| `modern_cli_yazi_version` | see `defaults/main.yml` | yazi binary version (github-releases: `sxyazi/yazi`) |
+| `modern_cli_yazi_checksum` | see `defaults/main.yml` | Checksum of the yazi `.deb`, verified by `get_url` |
+| `modern_cli_yazi_theme_ref` | see `defaults/main.yml` | Pinned commit of `catppuccin/yazi` the theme file is downloaded from |
+| `modern_cli_yazi_theme_checksum` | see `defaults/main.yml` | Checksum of the yazi theme file, verified by `get_url` |
 | `modern_cli_deploy_shell_aliases` | `true` | Deploy `~/.config/zsh/conf.d/modern_cli.zsh` with aliases for enabled tools |
 | `modern_cli_bat_theme_ref` | see `defaults/main.yml` | Pinned commit of `catppuccin/bat` the theme file is downloaded from |
 | `modern_cli_bat_theme_checksum` | see `defaults/main.yml` | Checksum of the bat theme file, verified by `get_url` |
@@ -159,6 +167,7 @@ tag, so a consuming playbook can filter to a single tool:
 | dust | `dust`, `modern_cli` |
 | emoji-fzf | `emoji_fzf`, `modern_cli` |
 | eza, fd, ripgrep, zoxide, sd, duf, gping, hexyl | `cli-tools`, `modern_cli` |
+| yazi | `yazi`, `modern_cli` |
 | fzf | `fzf`, `modern_cli` |
 | htop | `htop`, `modern_cli` |
 | jaq | `jaq`, `modern_cli` |
@@ -167,7 +176,7 @@ tag, so a consuming playbook can filter to a single tool:
 | procs | `procs`, `modern_cli` |
 | viddy | `viddy`, `modern_cli` |
 | xcp | `xcp`, `modern_cli` |
-| shell alias deployment | `bat`, `btop`, `cli-tools`, `delta`, `doggo`, `dust`, `emoji_fzf`, `fzf`, `jaq`, `moor`, `presenterm`, `procs`, `viddy`, `xcp`, `modern_cli` |
+| shell alias deployment | `bat`, `btop`, `cli-tools`, `delta`, `doggo`, `dust`, `emoji_fzf`, `fzf`, `jaq`, `moor`, `presenterm`, `procs`, `viddy`, `xcp`, `yazi`, `modern_cli` |
 
 **Do not** put an outer `tags:` on the role invocation in your play — that
 tag cascades to every task in the role and defeats this per-tool filtering.
@@ -201,6 +210,16 @@ Upstream (repo `walles/moar`) renamed the tool itself to `moor` to resolve a
 name clash — release assets and the installed binary are `moor`, not `moar`,
 even though the GitHub repository path is unchanged. `modern_cli_moor_*`
 variables and the `less='moor'` alias reflect the current name.
+
+## yazi
+
+Installed from a GitHub-released `.deb` (installs both `yazi` and its
+companion `ya` CLI). The Catppuccin Mocha theme is deployed to
+`~/.config/yazi/theme.toml` (yazi's expected config filename) — the "mauve"
+accent variant, Catppuccin's default. A `y` shell function is deployed
+alongside the other aliases: it wraps `yazi` so exiting it also `cd`s your
+shell to whatever directory you navigated to inside the file manager
+(yazi's own documented pattern, not custom to this role).
 
 ## Check-mode
 

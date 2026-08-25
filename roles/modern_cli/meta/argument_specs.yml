@@ -4,9 +4,9 @@ argument_specs:
     short_description: >-
       Install a set of modern CLI tool replacements: bat, btop, delta, doggo,
       duf, dust, emoji-fzf, eza, fd, fzf, gping, hexyl, htop, jaq, moor,
-      presenterm, procs, ripgrep, sd, viddy, xcp, zoxide — each independently
-      toggleable. Catppuccin Mocha theming is applied to bat, btop, delta,
-      and fzf; the other tools have no themeable config.
+      presenterm, procs, ripgrep, sd, viddy, xcp, yazi, zoxide — each
+      independently toggleable. Catppuccin Mocha theming is applied to bat,
+      btop, delta, fzf, and yazi; the other tools have no themeable config.
     options:
       modern_cli_bat_enabled:
         type: bool
@@ -126,6 +126,11 @@ argument_specs:
         description: >-
           Whether to install moor (the tool formerly known as "moar" —
           upstream renamed it; the GitHub repo path is unchanged).
+      modern_cli_yazi_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install yazi (from a GitHub-released .deb).
       modern_cli_bat_version:
         type: str
         required: false
@@ -290,6 +295,22 @@ argument_specs:
         type: str
         required: false
         description: Checksum of the moor binary at modern_cli_moor_version, verified by get_url.
+      modern_cli_yazi_version:
+        type: str
+        required: false
+        description: yazi version (github-releases sxyazi/yazi), installed from a checksum-verified .deb.
+      modern_cli_yazi_checksum:
+        type: str
+        required: false
+        description: Checksum of the yazi .deb at modern_cli_yazi_version, verified by get_url.
+      modern_cli_yazi_theme_ref:
+        type: str
+        required: false
+        description: Pinned commit of catppuccin/yazi the theme file is downloaded from (no releases/tags published upstream).
+      modern_cli_yazi_theme_checksum:
+        type: str
+        required: false
+        description: Checksum of the yazi theme file at modern_cli_yazi_theme_ref, verified by get_url.
       modern_cli_deploy_shell_aliases:
         type: bool
         required: false

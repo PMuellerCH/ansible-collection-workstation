@@ -824,6 +824,67 @@
      modern_cli_moor_version not in modern_cli_moor_current_version.stdout)
   tags: [moor, modern_cli]
 
+# yazi (github release .deb, no checksum file — static pin; installs both
+# `yazi` and its companion `ya` CLI, apt-held like any other installed .deb,
+# same pattern as trivy in code_quality_tools and dust above)
+- name: Get installed yazi version
+  ansible.builtin.command: yazi --version
+  register: modern_cli_yazi_current_version
+  changed_when: false
+  failed_when: false
+  when: modern_cli_yazi_enabled
+  tags: [yazi, modern_cli]
+
+- name: Download yazi .deb
+  ansible.builtin.get_url:
+    url: "https://github.com/sxyazi/yazi/releases/download/v{{ modern_cli_yazi_version }}/yazi-x86_64-unknown-linux-gnu.deb"
+    dest: "/tmp/yazi_{{ modern_cli_yazi_version }}_amd64.deb"
+    checksum: "{{ modern_cli_yazi_checksum }}"
+    mode: "0644"
+  when: >-
+    modern_cli_yazi_enabled and
+    (modern_cli_yazi_current_version.rc != 0 or
+     modern_cli_yazi_version not in modern_cli_yazi_current_version.stdout)
+  tags: [yazi, modern_cli]
+
+- name: Install yazi
+  ansible.builtin.apt:
+    deb: "/tmp/yazi_{{ modern_cli_yazi_version }}_amd64.deb"
+  become: true
+  when: >-
+    not ansible_check_mode and
+    modern_cli_yazi_enabled and
+    (modern_cli_yazi_current_version.rc != 0 or
+     modern_cli_yazi_version not in modern_cli_yazi_current_version.stdout)
+  tags: [yazi, modern_cli]
+
+- name: Hold yazi package version
+  ansible.builtin.dpkg_selections:
+    name: yazi
+    selection: hold
+  become: true
+  when: modern_cli_yazi_enabled and not ansible_check_mode
+  tags: [yazi, modern_cli]
+
+- name: Create yazi config directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/yazi"
+    state: directory
+    mode: "0755"
+  become: false
+  when: modern_cli_yazi_enabled
+  tags: [yazi, modern_cli]
+
+- name: Deploy Catppuccin Mocha theme for yazi
+  ansible.builtin.get_url:
+    url: "https://raw.githubusercontent.com/catppuccin/yazi/{{ modern_cli_yazi_theme_ref }}/themes/mocha/catppuccin-mocha-mauve.toml"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/yazi/theme.toml"
+    checksum: "{{ modern_cli_yazi_theme_checksum }}"
+    mode: "0644"
+  become: false
+  when: modern_cli_yazi_enabled
+  tags: [yazi, modern_cli]
+
 # shell integration
 - name: Create zsh conf.d directory
   ansible.builtin.file:
@@ -832,7 +893,7 @@
     mode: "0755"
   become: false
   when: modern_cli_deploy_shell_aliases
-  tags: [bat, btop, cli-tools, delta, doggo, dust, emoji_fzf, fzf, jaq, moor, presenterm, procs, viddy, xcp, modern_cli]
+  tags: [bat, btop, cli-tools, delta, doggo, dust, emoji_fzf, fzf, jaq, moor, presenterm, procs, viddy, xcp, yazi, modern_cli]
 
 - name: Deploy modern_cli shell aliases
   ansible.builtin.template:
@@ -841,4 +902,4 @@
     mode: "0644"
   become: false
   when: modern_cli_deploy_shell_aliases
-  tags: [bat, btop, cli-tools, delta, doggo, dust, emoji_fzf, fzf, jaq, moor, presenterm, procs, viddy, xcp, modern_cli]
+  tags: [bat, btop, cli-tools, delta, doggo, dust, emoji_fzf, fzf, jaq, moor, presenterm, procs, viddy, xcp, yazi, modern_cli]

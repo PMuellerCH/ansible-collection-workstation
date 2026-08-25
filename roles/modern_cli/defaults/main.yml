@@ -21,6 +21,7 @@ modern_cli_xcp_enabled: true
 modern_cli_doggo_enabled: true
 modern_cli_jaq_enabled: true
 modern_cli_moor_enabled: true
+modern_cli_yazi_enabled: true
 
 # renovate: datasource=deb depName=bat registryUrl=http://archive.ubuntu.com/ubuntu?suite=noble&components=main,universe&binaryArch=amd64
 modern_cli_bat_version: "0.24.0-1build1"
@@ -137,5 +138,18 @@ modern_cli_moor_version: "2.17.0"
 # walles/moar publishes bare binaries with no checksum file — static pin,
 # same deliberate friction as modern_cli_procs_checksum above.
 modern_cli_moor_checksum: "sha256:f6f6672cf4b9561212d80f0bb2dcc9656cc7b225c6941169505fd1c76bfce44d"
+
+# renovate: datasource=github-releases depName=sxyazi/yazi extractVersion=^v(?<version>.*)$
+modern_cli_yazi_version: "26.8.15"
+# sxyazi/yazi publishes no per-release checksum file — static pin, deliberate
+# manual-review friction on a Renovate bump (see the collection's
+# checksum-verification conventions).
+modern_cli_yazi_checksum: "sha256:80e6434bf12ef5c17cf715ae0f17df15cc40459a5caf1dd12f8b377ae7e9361a"
+
+# Pinned commit of catppuccin/yazi (no releases/tags published upstream —
+# theme is fetched from an immutable ref, not the mutable "main" branch).
+# "mauve" is Catppuccin's default accent color.
+modern_cli_yazi_theme_ref: "d62802be39210ea10e54b3e3b09735c6cb9e57c1"  # pragma: allowlist secret
+modern_cli_yazi_theme_checksum: "sha256:79d14028498ecf7da42fe3dc53b4436b43a24c723a0dea93020bffd23d235436"
 
 modern_cli_deploy_shell_aliases: true

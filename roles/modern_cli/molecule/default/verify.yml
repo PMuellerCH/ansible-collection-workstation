@@ -30,6 +30,7 @@
           - "'gping' in ansible_facts.packages"
           - "'hexyl' in ansible_facts.packages"
           - "'du-dust' in ansible_facts.packages"
+          - "'yazi' in ansible_facts.packages"
 
     - name: Get dpkg selections for held apt packages
       ansible.builtin.command: "dpkg --get-selections {{ item }}"
@@ -193,3 +194,38 @@
           - "'delta' in _modern_cli_delta_git_config.results[0].stdout"
           - "'catppuccin-mocha' in _modern_cli_delta_git_config.results[1].stdout"
           - "'catppuccin-delta.gitconfig' in _modern_cli_delta_git_config.results[2].stdout"
+
+    - name: Check yazi and ya run and report the pinned version
+      ansible.builtin.command: "{{ item }} --version"
+      register: _modern_cli_yazi_versions
+      changed_when: false
+      loop:
+        - yazi
+        - ya
+      loop_control:
+        label: "{{ item }}"
+
+    - name: Assert yazi and ya report the pinned version
+      ansible.builtin.assert:
+        that: "modern_cli_yazi_version in item.stdout"
+      loop: "{{ _modern_cli_yazi_versions.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+    - name: Get dpkg selection for yazi
+      ansible.builtin.command: dpkg --get-selections yazi
+      register: _modern_cli_yazi_selection
+      changed_when: false
+
+    - name: Assert yazi package version is held
+      ansible.builtin.assert:
+        that: "'hold' in _modern_cli_yazi_selection.stdout"
+
+    - name: Stat yazi Catppuccin theme
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/yazi/theme.toml"
+      register: _modern_cli_yazi_theme
+
+    - name: Assert yazi theme was downloaded
+      ansible.builtin.assert:
+        that: _modern_cli_yazi_theme.stat.exists
