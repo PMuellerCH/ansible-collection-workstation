@@ -24,15 +24,32 @@
           - "'htop' in ansible_facts.packages"
           - "'ripgrep' in ansible_facts.packages"
           - "'zoxide' in ansible_facts.packages"
+          - "'sd' in ansible_facts.packages"
+          - "'duf' in ansible_facts.packages"
+          - "'git-delta' in ansible_facts.packages"
+          - "'gping' in ansible_facts.packages"
+          - "'hexyl' in ansible_facts.packages"
+          - "'du-dust' in ansible_facts.packages"
 
-    - name: Get dpkg selection for htop
-      ansible.builtin.command: dpkg --get-selections htop
-      register: _modern_cli_htop_selection
+    - name: Get dpkg selections for held apt packages
+      ansible.builtin.command: "dpkg --get-selections {{ item }}"
+      register: _modern_cli_dpkg_selections
       changed_when: false
+      loop:
+        - htop
+        - sd
+        - duf
+        - git-delta
+        - gping
+        - hexyl
+        - du-dust
 
-    - name: Assert htop package version is held
+    - name: Assert held apt packages are held
       ansible.builtin.assert:
-        that: "'hold' in _modern_cli_htop_selection.stdout"
+        that: "'hold' in item.stdout"
+      loop: "{{ _modern_cli_dpkg_selections.results }}"
+      loop_control:
+        label: "{{ item.item }}"
 
     - name: Stat fd symlink
       ansible.builtin.stat:
@@ -123,3 +140,56 @@
     - name: Assert emoji-fzf reports the pinned version
       ansible.builtin.assert:
         that: "modern_cli_emoji_fzf_version in _modern_cli_emoji_fzf_version.stdout"
+
+    - name: Check GitHub-release binaries run and report their pinned version
+      ansible.builtin.command: "{{ item.bin }} --version"
+      register: _modern_cli_gh_release_versions
+      changed_when: false
+      loop:
+        - { bin: procs, version: "{{ modern_cli_procs_version }}" }
+        - { bin: dust, version: "{{ modern_cli_dust_version }}" }
+        - { bin: viddy, version: "{{ modern_cli_viddy_version }}" }
+        - { bin: xcp, version: "{{ modern_cli_xcp_version }}" }
+        - { bin: doggo, version: "{{ modern_cli_doggo_version }}" }
+        - { bin: jaq, version: "{{ modern_cli_jaq_version }}" }
+        - { bin: moor, version: "{{ modern_cli_moor_version }}" }
+      loop_control:
+        label: "{{ item.bin }}"
+
+    - name: Assert GitHub-release binaries report their pinned version
+      ansible.builtin.assert:
+        that: "item.item.version in item.stdout"
+      loop: "{{ _modern_cli_gh_release_versions.results }}"
+      loop_control:
+        label: "{{ item.item.bin }}"
+
+    - name: Check delta's Catppuccin theme gitconfig was deployed
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/git/catppuccin-delta.gitconfig"
+      register: _modern_cli_delta_theme
+
+    - name: Assert delta's Catppuccin theme gitconfig was deployed
+      ansible.builtin.assert:
+        that: _modern_cli_delta_theme.stat.exists
+
+    - name: Check delta git config integration
+      # community.general.git_config requires value: whenever state: present
+      # applies (its default), even for a pure read — so a read-only lookup
+      # has no module alternative here.
+      ansible.builtin.command: "git config --global {{ item }}"
+      register: _modern_cli_delta_git_config
+      changed_when: false
+      loop:
+        - core.pager
+        - delta.features
+        - include.path
+      loop_control:
+        label: "{{ item }}"
+      # noqa: command-instead-of-module - community.general.git_config cannot perform a value-less read; no module alternative exists
+
+    - name: Assert delta is wired into git config
+      ansible.builtin.assert:
+        that:
+          - "'delta' in _modern_cli_delta_git_config.results[0].stdout"
+          - "'catppuccin-mocha' in _modern_cli_delta_git_config.results[1].stdout"
+          - "'catppuccin-delta.gitconfig' in _modern_cli_delta_git_config.results[2].stdout"

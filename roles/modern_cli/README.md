@@ -1,15 +1,18 @@
 # swisstopo.workstation.modern_cli
 
 Installs a set of modern CLI tool replacements: `bat` (cat), `btop` (top),
-`emoji-fzf` (emoji picker), `eza` (ls), `fd`/`fd-find` (find), `fzf` (fuzzy
-finder), `htop` (top), `presenterm` (terminal presentations), `ripgrep`
-(grep), `zoxide` (cd). Each tool is independently toggleable and installed
-regardless of the others — this role is a single parameterized entry point
-for "modern CLI tool replacements" as a category.
+`delta` (diff), `doggo` (dig), `duf` (df), `dust` (du), `emoji-fzf` (emoji
+picker), `eza` (ls), `fd`/`fd-find` (find), `fzf` (fuzzy finder), `gping`
+(ping), `hexyl` (hexdump/xxd), `htop` (top), `jaq` (jq), `moor` (less),
+`presenterm` (terminal presentations), `procs` (ps), `ripgrep` (grep), `sd`
+(sed), `viddy` (watch), `xcp` (cp), `zoxide` (cd). Each tool is independently
+toggleable and installed regardless of the others — this role is a single
+parameterized entry point for "modern CLI tool replacements" as a category.
 
-`bat`, `btop`, and `fzf` are additionally Catppuccin-Mocha-themed — the fixed
-collection-wide theme convention, not a variable. The other tools (`eza`,
-`fd`, `htop`, `ripgrep`, `zoxide`) are installed only; they have no
+`bat`, `btop`, `delta`, and `fzf` are additionally Catppuccin-Mocha-themed —
+the fixed collection-wide theme convention, not a variable (checked against
+the full `catppuccin` GitHub org; none of the other tools in this role have
+an official port). The other tools are installed only; they have no
 themeable config file of their own.
 
 `presenterm` here covers only the binary and its mermaid-diagram rendering
@@ -32,11 +35,13 @@ that one tool.
 
 ## What it does
 
-- Installs `bat`, `btop`, `eza`, `fd-find`, `fzf`, `htop`, `ripgrep`,
-  `zoxide` via apt/GitHub releases.
+- Installs `bat`, `btop`, `delta`, `duf`, `eza`, `fd-find`, `fzf`, `gping`,
+  `hexyl`, `htop`, `ripgrep`, `sd`, `zoxide` via apt.
+- Installs `dust`, `doggo`, `jaq`, `moor`, `procs`, `viddy`, `xcp` from
+  checksum-verified GitHub release binaries.
 - Installs `emoji-fzf` via pipx.
 - Installs `presenterm` (binary + mermaid-cli rendering dependency).
-- Deploys Catppuccin Mocha theming for `bat`, `btop`, and `fzf`.
+- Deploys Catppuccin Mocha theming for `bat`, `btop`, `delta`, and `fzf`.
 - Deploys `~/.config/zsh/conf.d/modern_cli.zsh` with aliases for enabled
   tools.
 
@@ -79,6 +84,18 @@ take effect.
 | `modern_cli_presenterm_enabled` | `true` | Install presenterm (binary + mermaid-cli only) |
 | `modern_cli_ripgrep_enabled` | `true` | Install ripgrep |
 | `modern_cli_zoxide_enabled` | `true` | Install zoxide |
+| `modern_cli_sd_enabled` | `true` | Install sd |
+| `modern_cli_duf_enabled` | `true` | Install duf |
+| `modern_cli_delta_enabled` | `true` | Install delta (apt package `git-delta`), with Catppuccin Mocha theming wired into git config |
+| `modern_cli_gping_enabled` | `true` | Install gping |
+| `modern_cli_hexyl_enabled` | `true` | Install hexyl |
+| `modern_cli_procs_enabled` | `true` | Install procs |
+| `modern_cli_dust_enabled` | `true` | Install dust (from a GitHub-released `.deb`) |
+| `modern_cli_viddy_enabled` | `true` | Install viddy |
+| `modern_cli_xcp_enabled` | `true` | Install xcp |
+| `modern_cli_doggo_enabled` | `true` | Install doggo |
+| `modern_cli_jaq_enabled` | `true` | Install jaq |
+| `modern_cli_moor_enabled` | `true` | Install moor (the tool formerly known as "moar" — upstream renamed it) |
 | `modern_cli_bat_version` | see `defaults/main.yml` | Exact apt version of bat |
 | `modern_cli_btop_version` | see `defaults/main.yml` | Exact apt version of btop |
 | `modern_cli_btop_catppuccin_version` | see `defaults/main.yml` | `catppuccin/btop` release tag for the theme archive |
@@ -100,6 +117,25 @@ take effect.
 | `modern_cli_bat_theme_ref` | see `defaults/main.yml` | Pinned commit of `catppuccin/bat` the theme file is downloaded from |
 | `modern_cli_bat_theme_checksum` | see `defaults/main.yml` | Checksum of the bat theme file, verified by `get_url` |
 | `modern_cli_btop_catppuccin_checksum` | see `defaults/main.yml` | Checksum of the btop themes archive, verified by `get_url` |
+| `modern_cli_sd_version` | see `defaults/main.yml` | Exact apt version of sd |
+| `modern_cli_duf_version` | see `defaults/main.yml` | Exact apt version of duf |
+| `modern_cli_delta_version` | see `defaults/main.yml` | Exact apt version of git-delta |
+| `modern_cli_delta_catppuccin_ref` | see `defaults/main.yml` | Pinned commit of `catppuccin/delta` the theme gitconfig is downloaded from (no releases/tags published upstream) |
+| `modern_cli_delta_catppuccin_checksum` | see `defaults/main.yml` | Checksum of the catppuccin.gitconfig file, verified by `get_url` |
+| `modern_cli_gping_version` | see `defaults/main.yml` | Exact apt version of gping |
+| `modern_cli_hexyl_version` | see `defaults/main.yml` | Exact apt version of hexyl |
+| `modern_cli_procs_version` | see `defaults/main.yml` | procs binary version (github-releases: `dalance/procs`) |
+| `modern_cli_procs_checksum` | see `defaults/main.yml` | Checksum of the procs zip archive, verified by `get_url` |
+| `modern_cli_dust_version` | see `defaults/main.yml` | dust binary version (github-releases: `bootandy/dust`) |
+| `modern_cli_dust_checksum` | see `defaults/main.yml` | Checksum of the dust `.deb`, verified by `get_url` |
+| `modern_cli_viddy_version` | see `defaults/main.yml` | viddy binary version (github-releases: `sachaos/viddy`) |
+| `modern_cli_xcp_version` | see `defaults/main.yml` | xcp binary version (github-releases: `tarka/xcp`) |
+| `modern_cli_xcp_checksum` | see `defaults/main.yml` | Checksum of the xcp tarball, verified by `get_url` |
+| `modern_cli_doggo_version` | see `defaults/main.yml` | doggo binary version (github-releases: `mr-karan/doggo`) |
+| `modern_cli_jaq_version` | see `defaults/main.yml` | jaq binary version (github-releases: `01mf02/jaq`) |
+| `modern_cli_jaq_checksum` | see `defaults/main.yml` | Checksum of the jaq binary, verified by `get_url` |
+| `modern_cli_moor_version` | see `defaults/main.yml` | moor binary version (github-releases: `walles/moar`) |
+| `modern_cli_moor_checksum` | see `defaults/main.yml` | Checksum of the moor binary, verified by `get_url` |
 
 ## Example Playbook
 
@@ -118,12 +154,20 @@ tag, so a consuming playbook can filter to a single tool:
 | --- | --- |
 | bat | `bat`, `modern_cli` |
 | btop | `btop`, `modern_cli` |
+| delta | `delta`, `modern_cli` |
+| doggo | `doggo`, `modern_cli` |
+| dust | `dust`, `modern_cli` |
 | emoji-fzf | `emoji_fzf`, `modern_cli` |
-| eza, fd, ripgrep, zoxide | `cli-tools`, `modern_cli` |
+| eza, fd, ripgrep, zoxide, sd, duf, gping, hexyl | `cli-tools`, `modern_cli` |
 | fzf | `fzf`, `modern_cli` |
 | htop | `htop`, `modern_cli` |
+| jaq | `jaq`, `modern_cli` |
+| moor | `moor`, `modern_cli` |
 | presenterm | `presenterm`, `modern_cli` |
-| shell alias deployment | `bat`, `btop`, `cli-tools`, `emoji_fzf`, `fzf`, `presenterm`, `modern_cli` |
+| procs | `procs`, `modern_cli` |
+| viddy | `viddy`, `modern_cli` |
+| xcp | `xcp`, `modern_cli` |
+| shell alias deployment | `bat`, `btop`, `cli-tools`, `delta`, `doggo`, `dust`, `emoji_fzf`, `fzf`, `jaq`, `moor`, `presenterm`, `procs`, `viddy`, `xcp`, `modern_cli` |
 
 **Do not** put an outer `tags:` on the role invocation in your play — that
 tag cascades to every task in the role and defeats this per-tool filtering.
@@ -137,6 +181,26 @@ be independently runnable, `modern_cli` bootstraps its own adequate pipx
 (`pip install --user pipx=={{ modern_cli_pipx_min_version }}`) rather than
 assuming a consumer already upgraded the system pipx — identical to the
 pattern used by the `code_quality_tools` role.
+
+## delta git integration
+
+Unlike bat/btop (standalone theme files), delta only does anything once it's
+wired into git itself. This role sets `core.pager = delta` and
+`delta.features = catppuccin-mocha` globally via `community.general.git_config`,
+and downloads `catppuccin/delta`'s theme gitconfig (pinned to a commit SHA —
+that repo publishes no releases/tags) to
+`~/.config/git/catppuccin-delta.gitconfig`, included into the global
+gitconfig via `include.path`. This is the one exception to "git identity/
+behavior config belongs to the `base` role" — it's delta-specific
+integration, not generic git configuration, so it lives here next to the
+delta install itself.
+
+## moor (formerly "moar")
+
+Upstream (repo `walles/moar`) renamed the tool itself to `moor` to resolve a
+name clash — release assets and the installed binary are `moor`, not `moar`,
+even though the GitHub repository path is unchanged. `modern_cli_moor_*`
+variables and the `less='moor'` alias reflect the current name.
 
 ## Check-mode
 

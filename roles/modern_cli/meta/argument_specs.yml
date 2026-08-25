@@ -2,10 +2,11 @@
 argument_specs:
   main:
     short_description: >-
-      Install a set of modern CLI tool replacements: bat, btop, emoji-fzf, eza,
-      fd, fzf, htop, presenterm, ripgrep, zoxide — each independently
-      toggleable. Catppuccin Mocha theming is applied to bat, btop, and fzf;
-      the other tools have no themeable config.
+      Install a set of modern CLI tool replacements: bat, btop, delta, doggo,
+      duf, dust, emoji-fzf, eza, fd, fzf, gping, hexyl, htop, jaq, moor,
+      presenterm, procs, ripgrep, sd, viddy, xcp, zoxide — each independently
+      toggleable. Catppuccin Mocha theming is applied to bat, btop, delta,
+      and fzf; the other tools have no themeable config.
     options:
       modern_cli_bat_enabled:
         type: bool
@@ -63,6 +64,68 @@ argument_specs:
         required: false
         default: true
         description: Whether to install zoxide.
+      modern_cli_sd_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install sd.
+      modern_cli_duf_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install duf.
+      modern_cli_delta_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install delta (apt package git-delta), with Catppuccin Mocha theming wired into git config.
+      modern_cli_gping_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install gping.
+      modern_cli_hexyl_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install hexyl.
+      modern_cli_procs_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install procs.
+      modern_cli_dust_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install dust (from a GitHub-released .deb).
+      modern_cli_viddy_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install viddy.
+      modern_cli_xcp_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install xcp.
+      modern_cli_doggo_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install doggo.
+      modern_cli_jaq_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install jaq.
+      modern_cli_moor_enabled:
+        type: bool
+        required: false
+        default: true
+        description: >-
+          Whether to install moor (the tool formerly known as "moar" —
+          upstream renamed it; the GitHub repo path is unchanged).
       modern_cli_bat_version:
         type: str
         required: false
@@ -151,6 +214,82 @@ argument_specs:
           pipx version (pypi) installed via pip --user to satisfy
           community.general.pipx's >= 1.7.0 requirement, since Ubuntu 24.04's
           apt-provided pipx is only 1.4.3. Only used when modern_cli_emoji_fzf_enabled.
+      modern_cli_sd_version:
+        type: str
+        required: false
+        description: Exact apt package version of sd to install (held after install).
+      modern_cli_duf_version:
+        type: str
+        required: false
+        description: Exact apt package version of duf to install (held after install).
+      modern_cli_delta_version:
+        type: str
+        required: false
+        description: Exact apt package version of git-delta to install (held after install).
+      modern_cli_delta_catppuccin_ref:
+        type: str
+        required: false
+        description: Pinned commit of catppuccin/delta the theme gitconfig is downloaded from (no releases/tags published upstream).
+      modern_cli_delta_catppuccin_checksum:
+        type: str
+        required: false
+        description: Checksum of the catppuccin.gitconfig file at modern_cli_delta_catppuccin_ref, verified by get_url.
+      modern_cli_gping_version:
+        type: str
+        required: false
+        description: Exact apt package version of gping to install (held after install).
+      modern_cli_hexyl_version:
+        type: str
+        required: false
+        description: Exact apt package version of hexyl to install (held after install).
+      modern_cli_procs_version:
+        type: str
+        required: false
+        description: procs version (github-releases dalance/procs), installed from a checksum-verified zip.
+      modern_cli_procs_checksum:
+        type: str
+        required: false
+        description: Checksum of the procs zip archive at modern_cli_procs_version, verified by get_url.
+      modern_cli_dust_version:
+        type: str
+        required: false
+        description: dust version (github-releases bootandy/dust), installed from a checksum-verified .deb.
+      modern_cli_dust_checksum:
+        type: str
+        required: false
+        description: Checksum of the dust .deb at modern_cli_dust_version, verified by get_url.
+      modern_cli_viddy_version:
+        type: str
+        required: false
+        description: viddy version (github-releases sachaos/viddy), installed from a checksum-verified binary tarball.
+      modern_cli_xcp_version:
+        type: str
+        required: false
+        description: xcp version (github-releases tarka/xcp), installed from a checksum-verified binary tarball.
+      modern_cli_xcp_checksum:
+        type: str
+        required: false
+        description: Checksum of the xcp tarball at modern_cli_xcp_version, verified by get_url.
+      modern_cli_doggo_version:
+        type: str
+        required: false
+        description: doggo version (github-releases mr-karan/doggo), installed from a checksum-verified binary tarball.
+      modern_cli_jaq_version:
+        type: str
+        required: false
+        description: jaq version (github-releases 01mf02/jaq), installed from a checksum-verified bare binary.
+      modern_cli_jaq_checksum:
+        type: str
+        required: false
+        description: Checksum of the jaq binary at modern_cli_jaq_version, verified by get_url.
+      modern_cli_moor_version:
+        type: str
+        required: false
+        description: moor version (github-releases walles/moar), installed from a checksum-verified bare binary.
+      modern_cli_moor_checksum:
+        type: str
+        required: false
+        description: Checksum of the moor binary at modern_cli_moor_version, verified by get_url.
       modern_cli_deploy_shell_aliases:
         type: bool
         required: false

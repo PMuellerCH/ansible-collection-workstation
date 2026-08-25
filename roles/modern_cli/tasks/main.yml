@@ -427,6 +427,403 @@
   when: not ansible_check_mode and modern_cli_emoji_fzf_enabled
   tags: [emoji_fzf, modern_cli]
 
+# sd
+- name: Install sd
+  ansible.builtin.apt:
+    name: "sd={{ modern_cli_sd_version }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: modern_cli_sd_enabled
+  tags: [cli-tools, modern_cli]
+
+- name: Hold sd package version
+  ansible.builtin.dpkg_selections:
+    name: sd
+    selection: hold
+  become: true
+  when: modern_cli_sd_enabled and not ansible_check_mode
+  tags: [cli-tools, modern_cli]
+
+# duf
+- name: Install duf
+  ansible.builtin.apt:
+    name: "duf={{ modern_cli_duf_version }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: modern_cli_duf_enabled
+  tags: [cli-tools, modern_cli]
+
+- name: Hold duf package version
+  ansible.builtin.dpkg_selections:
+    name: duf
+    selection: hold
+  become: true
+  when: modern_cli_duf_enabled and not ansible_check_mode
+  tags: [cli-tools, modern_cli]
+
+# gping
+- name: Install gping
+  ansible.builtin.apt:
+    name: "gping={{ modern_cli_gping_version }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: modern_cli_gping_enabled
+  tags: [cli-tools, modern_cli]
+
+- name: Hold gping package version
+  ansible.builtin.dpkg_selections:
+    name: gping
+    selection: hold
+  become: true
+  when: modern_cli_gping_enabled and not ansible_check_mode
+  tags: [cli-tools, modern_cli]
+
+# hexyl
+- name: Install hexyl
+  ansible.builtin.apt:
+    name: "hexyl={{ modern_cli_hexyl_version }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: modern_cli_hexyl_enabled
+  tags: [cli-tools, modern_cli]
+
+- name: Hold hexyl package version
+  ansible.builtin.dpkg_selections:
+    name: hexyl
+    selection: hold
+  become: true
+  when: modern_cli_hexyl_enabled and not ansible_check_mode
+  tags: [cli-tools, modern_cli]
+
+# delta (apt package name git-delta, binary name delta) — includes Catppuccin
+# Mocha theming via git config, since delta only has meaningful theming once
+# wired into git itself (unlike bat/btop, which have standalone config files).
+- name: Install delta
+  ansible.builtin.apt:
+    name: "git-delta={{ modern_cli_delta_version }}"
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: modern_cli_delta_enabled
+  tags: [delta, modern_cli]
+
+- name: Hold delta package version
+  ansible.builtin.dpkg_selections:
+    name: git-delta
+    selection: hold
+  become: true
+  when: modern_cli_delta_enabled and not ansible_check_mode
+  tags: [delta, modern_cli]
+
+- name: Create git conf.d directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/git"
+    state: directory
+    mode: "0755"
+  become: false
+  when: modern_cli_delta_enabled
+  tags: [delta, modern_cli]
+
+- name: Download Catppuccin Mocha theme for delta
+  ansible.builtin.get_url:
+    url: "https://raw.githubusercontent.com/catppuccin/delta/{{ modern_cli_delta_catppuccin_ref }}/catppuccin.gitconfig"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/git/catppuccin-delta.gitconfig"
+    checksum: "{{ modern_cli_delta_catppuccin_checksum }}"
+    mode: "0644"
+  become: false
+  when: modern_cli_delta_enabled
+  tags: [delta, modern_cli]
+
+- name: Include Catppuccin delta theme file in global gitconfig
+  community.general.git_config:
+    name: include.path
+    value: "{{ ansible_facts['env']['HOME'] }}/.config/git/catppuccin-delta.gitconfig"
+    scope: global
+  become: false
+  when: modern_cli_delta_enabled and not ansible_check_mode
+  tags: [delta, modern_cli]
+
+- name: Set delta as git's diff pager, with the Catppuccin Mocha theme
+  community.general.git_config:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    scope: global
+  become: false
+  loop:
+    - name: core.pager
+      value: delta
+    - name: delta.features
+      value: catppuccin-mocha
+  when: modern_cli_delta_enabled and not ansible_check_mode
+  tags: [delta, modern_cli]
+
+# procs (github release, no per-release checksum file — static pin)
+- name: Install unzip (required to extract the procs zip archive)
+  ansible.builtin.apt:
+    name: unzip
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: modern_cli_procs_enabled
+  tags: [procs, modern_cli]
+
+- name: Get installed procs version
+  ansible.builtin.command: procs --version
+  register: modern_cli_procs_current_version
+  changed_when: false
+  failed_when: false
+  when: modern_cli_procs_enabled
+  tags: [procs, modern_cli]
+
+- name: Download procs archive
+  ansible.builtin.get_url:
+    url: "https://github.com/dalance/procs/releases/download/v{{ modern_cli_procs_version }}/procs-v{{ modern_cli_procs_version }}-x86_64-linux.zip"
+    dest: "/tmp/procs-{{ modern_cli_procs_version }}.zip"
+    checksum: "{{ modern_cli_procs_checksum }}"
+    mode: "0644"
+  when: >-
+    modern_cli_procs_enabled and
+    (modern_cli_procs_current_version.rc != 0 or
+     modern_cli_procs_version not in modern_cli_procs_current_version.stdout)
+  tags: [procs, modern_cli]
+
+- name: Install procs binary to /usr/local/bin
+  ansible.builtin.unarchive:
+    src: "/tmp/procs-{{ modern_cli_procs_version }}.zip"
+    dest: /usr/local/bin/
+    include:
+      - procs
+    remote_src: true
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and
+    modern_cli_procs_enabled and
+    (modern_cli_procs_current_version.rc != 0 or
+     modern_cli_procs_version not in modern_cli_procs_current_version.stdout)
+  tags: [procs, modern_cli]
+
+# dust (github release .deb, no checksum file — static pin; still apt-held
+# like any other installed .deb, same pattern as trivy in code_quality_tools)
+- name: Get installed dust version
+  ansible.builtin.command: dust --version
+  register: modern_cli_dust_current_version
+  changed_when: false
+  failed_when: false
+  when: modern_cli_dust_enabled
+  tags: [dust, modern_cli]
+
+- name: Download dust .deb
+  ansible.builtin.get_url:
+    url: "https://github.com/bootandy/dust/releases/download/v{{ modern_cli_dust_version }}/du-dust_{{ modern_cli_dust_version }}-1_amd64.deb"
+    dest: "/tmp/du-dust_{{ modern_cli_dust_version }}_amd64.deb"
+    checksum: "{{ modern_cli_dust_checksum }}"
+    mode: "0644"
+  when: >-
+    modern_cli_dust_enabled and
+    (modern_cli_dust_current_version.rc != 0 or
+     modern_cli_dust_version not in modern_cli_dust_current_version.stdout)
+  tags: [dust, modern_cli]
+
+- name: Install dust
+  ansible.builtin.apt:
+    deb: "/tmp/du-dust_{{ modern_cli_dust_version }}_amd64.deb"
+  become: true
+  when: >-
+    not ansible_check_mode and
+    modern_cli_dust_enabled and
+    (modern_cli_dust_current_version.rc != 0 or
+     modern_cli_dust_version not in modern_cli_dust_current_version.stdout)
+  tags: [dust, modern_cli]
+
+- name: Hold dust package version
+  ansible.builtin.dpkg_selections:
+    name: du-dust
+    selection: hold
+  become: true
+  when: modern_cli_dust_enabled and not ansible_check_mode
+  tags: [dust, modern_cli]
+
+# viddy (github release, per-asset .sha256 file — dynamic checksum)
+- name: Get installed viddy version
+  ansible.builtin.command: viddy --version
+  register: modern_cli_viddy_current_version
+  changed_when: false
+  failed_when: false
+  when: modern_cli_viddy_enabled
+  tags: [viddy, modern_cli]
+
+- name: Download viddy archive
+  ansible.builtin.get_url:
+    url: "{{ _modern_cli_viddy_release_base }}.tar.gz"
+    dest: "/tmp/viddy-{{ modern_cli_viddy_version }}.tar.gz"
+    # sachaos/viddy publishes a matching .sha256 file per release asset —
+    # get_url fetches and verifies against it directly, so there's no static
+    # checksum to keep in sync by hand when Renovate bumps
+    # modern_cli_viddy_version.
+    checksum: "sha256:{{ _modern_cli_viddy_release_base }}.sha256"
+    mode: "0644"
+  vars:
+    _modern_cli_viddy_release_base: >-
+      https://github.com/sachaos/viddy/releases/download/v{{ modern_cli_viddy_version }}/viddy-v{{ modern_cli_viddy_version }}-linux-x86_64
+  when: >-
+    modern_cli_viddy_enabled and
+    (modern_cli_viddy_current_version.rc != 0 or
+     modern_cli_viddy_version not in modern_cli_viddy_current_version.stdout)
+  tags: [viddy, modern_cli]
+
+- name: Install viddy binary to /usr/local/bin
+  ansible.builtin.unarchive:
+    src: "/tmp/viddy-{{ modern_cli_viddy_version }}.tar.gz"
+    dest: /usr/local/bin/
+    include:
+      - viddy
+    remote_src: true
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and
+    modern_cli_viddy_enabled and
+    (modern_cli_viddy_current_version.rc != 0 or
+     modern_cli_viddy_version not in modern_cli_viddy_current_version.stdout)
+  tags: [viddy, modern_cli]
+
+# xcp (github release, no per-release checksum file — static pin)
+- name: Get installed xcp version
+  ansible.builtin.command: xcp --version
+  register: modern_cli_xcp_current_version
+  changed_when: false
+  failed_when: false
+  when: modern_cli_xcp_enabled
+  tags: [xcp, modern_cli]
+
+- name: Download xcp archive
+  ansible.builtin.get_url:
+    url: "https://github.com/tarka/xcp/releases/download/xcp-v{{ modern_cli_xcp_version }}/xcp-v{{ modern_cli_xcp_version }}-x86_64-unknown-linux-gnu.tar.gz"
+    dest: "/tmp/xcp-{{ modern_cli_xcp_version }}.tar.gz"
+    checksum: "{{ modern_cli_xcp_checksum }}"
+    mode: "0644"
+  when: >-
+    modern_cli_xcp_enabled and
+    (modern_cli_xcp_current_version.rc != 0 or
+     modern_cli_xcp_version not in modern_cli_xcp_current_version.stdout)
+  tags: [xcp, modern_cli]
+
+- name: Install xcp binary to /usr/local/bin
+  ansible.builtin.unarchive:
+    src: "/tmp/xcp-{{ modern_cli_xcp_version }}.tar.gz"
+    dest: /usr/local/bin/
+    include:
+      - "xcp-v{{ modern_cli_xcp_version }}-x86_64-unknown-linux-gnu/bin/xcp"
+    extra_opts:
+      - --strip-components=2
+    remote_src: true
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and
+    modern_cli_xcp_enabled and
+    (modern_cli_xcp_current_version.rc != 0 or
+     modern_cli_xcp_version not in modern_cli_xcp_current_version.stdout)
+  tags: [xcp, modern_cli]
+
+# doggo (github release, aggregate checksums.txt — dynamic checksum)
+- name: Get installed doggo version
+  ansible.builtin.command: doggo --version
+  register: modern_cli_doggo_current_version
+  changed_when: false
+  failed_when: false
+  when: modern_cli_doggo_enabled
+  tags: [doggo, modern_cli]
+
+- name: Download doggo archive
+  ansible.builtin.get_url:
+    url: "https://github.com/mr-karan/doggo/releases/download/v{{ modern_cli_doggo_version }}/doggo-linux-x86_64.tar.gz"
+    dest: "/tmp/doggo-{{ modern_cli_doggo_version }}.tar.gz"
+    # mr-karan/doggo publishes an aggregate, version-named checksums.txt per
+    # release — get_url fetches it and matches the entry by the source URL's
+    # basename, so there's no static checksum to keep in sync by hand when
+    # Renovate bumps modern_cli_doggo_version.
+    checksum: "sha256:https://github.com/mr-karan/doggo/releases/download/v{{ modern_cli_doggo_version }}/doggo_{{ modern_cli_doggo_version }}_checksums.txt"
+    mode: "0644"
+  when: >-
+    modern_cli_doggo_enabled and
+    (modern_cli_doggo_current_version.rc != 0 or
+     modern_cli_doggo_version not in modern_cli_doggo_current_version.stdout)
+  tags: [doggo, modern_cli]
+
+- name: Install doggo binary to /usr/local/bin
+  ansible.builtin.unarchive:
+    src: "/tmp/doggo-{{ modern_cli_doggo_version }}.tar.gz"
+    dest: /usr/local/bin/
+    include:
+      - doggo
+    remote_src: true
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and
+    modern_cli_doggo_enabled and
+    (modern_cli_doggo_current_version.rc != 0 or
+     modern_cli_doggo_version not in modern_cli_doggo_current_version.stdout)
+  tags: [doggo, modern_cli]
+
+# jaq (github release, bare binary, no checksum file — static pin)
+- name: Get installed jaq version
+  ansible.builtin.command: jaq --version
+  register: modern_cli_jaq_current_version
+  changed_when: false
+  failed_when: false
+  when: modern_cli_jaq_enabled
+  tags: [jaq, modern_cli]
+
+- name: Install jaq binary to /usr/local/bin
+  ansible.builtin.get_url:
+    url: "https://github.com/01mf02/jaq/releases/download/v{{ modern_cli_jaq_version }}/jaq-x86_64-unknown-linux-gnu"
+    dest: /usr/local/bin/jaq
+    checksum: "{{ modern_cli_jaq_checksum }}"
+    mode: "0755"
+  become: true
+  when: >-
+    modern_cli_jaq_enabled and
+    (modern_cli_jaq_current_version.rc != 0 or
+     modern_cli_jaq_version not in modern_cli_jaq_current_version.stdout)
+  tags: [jaq, modern_cli]
+
+# moor (github release, bare binary, no checksum file — static pin; upstream
+# renamed the tool itself from "moar" to "moor", see the version var comment
+# in defaults/main.yml)
+- name: Get installed moor version
+  ansible.builtin.command: moor --version
+  register: modern_cli_moor_current_version
+  changed_when: false
+  failed_when: false
+  when: modern_cli_moor_enabled
+  tags: [moor, modern_cli]
+
+- name: Install moor binary to /usr/local/bin
+  ansible.builtin.get_url:
+    url: "https://github.com/walles/moar/releases/download/v{{ modern_cli_moor_version }}/moor-v{{ modern_cli_moor_version }}-linux-amd64"
+    dest: /usr/local/bin/moor
+    checksum: "{{ modern_cli_moor_checksum }}"
+    mode: "0755"
+  become: true
+  when: >-
+    modern_cli_moor_enabled and
+    (modern_cli_moor_current_version.rc != 0 or
+     modern_cli_moor_version not in modern_cli_moor_current_version.stdout)
+  tags: [moor, modern_cli]
+
 # shell integration
 - name: Create zsh conf.d directory
   ansible.builtin.file:
@@ -435,7 +832,7 @@
     mode: "0755"
   become: false
   when: modern_cli_deploy_shell_aliases
-  tags: [bat, btop, cli-tools, emoji_fzf, fzf, presenterm, modern_cli]
+  tags: [bat, btop, cli-tools, delta, doggo, dust, emoji_fzf, fzf, jaq, moor, presenterm, procs, viddy, xcp, modern_cli]
 
 - name: Deploy modern_cli shell aliases
   ansible.builtin.template:
@@ -444,4 +841,4 @@
     mode: "0644"
   become: false
   when: modern_cli_deploy_shell_aliases
-  tags: [bat, btop, cli-tools, emoji_fzf, fzf, presenterm, modern_cli]
+  tags: [bat, btop, cli-tools, delta, doggo, dust, emoji_fzf, fzf, jaq, moor, presenterm, procs, viddy, xcp, modern_cli]
