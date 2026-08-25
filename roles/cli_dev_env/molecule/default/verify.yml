@@ -127,6 +127,32 @@
       ansible.builtin.assert:
         that: _cli_dev_env_presenterm_plugin.stat.exists
 
+    - name: Stat lazy-lock.json
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lazy-lock.json"
+      register: _cli_dev_env_lazylock
+
+    - name: Assert the headless lazy.nvim sync ran and produced a lock file
+      ansible.builtin.assert:
+        that: _cli_dev_env_lazylock.stat.exists
+
+    - name: Stat plugin install directories synced by lazy.nvim
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.local/share/nvim/lazy/{{ item }}"
+      register: _cli_dev_env_lazy_plugin_dirs
+      loop:
+        - vim-tmux-navigator
+        - presenterm.nvim
+      loop_control:
+        label: "{{ item }}"
+
+    - name: Assert declared plugins were actually installed by the headless sync
+      ansible.builtin.assert:
+        that: item.stat.exists and item.stat.isdir
+      loop: "{{ _cli_dev_env_lazy_plugin_dirs.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
     # claude-code
     - name: Check Node.js version
       ansible.builtin.command: node --version

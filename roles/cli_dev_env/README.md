@@ -45,6 +45,7 @@ first. No collection role is otherwise required to have run first.
 | `cli_dev_env_lazygit_enabled` | `true` | Install lazygit |
 | `cli_dev_env_neovim_enabled` | `true` | Install neovim and bootstrap LazyVim. Also gates the presenterm.nvim plugin config below |
 | `cli_dev_env_neovim_presenterm_plugin_enabled` | `true` | Deploy the presenterm.nvim plugin config (see below) |
+| `cli_dev_env_neovim_lazy_sync_enabled` | `true` | Run a headless `lazy.nvim` sync on every apply (see "Headless plugin sync" below) |
 | `cli_dev_env_claude_code_enabled` | `true` | Install the Claude Code CLI, its NodeSource Node.js dependency, and configure its MCP servers |
 | `cli_dev_env_lazygit_version` | see `defaults/main.yml` | lazygit version (github-releases: `jesseduffield/lazygit`) |
 | `cli_dev_env_lazygit_download_base` | see `defaults/main.yml` | Base URL the lazygit archive and its `checksums.txt` are downloaded from |
@@ -142,8 +143,44 @@ invocation.
   navigation still works standalone).
 - A zsh snippet is deployed to `~/.config/zsh/conf.d/neovim.zsh` setting
   `EDITOR=nvim`, `VISUAL=nvim`, and aliases `vi`/`vim` → `nvim`.
-- On first `nvim` launch, LazyVim bootstraps all plugins automatically
-  (requires an internet connection).
+- A headless `lazy.nvim` sync runs on every apply (see "Headless plugin
+  sync" below) — plugins are installed and kept up to date without ever
+  launching `nvim` interactively.
+
+### Headless plugin sync
+
+`nvim --headless "+Lazy! sync" +qa` runs after every plugin config file
+above is deployed, so a single apply both configures and installs
+everything on a fresh machine, and keeps plugins current on every
+subsequent one — no manual `:Lazy sync` inside `nvim`, and no reliance on
+LazyVim's own on-first-launch bootstrap. `Lazy! sync` (bang =
+non-interactive) installs missing plugins, updates existing ones, and
+removes ones no longer declared; the bang variant blocks until the sync
+fully completes before `+qa` quits nvim, unlike the non-bang command.
+
+Gated by `cli_dev_env_neovim_lazy_sync_enabled` (default `true`). Reports
+`changed` only when `~/.config/nvim/lazy-lock.json`'s *content* differs
+before/after the sync — not a full guarantee that every plugin directory
+is actually correct (e.g. `Lazy! sync` silently reinstalling a
+missing/corrupted plugin directory without touching a version already
+recorded in the lock file wouldn't flip this to `changed`), but a
+practical, cheap signal that's accurate for the common case (a plugin was
+actually added, updated, or removed) and — critically — required for
+Molecule idempotence, since this task (unlike most in this role) must run
+on every apply rather than being gated behind a one-time "already
+installed" check.
+
+**Individual plugin versions are not Renovate-tracked.** Every sync
+resolves each plugin to whatever its declared branch/tag currently points
+to (recorded in `lazy-lock.json`), not a pinned commit this collection
+controls — unlike every other exact-version-pinned tool here. Achieving
+per-plugin Renovate tracking would mean checking a `lazy-lock.json` into
+this role as a static file and wiring a custom regex manager per plugin
+entry, which doesn't scale with LazyVim's plugin count and would need
+updating every time the plugin set changes. This is a deliberate,
+documented deviation from the collection's version-pinning convention, not
+an oversight — accept some potential plugin churn between applies in
+exchange for automation over manual updates.
 
 ### presenterm.nvim plugin toggle
 

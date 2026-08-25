@@ -5,7 +5,8 @@ argument_specs:
       Install CLI developer environment tools: lazygit, neovim/LazyVim, and
       the Claude Code CLI — each independently toggleable — plus
       presenterm.nvim's plugin config (independently toggleable, depends on
-      the presenterm binary installed by the modern_cli role).
+      the presenterm binary installed by the modern_cli role) and a headless
+      lazy.nvim plugin sync on every apply.
     options:
       cli_dev_env_lazygit_enabled:
         type: bool
@@ -36,6 +37,15 @@ argument_specs:
           this plugin needs lives in the modern_cli role
           (modern_cli_presenterm_enabled) — keep the two in sync. Only
           applies when cli_dev_env_neovim_enabled is true.
+      cli_dev_env_neovim_lazy_sync_enabled:
+        type: bool
+        required: false
+        default: true
+        description: >-
+          Whether to run a headless `lazy.nvim` sync (install + update +
+          clean) on every apply, instead of relying on a human running
+          :Lazy sync manually. Only applies when cli_dev_env_neovim_enabled
+          is true.
       cli_dev_env_lazygit_version:
         type: str
         required: false

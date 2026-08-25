@@ -154,15 +154,48 @@
     cli_dev_env_neovim_enabled
   tags: [neovim, cli_dev_env]
 
+- name: Check currently-deployed lazyvim.json extras
+  # LazyVim rewrites this file at runtime — expands each short extra name
+  # (e.g. "lang.yaml") to its fully-qualified module path
+  # ("lazyvim.plugins.extras.lang.yaml") and adds "news"/"version"
+  # bookkeeping fields — the moment nvim actually loads the config (which
+  # the headless sync task below now does on every apply). A plain
+  # force-overwriting copy would therefore never be idempotent: it resets
+  # the file to short-name form, the sync task immediately expands it
+  # again, forever. Comparing the *set of extras* (after stripping the
+  # module-path prefix LazyVim adds) against the role's own desired list
+  # lets the deploy task below skip when nothing meaningful changed, while
+  # still redeploying — and self-healing the expansion again on the next
+  # sync — when roles/cli_dev_env/files/lazyvim.json itself gains or loses
+  # an extra.
+  ansible.builtin.slurp:
+    src: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lazyvim.json"
+  register: cli_dev_env_neovim_lazyvim_json_current
+  become: false
+  failed_when: false
+  when: cli_dev_env_neovim_enabled
+  tags: [neovim, cli_dev_env]
+
 - name: Deploy lazyvim.json extras config
   ansible.builtin.copy:
     src: lazyvim.json
     dest: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lazyvim.json"
     mode: "0644"
   become: false
+  vars:
+    _cli_dev_env_lazyvim_desired_extras: "{{ (lookup('file', role_path + '/files/lazyvim.json') | from_json).extras }}"
+    _cli_dev_env_lazyvim_current_extras: >-
+      {{
+        (cli_dev_env_neovim_lazyvim_json_current.content | b64decode | from_json).extras | default([])
+        | map('regex_replace', '^lazyvim\.plugins\.extras\.', '')
+        | list
+        if cli_dev_env_neovim_lazyvim_json_current.content is defined
+        else []
+      }}
   when: >-
     not ansible_check_mode and
-    cli_dev_env_neovim_enabled
+    cli_dev_env_neovim_enabled and
+    (_cli_dev_env_lazyvim_desired_extras | sort) != (_cli_dev_env_lazyvim_current_extras | sort)
   tags: [neovim, cli_dev_env]
 
 - name: Deploy catppuccin colorscheme plugin config
@@ -270,6 +303,53 @@
     cli_dev_env_neovim_enabled and
     cli_dev_env_neovim_presenterm_plugin_enabled
   tags: [presenterm, cli_dev_env]
+
+# ---- LazyVim headless plugin sync (runs after every plugin config file
+# above is deployed, so a single apply on a fresh machine both configures
+# and installs everything in one pass) ----
+- name: Check lazy-lock.json checksum before sync
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lazy-lock.json"
+  register: cli_dev_env_neovim_lazylock_before
+  become: false
+  when: cli_dev_env_neovim_enabled and cli_dev_env_neovim_lazy_sync_enabled
+  tags: [neovim, cli_dev_env]
+
+- name: Sync LazyVim plugins headlessly
+  # "Lazy! sync" (bang = non-interactive) installs missing plugins, updates
+  # existing ones, and removes ones no longer declared — the documented
+  # lazy.nvim headless-CI command; it blocks until the sync fully completes
+  # before +qa quits, unlike a bare (non-bang) :Lazy sync. Individual plugin
+  # versions aren't Renovate-tracked (see README) — this always syncs to
+  # whatever each plugin's default branch currently resolves to, recorded
+  # in lazy-lock.json.
+  ansible.builtin.command: nvim --headless "+Lazy! sync" +qa
+  become: false
+  changed_when: false
+  when: >-
+    not ansible_check_mode and
+    cli_dev_env_neovim_enabled and
+    cli_dev_env_neovim_lazy_sync_enabled
+  tags: [neovim, cli_dev_env]
+
+- name: Check lazy-lock.json checksum after sync
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lazy-lock.json"
+  register: cli_dev_env_neovim_lazylock_after
+  become: false
+  when: >-
+    not ansible_check_mode and
+    cli_dev_env_neovim_enabled and
+    cli_dev_env_neovim_lazy_sync_enabled
+  # Reports changed only when the sync actually installed/updated/removed a
+  # plugin (lock file content differs), not on every run — required for
+  # this task to behave correctly in Molecule's idempotence check, since
+  # (unlike most tasks in this role) it must run on every apply rather than
+  # being gated behind a one-time "already installed" stat check.
+  changed_when: >-
+    cli_dev_env_neovim_lazylock_before.stat.checksum | default('') !=
+    cli_dev_env_neovim_lazylock_after.stat.checksum | default('')
+  tags: [neovim, cli_dev_env]
 
 # ---- claude-code (Claude Code CLI via npm, Node.js sourced from
 # NodeSource — this role's own Node.js install, independent of modern_cli's
