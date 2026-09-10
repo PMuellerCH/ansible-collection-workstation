@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.0.1](https://github.com/PMuellerCH/ansible-collection-workstation/compare/1.0.0...1.0.1) (2026-09-10)
+
+
+### Miscellaneous
+
+* **deps:** update dependency beets to v2.14.0 ([#82](https://github.com/PMuellerCH/ansible-collection-workstation/issues/82)) ([4a3ec12](https://github.com/PMuellerCH/ansible-collection-workstation/commit/4a3ec12dfe296760e95a921e681b16e97a408db5))
+* **deps:** update dependency checkov to v3.3.15 ([#78](https://github.com/PMuellerCH/ansible-collection-workstation/issues/78)) ([15e675f](https://github.com/PMuellerCH/ansible-collection-workstation/commit/15e675f9b549c66f24d81fe0a46ec93555c9b580))
+* **deps:** update dependency checkov to v3.3.16 ([#80](https://github.com/PMuellerCH/ansible-collection-workstation/issues/80)) ([28c5358](https://github.com/PMuellerCH/ansible-collection-workstation/commit/28c535841390e9f7df1f6c1268841c51d4e0ee45))
+* **deps:** update dependency checkov to v3.3.17 ([#84](https://github.com/PMuellerCH/ansible-collection-workstation/issues/84)) ([2bd7bcf](https://github.com/PMuellerCH/ansible-collection-workstation/commit/2bd7bcf1a391e05f03fe63172895cc03c1444b13))
+
 ## [1.0.0](https://github.com/PMuellerCH/ansible-collection-workstation/compare/0.1.9...1.0.0) (2026-08-21)
 
 
