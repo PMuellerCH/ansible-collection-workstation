@@ -26,7 +26,7 @@ collections:
     version: "5.0.0"
   # renovate: datasource=galaxy-collection depName=kubernetes.core
   - name: kubernetes.core
-    version: "6.5.0"
+    version: "6.6.0"
   # renovate: datasource=galaxy-collection depName=community.zabbix
   - name: community.zabbix
     version: "4.2.0"
