@@ -32,7 +32,7 @@ collections:
     version: "4.2.0"
   # renovate: datasource=galaxy-collection depName=community.vmware
   - name: community.vmware
-    version: "6.2.1"
+    version: "7.0.0"
   # renovate: datasource=galaxy-collection depName=community.rabbitmq
   - name: community.rabbitmq
     version: "1.7.0"
