@@ -32,7 +32,7 @@ modern_cli_btop_catppuccin_version: "1.0.0"
 modern_cli_btop_catppuccin_checksum: "sha256:5331e055f239d2b42a15496905c6f357493940e1213cc91acfcba67b3fd7a281"
 
 # renovate: datasource=github-releases depName=junegunn/fzf extractVersion=^v(?<version>.*)$
-modern_cli_fzf_version: "0.74.3"
+modern_cli_fzf_version: "0.74.4"
 
 # renovate: datasource=github-releases depName=mfontanini/presenterm extractVersion=^v(?<version>.*)$
 modern_cli_presenterm_version: "0.16.1"
