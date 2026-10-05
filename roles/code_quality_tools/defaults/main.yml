@@ -22,7 +22,7 @@ code_quality_tools_detect_secrets_version: "1.5.0"
 code_quality_tools_yamllint_version: "1.38.0"
 
 # renovate: datasource=pypi depName=checkov
-code_quality_tools_checkov_version: "3.3.13"
+code_quality_tools_checkov_version: "3.3.23"
 
 # renovate: datasource=pypi depName=ansible-lint
 code_quality_tools_ansible_lint_version: "26.9.0"
