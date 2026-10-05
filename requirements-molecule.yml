@@ -3,7 +3,7 @@ collections:
   # Required by the molecule docker driver
   # renovate: datasource=galaxy-collection depName=community.docker
   - name: community.docker
-    version: "5.2.2"
+    version: "5.4.0"
   # Required by molecule-plugins[docker]'s own create.yml (ansible.posix.synchronize)
   # when a scenario sets override_command: false (e.g. systemd-capable images) —
   # not needed by every scenario, but installed for all since it's cheap and this
