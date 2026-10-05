@@ -48,7 +48,8 @@ cd roles/<name> && molecule test
 ```
 
 CI lints every push/PR to `main`. Molecule only runs on the release-please PR (or via
-manual `workflow_dispatch`), so a release is never cut without molecule passing.
+manual `workflow_dispatch`), so a release is never cut without molecule passing. Only roles with a `molecule/default/` scenario are tested; roles without one are
+skipped, including on Renovate PRs that change shared files.
 
 New roles should include a `README.md` following
 [`roles/ROLE_README_TEMPLATE.md`](roles/ROLE_README_TEMPLATE.md).

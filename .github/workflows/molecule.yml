@@ -55,11 +55,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: List all roles
+      # Only roles with a molecule/default scenario are testable; the others
+      # (opt-in per role, see CLAUDE.md) would fail on a missing molecule.yml.
+      - name: List roles with a molecule scenario
         id: list-roles
         shell: bash
         run: |
-          all=$(for d in roles/*/; do basename "$d"; done | sort | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          all=$(for d in roles/*/; do [ -f "$d/molecule/default/molecule.yml" ] && basename "$d"; done | sort | jq -R -s -c 'split("\n") | map(select(length > 0))')
           echo "all=$all" >> "$GITHUB_OUTPUT"
 
       - name: Generate per-role and shared path filters
@@ -115,7 +117,8 @@ jobs:
             echo "A shared file changed — testing every role."
             echo "roles=$ALL_ROLES" >> "$GITHUB_OUTPUT"
           else
-            roles=$(echo "$CHANGED_ROLES" | jq -c '[.[] | select(. != "shared")]')
+            roles=$(jq -c -n --argjson changed "$CHANGED_ROLES" --argjson all "$ALL_ROLES" \
+              '[$changed[] | select(. as $r | $all | index([$r]) != null)]')
             echo "Role-specific changes detected: $roles"
             echo "roles=$roles" >> "$GITHUB_OUTPUT"
           fi
