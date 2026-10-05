@@ -83,7 +83,7 @@ iac_tools_floci_version: "0.2.3"
 
 # ── kubernetes_tools ─────────────────────────────────────────────────────
 # renovate: datasource=github-releases depName=kubernetes/kubernetes extractVersion=^v(?<version>.*)$
-iac_tools_kubectl_version: "1.36.4"
+iac_tools_kubectl_version: "1.37.1"
 iac_tools_kubectl_url: "https://dl.k8s.io/release/v{{ iac_tools_kubectl_version }}/bin/linux/amd64/kubectl"
 iac_tools_kubectl_checksum_url: "https://dl.k8s.io/release/v{{ iac_tools_kubectl_version }}/bin/linux/amd64/kubectl.sha256"
 # renovate: datasource=github-releases depName=derailed/k9s extractVersion=^v(?<version>.*)$
