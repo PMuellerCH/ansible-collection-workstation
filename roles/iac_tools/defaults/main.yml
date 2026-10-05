@@ -79,7 +79,7 @@ iac_tools_terraform_vault_github_token: ""
 # (the emulator engine itself, which ships only as a Docker image with no
 # GitHub release binaries — floci start pulls and manages it directly).
 # renovate: datasource=github-releases depName=floci-io/floci-cli extractVersion=^(?<version>.*)$
-iac_tools_floci_version: "0.2.0"
+iac_tools_floci_version: "0.2.3"
 
 # ── kubernetes_tools ─────────────────────────────────────────────────────
 # renovate: datasource=github-releases depName=kubernetes/kubernetes extractVersion=^v(?<version>.*)$
