@@ -100,3 +100,11 @@ Molecule auto-discovers every role with a `roles/<name>/molecule/default/` scena
 runs it as a matrix job, but only on the release-please PR, a Renovate PR, or manual
 `workflow_dispatch` — not on every ordinary feature PR, since a full matrix run is too
 slow to gate routine iteration (those get fast lint-only feedback from `ci.yml` instead).
+
+Renovate automerges non-major updates itself (`platformAutomerge: false`) once CI is
+green; it is a bypass actor on the default-branch ruleset. `rebaseWhen` is
+`conflicted` because the ruleset does not require up-to-date branches: with the default
+(`auto`) every merge to `main` made Renovate rebase all open PRs, restarting their
+lint and Molecule runs so none finished before the next rebase. `prConcurrentLimit` caps
+open Renovate PRs at 5 to keep the Molecule matrix load manageable. If PRs stop
+automerging, check for repeated Renovate force-pushes on the PR branches.

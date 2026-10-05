@@ -9,6 +9,8 @@
     ]
   },
   "platformAutomerge": false,
+  "rebaseWhen": "conflicted",
+  "prConcurrentLimit": 5,
   "packageRules": [
     {
       "matchPackageNames": ["ansible-core"],
