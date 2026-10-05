@@ -25,7 +25,7 @@ iac_tools_pipx_min_version: "1.16.7"
 # renovate: datasource=pypi depName=ansible-core
 iac_tools_ansible_core_version: "2.21.4"
 # renovate: datasource=pypi depName=molecule
-iac_tools_ansible_molecule_version: "26.8.0"
+iac_tools_ansible_molecule_version: "26.9.0"
 # renovate: datasource=pypi depName=molecule-plugins
 iac_tools_ansible_molecule_plugins_version: "26.7.15"
 # renovate: datasource=pypi depName=hvac
