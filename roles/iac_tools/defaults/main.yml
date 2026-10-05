@@ -64,7 +64,7 @@ iac_tools_tflint_version: "0.64.0"
 iac_tools_terraform_docs_version: "0.24.0"
 iac_tools_terraform_docs_archive: "terraform-docs-v{{ iac_tools_terraform_docs_version }}-linux-amd64.tar.gz"
 # renovate: datasource=github-releases depName=warrensbox/terraform-switcher extractVersion=^v(?<version>.*)$
-iac_tools_tfswitch_version: "1.19.0"
+iac_tools_tfswitch_version: "1.20.0"
 iac_tools_tfswitch_archive: "terraform-switcher_v{{ iac_tools_tfswitch_version }}_linux_amd64.tar.gz"
 iac_tools_tfswitch_download_base: "https://github.com/warrensbox/terraform-switcher/releases/download/v{{ iac_tools_tfswitch_version }}"
 
