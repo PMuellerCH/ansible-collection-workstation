@@ -2,7 +2,7 @@
 collections:
   # renovate: datasource=galaxy-collection depName=community.general
   - name: community.general
-    version: "13.3.0"
+    version: "13.5.0"
   # renovate: datasource=galaxy-collection depName=ansible.posix
   - name: ansible.posix
     version: "2.2.2"
