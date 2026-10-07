@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.0.2](https://github.com/PMuellerCH/ansible-collection-workstation/compare/1.0.1...1.0.2) (2026-10-07)
+
+
+### Miscellaneous
+
+* **deps:** update dependency ansible-core to v2.21.5 ([#98](https://github.com/PMuellerCH/ansible-collection-workstation/issues/98)) ([5fb3b2d](https://github.com/PMuellerCH/ansible-collection-workstation/commit/5fb3b2d9473fa99af0a3936480dace0a24a931d5))
+* **deps:** update dependency checkov to v3.3.24 ([#99](https://github.com/PMuellerCH/ansible-collection-workstation/issues/99)) ([e3558ca](https://github.com/PMuellerCH/ansible-collection-workstation/commit/e3558ca3b6438b6a605d43b7cb21d39af9610a87))
+* **deps:** update dependency checkov to v3.3.25 ([#101](https://github.com/PMuellerCH/ansible-collection-workstation/issues/101)) ([80640e9](https://github.com/PMuellerCH/ansible-collection-workstation/commit/80640e9713818d9b0fdaf1fe4fe548d502829ac4))
+* **deps:** update dependency checkov to v3.3.26 ([#102](https://github.com/PMuellerCH/ansible-collection-workstation/issues/102)) ([e4317df](https://github.com/PMuellerCH/ansible-collection-workstation/commit/e4317df8c5ca74d020d4fbe780e6a30c6b90e04f))
+
 ## [1.0.1](https://github.com/PMuellerCH/ansible-collection-workstation/compare/1.0.0...1.0.1) (2026-10-05)
 
 
