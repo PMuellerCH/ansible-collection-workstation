@@ -59,15 +59,6 @@ argument_specs:
         type: str
         required: false
         description: Neovim version (github-releases neovim/neovim), installed from a checksum-verified archive.
-      cli_dev_env_neovim_checksum:
-        type: str
-        required: false
-        default: "sha256:012bf3fcac5ade43914df3f174668bf64d05e049a4f032a388c027b1ebd78628"
-        description: >-
-          sha256 checksum for the pinned cli_dev_env_neovim_version's
-          nvim-linux-x86_64.tar.gz. Static (neovim/neovim publishes no
-          per-release checksum file) — deliberately goes stale on a
-          Renovate version bump until manually updated, as a review gate.
       cli_dev_env_claude_code_nodejs_major_version:
         type: str
         required: false

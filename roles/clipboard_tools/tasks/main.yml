@@ -19,6 +19,68 @@
   when: clipboard_tools_cliphist_enabled
   tags: [cliphist, clipboard_tools]
 
+- name: Fetch cliphist release metadata for the GitHub asset digest
+  # sentriz/cliphist publishes no checksum file, so the checksum is derived at
+  # run time from GitHub's own per-asset digest for the pinned version (see the
+  # "Checksum verification" note in README). Nothing to keep in sync by hand
+  # when Renovate bumps clipboard_tools_cliphist_version.
+  ansible.builtin.get_url:
+    url: "https://api.github.com/repos/sentriz/cliphist/releases/tags/v{{ clipboard_tools_cliphist_version }}"
+    dest: "/tmp/cliphist-{{ clipboard_tools_cliphist_version }}_release.json"
+    force: true
+    headers: >-
+      {{ {'Accept': 'application/vnd.github+json'}
+         | combine({'Authorization': 'Bearer ' + clipboard_tools_github_api_token}
+                   if clipboard_tools_github_api_token else {}) }}
+    mode: "0644"
+  # Suppress output only when a token is in use, so the Bearer header cannot
+  # leak into invocation.module_args under -v or on failure. Unauthenticated
+  # runs keep full logging.
+  no_log: "{{ clipboard_tools_github_api_token | length > 0 }}"
+  when: >-
+    not ansible_check_mode and
+    clipboard_tools_cliphist_enabled and
+    (clipboard_tools_cliphist_current_version.rc != 0 or
+     clipboard_tools_cliphist_version not in clipboard_tools_cliphist_current_version.stderr)
+  tags: [cliphist, clipboard_tools]
+
+- name: Read cliphist release metadata
+  ansible.builtin.slurp:
+    path: "/tmp/cliphist-{{ clipboard_tools_cliphist_version }}_release.json"
+  register: clipboard_tools_cliphist_release_raw
+  when: >-
+    not ansible_check_mode and
+    clipboard_tools_cliphist_enabled and
+    (clipboard_tools_cliphist_current_version.rc != 0 or
+     clipboard_tools_cliphist_version not in clipboard_tools_cliphist_current_version.stderr)
+  tags: [cliphist, clipboard_tools]
+
+- name: Resolve cliphist binary checksum from the release metadata
+  ansible.builtin.set_fact:
+    clipboard_tools_cliphist_checksum: >-
+      {{ (clipboard_tools_cliphist_release_raw.content | b64decode | from_json).assets
+         | selectattr('name', 'equalto', 'v' + clipboard_tools_cliphist_version + '-linux-amd64')
+         | map(attribute='digest') | select('string') | first | default('') }}
+  when: >-
+    not ansible_check_mode and
+    clipboard_tools_cliphist_enabled and
+    (clipboard_tools_cliphist_current_version.rc != 0 or
+     clipboard_tools_cliphist_version not in clipboard_tools_cliphist_current_version.stderr)
+  tags: [cliphist, clipboard_tools]
+
+- name: Assert GitHub published a sha256 digest for the cliphist binary
+  ansible.builtin.assert:
+    that: clipboard_tools_cliphist_checksum.startswith('sha256:')
+    fail_msg: >-
+      GitHub published no sha256 digest for v{{ clipboard_tools_cliphist_version }}-linux-amd64;
+      cannot verify the download.
+  when: >-
+    not ansible_check_mode and
+    clipboard_tools_cliphist_enabled and
+    (clipboard_tools_cliphist_current_version.rc != 0 or
+     clipboard_tools_cliphist_version not in clipboard_tools_cliphist_current_version.stderr)
+  tags: [cliphist, clipboard_tools]
+
 - name: Download cliphist binary
   ansible.builtin.get_url:
     url: "https://github.com/sentriz/cliphist/releases/download/v{{ clipboard_tools_cliphist_version }}/v{{ clipboard_tools_cliphist_version }}-linux-amd64"
@@ -26,6 +88,7 @@
     checksum: "{{ clipboard_tools_cliphist_checksum }}"
     mode: "0755"
   when: >-
+    not ansible_check_mode and
     clipboard_tools_cliphist_enabled and
     (clipboard_tools_cliphist_current_version.rc != 0 or
      clipboard_tools_cliphist_version not in clipboard_tools_cliphist_current_version.stderr)

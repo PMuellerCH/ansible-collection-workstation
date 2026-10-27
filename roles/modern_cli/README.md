@@ -104,7 +104,6 @@ take effect.
 | `modern_cli_presenterm_mermaid_cli_version` | see `defaults/main.yml` | `@mermaid-js/mermaid-cli` npm version for mermaid rendering |
 | `modern_cli_pipx_min_version` | see `defaults/main.yml` | pipx version bootstrapped via `pip --user` so `community.general.pipx` (needs >=1.7.0) works on Ubuntu 24.04's apt-provided pipx 1.4.3. Only used when `modern_cli_emoji_fzf_enabled` |
 | `modern_cli_yazi_version` | see `defaults/main.yml` | yazi binary version (github-releases: `sxyazi/yazi`) |
-| `modern_cli_yazi_checksum` | see `defaults/main.yml` | Checksum of the yazi `.deb`, verified by `get_url` |
 | `modern_cli_yazi_theme_ref` | see `defaults/main.yml` | Pinned commit of `catppuccin/yazi` the theme file is downloaded from |
 | `modern_cli_yazi_theme_checksum` | see `defaults/main.yml` | Checksum of the yazi theme file, verified by `get_url` |
 | `modern_cli_deploy_shell_aliases` | `true` | Deploy `~/.config/zsh/conf.d/modern_cli.zsh` with aliases for enabled tools |
@@ -114,17 +113,12 @@ take effect.
 | `modern_cli_delta_catppuccin_ref` | see `defaults/main.yml` | Pinned commit of `catppuccin/delta` the theme gitconfig is downloaded from (no releases/tags published upstream) |
 | `modern_cli_delta_catppuccin_checksum` | see `defaults/main.yml` | Checksum of the catppuccin.gitconfig file, verified by `get_url` |
 | `modern_cli_procs_version` | see `defaults/main.yml` | procs binary version (github-releases: `dalance/procs`) |
-| `modern_cli_procs_checksum` | see `defaults/main.yml` | Checksum of the procs zip archive, verified by `get_url` |
 | `modern_cli_dust_version` | see `defaults/main.yml` | dust binary version (github-releases: `bootandy/dust`) |
-| `modern_cli_dust_checksum` | see `defaults/main.yml` | Checksum of the dust `.deb`, verified by `get_url` |
 | `modern_cli_viddy_version` | see `defaults/main.yml` | viddy binary version (github-releases: `sachaos/viddy`) |
 | `modern_cli_xcp_version` | see `defaults/main.yml` | xcp binary version (github-releases: `tarka/xcp`) |
-| `modern_cli_xcp_checksum` | see `defaults/main.yml` | Checksum of the xcp tarball, verified by `get_url` |
 | `modern_cli_doggo_version` | see `defaults/main.yml` | doggo binary version (github-releases: `mr-karan/doggo`) |
 | `modern_cli_jaq_version` | see `defaults/main.yml` | jaq binary version (github-releases: `01mf02/jaq`) |
-| `modern_cli_jaq_checksum` | see `defaults/main.yml` | Checksum of the jaq binary, verified by `get_url` |
 | `modern_cli_moor_version` | see `defaults/main.yml` | moor binary version (github-releases: `walles/moar`) |
-| `modern_cli_moor_checksum` | see `defaults/main.yml` | Checksum of the moor binary, verified by `get_url` |
 
 ## Example Playbook
 
@@ -163,6 +157,20 @@ tag, so a consuming playbook can filter to a single tool:
 tag cascades to every task in the role and defeats this per-tool filtering.
 Rely on the tasks' own tags; Ansible filters `--tags` across the whole play,
 not per role.
+
+## Checksum verification
+
+Most GitHub-release tools here verify their download against a checksum file
+the upstream project publishes (`get_url`'s `checksum:` fetches it directly —
+fzf, presenterm, viddy, doggo). Six tools (`dust`, `jaq`, `moor`, `procs`,
+`xcp`, `yazi`) publish **no** checksum file of any kind. Rather than hand-pin a
+static checksum that goes stale on every Renovate version bump, the role
+derives the checksum at run time from GitHub's own per-asset digest: it fetches
+the release metadata from the GitHub API for the pinned version, reads the
+asset's `sha256` digest, and feeds it to `get_url`. The checksum always matches
+the pinned version, so a Renovate bump needs no manual checksum update. If
+GitHub reports no digest for the asset, the role fails loudly rather than
+skipping verification.
 
 ## pipx bootstrap
 

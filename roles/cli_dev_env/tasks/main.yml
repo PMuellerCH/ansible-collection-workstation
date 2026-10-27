@@ -60,12 +60,74 @@
   tags: [lazygit, cli_dev_env]
 
 # ---- neovim ----
+# neovim publishes no checksum file for its release assets, so the checksum is
+# derived at run time from GitHub's own per-asset digest for the pinned version
+# (see the digest-checksum note in README). Nothing to keep in sync by hand when
+# Renovate bumps cli_dev_env_neovim_version.
 - name: Get installed neovim version
   ansible.builtin.command: nvim --version
   register: cli_dev_env_neovim_current_version
   changed_when: false
   failed_when: false
   when: cli_dev_env_neovim_enabled
+  tags: [neovim, cli_dev_env]
+
+- name: Fetch neovim release metadata for the GitHub asset digest
+  ansible.builtin.get_url:
+    url: "https://api.github.com/repos/neovim/neovim/releases/tags/v{{ cli_dev_env_neovim_version }}"
+    dest: "/tmp/nvim-linux-x86_64-{{ cli_dev_env_neovim_version }}_release.json"
+    force: true
+    headers: >-
+      {{ {'Accept': 'application/vnd.github+json'}
+         | combine({'Authorization': 'Bearer ' + cli_dev_env_github_api_token}
+                   if cli_dev_env_github_api_token else {}) }}
+    mode: "0644"
+  # Suppress output only when a token is in use, so the Bearer header cannot
+  # leak into invocation.module_args under -v or on failure. Unauthenticated
+  # runs keep full logging.
+  no_log: "{{ cli_dev_env_github_api_token | length > 0 }}"
+  when: >-
+    not ansible_check_mode and
+    cli_dev_env_neovim_enabled and
+    (cli_dev_env_neovim_current_version.rc != 0 or
+     cli_dev_env_neovim_version not in cli_dev_env_neovim_current_version.stdout)
+  tags: [neovim, cli_dev_env]
+
+- name: Read neovim release metadata
+  ansible.builtin.slurp:
+    path: "/tmp/nvim-linux-x86_64-{{ cli_dev_env_neovim_version }}_release.json"
+  register: cli_dev_env_neovim_release_raw
+  when: >-
+    not ansible_check_mode and
+    cli_dev_env_neovim_enabled and
+    (cli_dev_env_neovim_current_version.rc != 0 or
+     cli_dev_env_neovim_version not in cli_dev_env_neovim_current_version.stdout)
+  tags: [neovim, cli_dev_env]
+
+- name: Resolve neovim archive checksum from the release metadata
+  ansible.builtin.set_fact:
+    cli_dev_env_neovim_checksum: >-
+      {{ (cli_dev_env_neovim_release_raw.content | b64decode | from_json).assets
+         | selectattr('name', 'equalto', 'nvim-linux-x86_64.tar.gz')
+         | map(attribute='digest') | select('string') | first | default('') }}
+  when: >-
+    not ansible_check_mode and
+    cli_dev_env_neovim_enabled and
+    (cli_dev_env_neovim_current_version.rc != 0 or
+     cli_dev_env_neovim_version not in cli_dev_env_neovim_current_version.stdout)
+  tags: [neovim, cli_dev_env]
+
+- name: Assert GitHub published a sha256 digest for the neovim archive
+  ansible.builtin.assert:
+    that: cli_dev_env_neovim_checksum.startswith('sha256:')
+    fail_msg: >-
+      GitHub published no sha256 digest for nvim-linux-x86_64.tar.gz
+      ({{ cli_dev_env_neovim_version }}); cannot verify the download.
+  when: >-
+    not ansible_check_mode and
+    cli_dev_env_neovim_enabled and
+    (cli_dev_env_neovim_current_version.rc != 0 or
+     cli_dev_env_neovim_version not in cli_dev_env_neovim_current_version.stdout)
   tags: [neovim, cli_dev_env]
 
 - name: Download neovim archive
@@ -75,6 +137,7 @@
     checksum: "{{ cli_dev_env_neovim_checksum }}"
     mode: "0644"
   when: >-
+    not ansible_check_mode and
     cli_dev_env_neovim_enabled and
     (cli_dev_env_neovim_current_version.rc != 0 or
      cli_dev_env_neovim_version not in cli_dev_env_neovim_current_version.stdout)

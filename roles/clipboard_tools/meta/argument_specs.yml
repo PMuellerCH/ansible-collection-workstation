@@ -36,16 +36,6 @@ argument_specs:
         type: str
         required: false
         description: cliphist version (github-releases sentriz/cliphist), installed from a checksum-verified binary.
-      clipboard_tools_cliphist_checksum:
-        type: str
-        required: false
-        default: "sha256:d21ca6846bd25f7bd2dabb157912e2e07226db76be32885bc53d7f27db98d08a"
-        description: >-
-          Static sha256 checksum for the pinned cliphist binary. sentriz/cliphist
-          publishes no per-release checksum file, unlike clipse's checksums.txt —
-          this is the collection's documented "fall back to a static pinned
-          checksum" case (same as cli_dev_env's neovim). Goes stale on the next
-          Renovate version bump by design; see README.
       clipboard_tools_clipse_version:
         type: str
         required: false

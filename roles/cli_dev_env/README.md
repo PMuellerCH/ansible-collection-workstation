@@ -50,7 +50,6 @@ first. No collection role is otherwise required to have run first.
 | `cli_dev_env_lazygit_version` | see `defaults/main.yml` | lazygit version (github-releases: `jesseduffield/lazygit`) |
 | `cli_dev_env_lazygit_download_base` | see `defaults/main.yml` | Base URL the lazygit archive and its `checksums.txt` are downloaded from |
 | `cli_dev_env_neovim_version` | see `defaults/main.yml` | Neovim version (github-releases: `neovim/neovim`) |
-| `cli_dev_env_neovim_checksum` | see `defaults/main.yml` | Static sha256 checksum for the pinned neovim archive (see below) |
 | `cli_dev_env_claude_code_nodejs_major_version` | `"24"` | Node.js LTS major version — selects which NodeSource apt repo to add. `nodejs`/`build-essential` themselves install unpinned, see [root README](../../README.md#apt-package-versions-are-unpinned) |
 | `cli_dev_env_claude_code_version` | see `defaults/main.yml` | `@anthropic-ai/claude-code` npm package version (npm datasource) |
 | `cli_dev_env_claude_code_aws_profile` | `default` | `AWS_PROFILE` passed to the `awslabs.core` MCP server |
@@ -109,12 +108,13 @@ invocation.
 - The `nvim-linux-x86_64.tar.gz` archive is extracted to `/opt/`; a symlink
   `/usr/local/bin/nvim → /opt/nvim-linux-x86_64/bin/nvim` is created.
 - **Checksum**: unlike lazygit, `neovim/neovim` publishes **no** per-release
-  checksum file of any kind — this is the collection's documented "fall back
-  to a static pinned checksum" case. `cli_dev_env_neovim_checksum` is
-  hand-pinned against the exact archive for `cli_dev_env_neovim_version` and
-  will go stale the next time the version is bumped — that staleness is
-  deliberate friction (it forces a human to look at the new release and
-  update the checksum before the bump can land), not a bug to work around.
+  checksum file of any kind. The archive is instead verified against GitHub's
+  own per-asset digest: the role fetches the release metadata from the GitHub
+  API for the pinned `cli_dev_env_neovim_version`, reads the `sha256` digest of
+  `nvim-linux-x86_64.tar.gz`, and feeds it to `get_url`. The checksum is always
+  derived from the pinned version, so a Renovate version bump needs no manual
+  checksum update. If GitHub ever reports no digest for the asset, the role
+  fails loudly rather than skipping verification.
 - The LazyVim starter (`https://github.com/LazyVim/starter.git`) is cloned
   to `~/.config/nvim/` on first run only (guarded by a stat check on
   `init.lua`); `.git` is removed afterwards so the config is not a

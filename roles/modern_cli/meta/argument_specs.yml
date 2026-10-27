@@ -195,18 +195,10 @@ argument_specs:
         type: str
         required: false
         description: procs version (github-releases dalance/procs), installed from a checksum-verified zip.
-      modern_cli_procs_checksum:
-        type: str
-        required: false
-        description: Checksum of the procs zip archive at modern_cli_procs_version, verified by get_url.
       modern_cli_dust_version:
         type: str
         required: false
         description: dust version (github-releases bootandy/dust), installed from a checksum-verified .deb.
-      modern_cli_dust_checksum:
-        type: str
-        required: false
-        description: Checksum of the dust .deb at modern_cli_dust_version, verified by get_url.
       modern_cli_viddy_version:
         type: str
         required: false
@@ -215,10 +207,6 @@ argument_specs:
         type: str
         required: false
         description: xcp version (github-releases tarka/xcp), installed from a checksum-verified binary tarball.
-      modern_cli_xcp_checksum:
-        type: str
-        required: false
-        description: Checksum of the xcp tarball at modern_cli_xcp_version, verified by get_url.
       modern_cli_doggo_version:
         type: str
         required: false
@@ -227,26 +215,14 @@ argument_specs:
         type: str
         required: false
         description: jaq version (github-releases 01mf02/jaq), installed from a checksum-verified bare binary.
-      modern_cli_jaq_checksum:
-        type: str
-        required: false
-        description: Checksum of the jaq binary at modern_cli_jaq_version, verified by get_url.
       modern_cli_moor_version:
         type: str
         required: false
         description: moor version (github-releases walles/moar), installed from a checksum-verified bare binary.
-      modern_cli_moor_checksum:
-        type: str
-        required: false
-        description: Checksum of the moor binary at modern_cli_moor_version, verified by get_url.
       modern_cli_yazi_version:
         type: str
         required: false
         description: yazi version (github-releases sxyazi/yazi), installed from a checksum-verified .deb.
-      modern_cli_yazi_checksum:
-        type: str
-        required: false
-        description: Checksum of the yazi .deb at modern_cli_yazi_version, verified by get_url.
       modern_cli_yazi_theme_ref:
         type: str
         required: false

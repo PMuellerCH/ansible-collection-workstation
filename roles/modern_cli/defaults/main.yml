@@ -23,6 +23,14 @@ modern_cli_jaq_enabled: true
 modern_cli_moor_enabled: true
 modern_cli_yazi_enabled: true
 
+# Optional GitHub API token used only to raise the rate limit when resolving
+# release-asset digests for tools that publish no checksum file (dust, jaq,
+# moor, procs, xcp, yazi — see tasks/main.yml). Defaults to GH_TOKEN/GITHUB_TOKEN
+# from the environment; unauthenticated (empty) still works but is subject to
+# GitHub's 60 requests/hour per-IP limit. On GitHub Actions the workflow passes
+# GITHUB_TOKEN; a consumer can override this with their own token.
+modern_cli_github_api_token: "{{ lookup('ansible.builtin.env', 'GH_TOKEN') or lookup('ansible.builtin.env', 'GITHUB_TOKEN') }}"
+
 # Pinned commit of catppuccin/bat (theme is fetched from an immutable ref, not the mutable "main" branch)
 modern_cli_bat_theme_ref: "6810349b28055dce54076712fc05fc68da4b8ec0"  # pragma: allowlist secret
 modern_cli_bat_theme_checksum: "sha256:395566f08ceb301b936b91c077690ef94f7aeb651b121553f201c99c2bd4aa77"
@@ -59,50 +67,45 @@ modern_cli_delta_catppuccin_checksum: "sha256:f0580ada6b1e3767b718b25116a2ababec
 
 # renovate: datasource=github-releases depName=dalance/procs extractVersion=^v(?<version>.*)$
 modern_cli_procs_version: "0.14.12"
-# dalance/procs publishes no per-release checksum file — static pin,
-# deliberate manual-review friction on a Renovate bump (see the collection's
-# checksum-verification conventions).
-modern_cli_procs_checksum: "sha256:81964faf9d5cd0e9f399d5d0954fb6fe4d4d9f7d3cbec4507633df5a45b11713"
+# dalance/procs publishes no checksum file; the archive checksum is derived at
+# run time from GitHub's per-asset digest (see tasks/main.yml).
 
 # renovate: datasource=github-releases depName=bootandy/dust extractVersion=^v(?<version>.*)$
 modern_cli_dust_version: "1.2.5"
-# bootandy/dust publishes a .deb directly but no checksum file for it —
-# static pin, same deliberate friction as modern_cli_procs_checksum above.
-modern_cli_dust_checksum: "sha256:42056f56bce095830d1c87f560f04a2c58ad6ac8e658cc44f78d25a8fa796920"
+# bootandy/dust publishes no checksum file; the .deb checksum is derived at run
+# time from GitHub's per-asset digest (see tasks/main.yml), so there is no static
+# checksum to keep in sync when Renovate bumps the version.
 
 # renovate: datasource=github-releases depName=sachaos/viddy extractVersion=^v(?<version>.*)$
 modern_cli_viddy_version: "1.3.1"
 
 # renovate: datasource=github-releases depName=tarka/xcp extractVersion=^xcp-v(?<version>.*)$
 modern_cli_xcp_version: "0.24.8"
-# tarka/xcp publishes no per-release checksum file — static pin, same
-# deliberate friction as modern_cli_procs_checksum above.
-modern_cli_xcp_checksum: "sha256:b7163f44c837fe8f7e3cc147bfe5db96841c9f65252f0f17cda885db3bc97331"
+# tarka/xcp publishes no checksum file; the archive checksum is derived at run
+# time from GitHub's per-asset digest (see tasks/main.yml).
 
 # renovate: datasource=github-releases depName=mr-karan/doggo extractVersion=^v(?<version>.*)$
 modern_cli_doggo_version: "1.4.0"
 
 # renovate: datasource=github-releases depName=01mf02/jaq extractVersion=^v(?<version>.*)$
 modern_cli_jaq_version: "3.1.1"
-# 01mf02/jaq publishes bare binaries with no checksum file — static pin,
-# same deliberate friction as modern_cli_procs_checksum above.
-modern_cli_jaq_checksum: "sha256:5922c7b67d9bd6841d6676d1f954410c6bf04b47203dcb661c4f052dfef7f454"
+# 01mf02/jaq publishes no checksum file; the binary checksum is derived at run
+# time from GitHub's per-asset digest (see tasks/main.yml).
 
 # The upstream project (repo walles/moar) renamed the tool itself to "moor"
 # to resolve a name clash — release assets and the installed binary are
 # named "moor", not "moar", even though the GitHub repo path is unchanged.
 # renovate: datasource=github-releases depName=walles/moar extractVersion=^v(?<version>.*)$
 modern_cli_moor_version: "2.17.0"
-# walles/moar publishes bare binaries with no checksum file — static pin,
-# same deliberate friction as modern_cli_procs_checksum above.
-modern_cli_moor_checksum: "sha256:f6f6672cf4b9561212d80f0bb2dcc9656cc7b225c6941169505fd1c76bfce44d"
+# walles/moar publishes no checksum file; the binary checksum is derived at run
+# time from GitHub's per-asset digest (see tasks/main.yml), so there is no static
+# checksum to keep in sync when Renovate bumps the version.
 
 # renovate: datasource=github-releases depName=sxyazi/yazi extractVersion=^v(?<version>.*)$
 modern_cli_yazi_version: "26.8.15"
-# sxyazi/yazi publishes no per-release checksum file — static pin, deliberate
-# manual-review friction on a Renovate bump (see the collection's
-# checksum-verification conventions).
-modern_cli_yazi_checksum: "sha256:80e6434bf12ef5c17cf715ae0f17df15cc40459a5caf1dd12f8b377ae7e9361a"
+# sxyazi/yazi publishes no checksum file; the .deb checksum is derived at run
+# time from GitHub's per-asset digest (see tasks/main.yml), so there is no static
+# checksum to keep in sync when Renovate bumps the version.
 
 # Pinned commit of catppuccin/yazi (no releases/tags published upstream —
 # theme is fetched from an immutable ref, not the mutable "main" branch).

@@ -50,7 +50,6 @@ take effect.
 | `clipboard_tools_cliphist_enabled` | `true` | Install cliphist and deploy its autostart entry |
 | `clipboard_tools_clipse_enabled` | `true` | Install clipse |
 | `clipboard_tools_cliphist_version` | see `defaults/main.yml` | cliphist binary version (github-releases: `sentriz/cliphist`) |
-| `clipboard_tools_cliphist_checksum` | see `defaults/main.yml` | Static sha256 checksum for the pinned cliphist binary (see "Checksum verification" below) |
 | `clipboard_tools_clipse_version` | see `defaults/main.yml` | clipse archive version (github-releases: `savedra1/clipse`) |
 | `clipboard_tools_clipse_archive` | see `defaults/main.yml` | Filename of the clipse release archive |
 | `clipboard_tools_clipse_download_base` | see `defaults/main.yml` | Base URL the clipse archive and its `checksums.txt` are downloaded from |
@@ -88,13 +87,14 @@ tag cascades to every task in the role and defeats this per-tool filtering.
   as `cli_dev_env`'s lazygit).
 - **cliphist** (`sentriz/cliphist`) publishes **only** raw per-platform
   binaries per release (e.g. `v0.7.0-linux-amd64`) — no `checksums.txt`,
-  `.sha256`, or any other sidecar. This is the collection's documented
-  "fall back to a static pinned checksum" exception, same posture as
-  `cli_dev_env`'s neovim: `clipboard_tools_cliphist_checksum` is hand-pinned
-  against the exact binary for `clipboard_tools_cliphist_version` and will
-  go stale the next time the version is bumped. That staleness is
-  deliberate friction (it forces a human to look at the new release and
-  update the checksum before the bump can land), not a bug to work around.
+  `.sha256`, or any other sidecar. Instead of a hand-pinned static checksum,
+  the binary is verified against GitHub's own per-asset digest: the role
+  fetches the release metadata from the GitHub API for the pinned
+  `clipboard_tools_cliphist_version`, reads the asset's `sha256` digest, and
+  feeds it to `get_url`. The checksum is always derived from the pinned
+  version, so a Renovate version bump needs no manual checksum update. If
+  GitHub reports no digest for the asset, the role fails loudly rather than
+  skipping verification.
 
 ## Soft cross-tool dependencies (documentation only, not hard-gated)
 
