@@ -14,7 +14,7 @@ collections:
     version: "5.4.0"
   # renovate: datasource=galaxy-collection depName=community.crypto
   - name: community.crypto
-    version: "3.5.0"
+    version: "3.5.1"
   # renovate: datasource=galaxy-collection depName=community.hashi_vault
   - name: community.hashi_vault
     version: "7.1.0"
