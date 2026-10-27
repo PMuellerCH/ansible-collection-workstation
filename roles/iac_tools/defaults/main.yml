@@ -103,7 +103,7 @@ iac_tools_kubeconform_version: "0.8.0"
 # renovate: datasource=github-releases depName=stackrox/kube-linter extractVersion=^v(?<version>.*)$
 iac_tools_kube_linter_version: "0.8.3"
 # renovate: datasource=pypi depName=kubernetes
-iac_tools_kubernetes_pip_kubernetes_version: "36.0.3"
+iac_tools_kubernetes_pip_kubernetes_version: "37.0.1"
 # renovate: datasource=pypi depName=jsonpatch
 iac_tools_kubernetes_pip_jsonpatch_version: "1.38"
 # renovate: datasource=pypi depName=pyhcl
