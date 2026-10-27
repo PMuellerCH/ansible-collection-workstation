@@ -18,4 +18,4 @@ terminal_env_zsh_syntax_highlighting_version: "0.8.0"
 
 # tmux
 # renovate: datasource=github-releases depName=catppuccin/tmux extractVersion=^v(?<version>.*)$
-terminal_env_tmux_catppuccin_version: "2.3.0"
+terminal_env_tmux_catppuccin_version: "2.3.2"
