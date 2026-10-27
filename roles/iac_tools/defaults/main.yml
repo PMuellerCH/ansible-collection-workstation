@@ -105,7 +105,7 @@ iac_tools_kube_linter_version: "0.8.3"
 # renovate: datasource=pypi depName=kubernetes
 iac_tools_kubernetes_pip_kubernetes_version: "36.0.3"
 # renovate: datasource=pypi depName=jsonpatch
-iac_tools_kubernetes_pip_jsonpatch_version: "1.33"
+iac_tools_kubernetes_pip_jsonpatch_version: "1.38"
 # renovate: datasource=pypi depName=pyhcl
 iac_tools_kubernetes_pip_pyhcl_version: "0.4.5"
 
