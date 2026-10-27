@@ -2,9 +2,14 @@
 - name: Verify
   hosts: all
   gather_facts: true
+  # Source the role's defaults so the verify always checks the versions the
+  # role actually installs. Hard-coding them here let the two drift: a Renovate
+  # bump to the role default (e.g. catppuccin/tmux v2.3.2 in #198) left the
+  # verify pinned to the old version, so it asserted against a different commit
+  # and failed even though converge installed the new one.
+  vars_files:
+    - ../../defaults/main.yml
   vars:
-    terminal_env_zsh_powerlevel10k_version: "1.20.0"
-    terminal_env_tmux_catppuccin_version: "2.3.0"
     _terminal_env_expected_zdotdir_line: 'export ZDOTDIR="$HOME/.config/zsh"'
   tasks:
     - name: Gather package facts
@@ -148,16 +153,43 @@
       ansible.builtin.assert:
         that: _terminal_env_tpm.stat.exists
 
-    - name: Check Catppuccin tmux plugin installed tag
+    - name: Resolve Catppuccin tmux pinned tag commit
       ansible.builtin.command:
-        cmd: git -C "{{ ansible_facts['env']['HOME'] }}/.config/tmux/plugins/catppuccin/tmux" tag --points-at HEAD
-      register: _terminal_env_tmux_catppuccin_tag
+        cmd: >-
+          git -C "{{ ansible_facts['env']['HOME'] }}/.config/tmux/plugins/catppuccin/tmux"
+          rev-parse --verify --quiet "refs/tags/v{{ terminal_env_tmux_catppuccin_version }}^{commit}"
+      register: _terminal_env_tmux_catppuccin_pinned_commit
       changed_when: false
-      # noqa: command-instead-of-module - ansible.builtin.git cannot query the current tag; no module alternative exists
+      failed_when: false
+      # noqa: command-instead-of-module - ansible.builtin.git cannot resolve a tag to a commit; no module alternative exists
 
-    - name: Assert Catppuccin tmux plugin is cloned at the pinned version
+    - name: Resolve Catppuccin tmux checked-out HEAD commit
+      ansible.builtin.command:
+        cmd: >-
+          git -C "{{ ansible_facts['env']['HOME'] }}/.config/tmux/plugins/catppuccin/tmux"
+          rev-parse --verify --quiet HEAD
+      register: _terminal_env_tmux_catppuccin_head_commit
+      changed_when: false
+      failed_when: false
+      # noqa: command-instead-of-module - ansible.builtin.git cannot query the current commit; no module alternative exists
+
+    - name: Assert Catppuccin tmux plugin is checked out at the pinned version
+      # Compare HEAD against the pinned tag's commit instead of matching tag
+      # names from `git tag --points-at HEAD`: the latter depends on which tags
+      # a shallow clone fetches and on upstream's moving latest/v2 tags, which
+      # made this assertion flaky across git versions.
       ansible.builtin.assert:
-        that: "('v' + terminal_env_tmux_catppuccin_version) in _terminal_env_tmux_catppuccin_tag.stdout"
+        that:
+          - _terminal_env_tmux_catppuccin_pinned_commit.rc == 0
+          - _terminal_env_tmux_catppuccin_head_commit.rc == 0
+          - _terminal_env_tmux_catppuccin_pinned_commit.stdout | trim
+            == _terminal_env_tmux_catppuccin_head_commit.stdout | trim
+        fail_msg: >-
+          catppuccin/tmux is not checked out at v{{ terminal_env_tmux_catppuccin_version }}.
+          pinned-tag commit rc={{ _terminal_env_tmux_catppuccin_pinned_commit.rc }}
+          stdout='{{ _terminal_env_tmux_catppuccin_pinned_commit.stdout | trim }}';
+          HEAD rc={{ _terminal_env_tmux_catppuccin_head_commit.rc }}
+          stdout='{{ _terminal_env_tmux_catppuccin_head_commit.stdout | trim }}'.
 
     - name: Check TPM-managed tmux plugins are cloned
       ansible.builtin.stat:

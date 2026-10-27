@@ -331,17 +331,39 @@
   become: false
   tags: [tmux, terminal_env]
 
-- name: Check Catppuccin tmux installed version
+- name: Check Catppuccin tmux installed commit matches the pinned tag
+  # Compare the checked-out commit against the commit the pinned tag resolves
+  # to, rather than `git tag --points-at HEAD`. The latter depends on which
+  # tags a shallow clone happens to fetch locally and on upstream's moving
+  # `latest`/`v2` annotated tags, which made this check (and the Molecule
+  # verify) flaky across git versions. rev-parse of the exact tag ref is
+  # deterministic: it prints the pinned tag's commit, or fails if that tag is
+  # not present locally (wrong version cloned), triggering a re-clone.
   ansible.builtin.command:
-    cmd: git -C "{{ ansible_facts['env']['HOME'] }}/.config/tmux/plugins/catppuccin/tmux" tag --points-at HEAD
+    cmd: >-
+      git -C "{{ ansible_facts['env']['HOME'] }}/.config/tmux/plugins/catppuccin/tmux"
+      rev-parse --verify --quiet "refs/tags/v{{ terminal_env_tmux_catppuccin_version }}^{commit}"
   become: false
-  register: terminal_env_tmux_catppuccin_installed_version
+  register: terminal_env_tmux_catppuccin_pinned_commit
   changed_when: false
   failed_when: false
   # See the powerlevel10k version-check task (zsh section) above for why
   # this needs check_mode: false.
   check_mode: false
-  # noqa: command-instead-of-module - ansible.builtin.git cannot query the current tag; no module alternative exists
+  # noqa: command-instead-of-module - ansible.builtin.git cannot resolve a tag to a commit; no module alternative exists
+  tags: [tmux, terminal_env]
+
+- name: Check Catppuccin tmux checked-out HEAD commit
+  ansible.builtin.command:
+    cmd: >-
+      git -C "{{ ansible_facts['env']['HOME'] }}/.config/tmux/plugins/catppuccin/tmux"
+      rev-parse --verify --quiet HEAD
+  become: false
+  register: terminal_env_tmux_catppuccin_head_commit
+  changed_when: false
+  failed_when: false
+  check_mode: false
+  # noqa: command-instead-of-module - ansible.builtin.git cannot query the current commit; no module alternative exists
   tags: [tmux, terminal_env]
 
 - name: Remove Catppuccin tmux plugin clone to allow re-clone at the pinned version
@@ -352,8 +374,10 @@
     state: absent
   become: false
   when: >-
-    terminal_env_tmux_catppuccin_installed_version.rc != 0 or
-    ('v' + terminal_env_tmux_catppuccin_version) not in terminal_env_tmux_catppuccin_installed_version.stdout
+    terminal_env_tmux_catppuccin_pinned_commit.rc != 0 or
+    terminal_env_tmux_catppuccin_head_commit.rc != 0 or
+    terminal_env_tmux_catppuccin_pinned_commit.stdout | trim
+    != terminal_env_tmux_catppuccin_head_commit.stdout | trim
   tags: [tmux, terminal_env]
 
 - name: Clone Catppuccin tmux plugin (manual install — recommended over TPM due to name conflicts)
@@ -365,8 +389,10 @@
     update: false
   become: false
   when: >-
-    terminal_env_tmux_catppuccin_installed_version.rc != 0 or
-    ('v' + terminal_env_tmux_catppuccin_version) not in terminal_env_tmux_catppuccin_installed_version.stdout
+    terminal_env_tmux_catppuccin_pinned_commit.rc != 0 or
+    terminal_env_tmux_catppuccin_head_commit.rc != 0 or
+    terminal_env_tmux_catppuccin_pinned_commit.stdout | trim
+    != terminal_env_tmux_catppuccin_head_commit.stdout | trim
   tags: [tmux, terminal_env]
 
 - name: Copy tmux.conf
