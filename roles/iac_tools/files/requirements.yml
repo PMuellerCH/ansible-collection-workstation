@@ -20,7 +20,7 @@ collections:
     version: "7.1.0"
   # renovate: datasource=galaxy-collection depName=amazon.aws
   - name: amazon.aws
-    version: "11.4.0"
+    version: "11.5.0"
   # renovate: datasource=galaxy-collection depName=community.postgresql
   - name: community.postgresql
     version: "5.0.0"
