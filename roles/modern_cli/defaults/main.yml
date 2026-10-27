@@ -102,7 +102,7 @@ modern_cli_moor_version: "2.17.0"
 # checksum to keep in sync when Renovate bumps the version.
 
 # renovate: datasource=github-releases depName=sxyazi/yazi extractVersion=^v(?<version>.*)$
-modern_cli_yazi_version: "26.8.15"
+modern_cli_yazi_version: "26.9.1"
 # sxyazi/yazi publishes no checksum file; the .deb checksum is derived at run
 # time from GitHub's per-asset digest (see tasks/main.yml), so there is no static
 # checksum to keep in sync when Renovate bumps the version.
