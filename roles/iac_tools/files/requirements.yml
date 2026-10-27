@@ -8,7 +8,7 @@ collections:
     version: "2.2.2"
   # renovate: datasource=galaxy-collection depName=community.proxmox
   - name: community.proxmox
-    version: "2.0.0"
+    version: "2.1.0"
   # renovate: datasource=galaxy-collection depName=community.docker
   - name: community.docker
     version: "5.4.0"
