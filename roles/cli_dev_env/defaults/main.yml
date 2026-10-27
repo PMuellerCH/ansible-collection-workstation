@@ -27,7 +27,7 @@ cli_dev_env_lazygit_version: "0.66.2"
 cli_dev_env_lazygit_download_base: "https://github.com/jesseduffield/lazygit/releases/download/v{{ cli_dev_env_lazygit_version }}"
 
 # renovate: datasource=github-releases depName=neovim/neovim extractVersion=^v(?<version>.*)$
-cli_dev_env_neovim_version: "0.12.4"
+cli_dev_env_neovim_version: "0.12.6"
 # neovim/neovim publishes no checksum file (unlike lazygit's checksums.txt); the
 # archive checksum is derived at run time from GitHub's per-asset digest for the
 # pinned version (see tasks/main.yml), so there is no static checksum to keep in
