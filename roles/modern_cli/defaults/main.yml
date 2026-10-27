@@ -80,7 +80,7 @@ modern_cli_dust_version: "1.2.5"
 modern_cli_viddy_version: "1.3.1"
 
 # renovate: datasource=github-releases depName=tarka/xcp extractVersion=^xcp-v(?<version>.*)$
-modern_cli_xcp_version: "0.24.8"
+modern_cli_xcp_version: "0.24.9"
 # tarka/xcp publishes no checksum file; the archive checksum is derived at run
 # time from GitHub's per-asset digest (see tasks/main.yml).
 
