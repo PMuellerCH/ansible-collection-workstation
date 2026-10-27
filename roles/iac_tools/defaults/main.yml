@@ -59,7 +59,7 @@ iac_tools_aws_profiles: []
 
 # ── terraform ────────────────────────────────────────────────────────────
 # renovate: datasource=github-releases depName=terraform-linters/tflint extractVersion=^v(?<version>.*)$
-iac_tools_tflint_version: "0.64.0"
+iac_tools_tflint_version: "0.65.0"
 # renovate: datasource=github-releases depName=terraform-docs/terraform-docs extractVersion=^v(?<version>.*)$
 iac_tools_terraform_docs_version: "0.24.0"
 iac_tools_terraform_docs_archive: "terraform-docs-v{{ iac_tools_terraform_docs_version }}-linux-amd64.tar.gz"
