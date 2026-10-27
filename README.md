@@ -101,10 +101,16 @@ runs it as a matrix job, but only on the release-please PR, a Renovate PR, or ma
 `workflow_dispatch` — not on every ordinary feature PR, since a full matrix run is too
 slow to gate routine iteration (those get fast lint-only feedback from `ci.yml` instead).
 
-Renovate automerges non-major updates itself (`platformAutomerge: false`) once CI is
-green; it is a bypass actor on the default-branch ruleset. `rebaseWhen` is
-`conflicted` because the ruleset does not require up-to-date branches: with the default
-(`auto`) every merge to `main` made Renovate rebase all open PRs, restarting their
-lint and Molecule runs so none finished before the next rebase. `prConcurrentLimit` caps
-open Renovate PRs at 5 to keep the Molecule matrix load manageable. If PRs stop
-automerging, check for repeated Renovate force-pushes on the PR branches.
+Renovate automerges non-major updates (minor, patch, digest, pin) once CI is green;
+major bumps stay on manual review. The config and the automerge policy come from the
+shared `renovate/ansible` preset in `infra-github-shared-actions`, which this repo's
+`renovate.json` extends rather than duplicating. That preset sets `platformAutomerge:
+true`, so Renovate enables GitHub's native auto-merge on each eligible PR; the
+`auto-merge` job in `molecule.yml` (the shared `ansible_renovate_auto_merge.yml`
+reusable workflow) then supplies the single approval the default-branch ruleset requires,
+but only after lint and Molecule on the PR head have passed. Without that approval job the
+PRs would wait for a manual review. This repo keeps `prConcurrentLimit` at 5 to keep the
+Molecule matrix load manageable, and pins `ansible-core` away from the broken 2.21.0. A
+repo-local regex manager also covers `roles/*/files/requirements.yml`, which the shared
+preset's top-level requirements manager does not match. If PRs stop automerging, check
+that lint and Molecule are green on the PR head and that the `auto-merge` job approved it.

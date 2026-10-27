@@ -1,46 +1,21 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"],
-  "labels": ["dependencies"],
-  "pip_requirements": {
-    "managerFilePatterns": [
-      "/^requirements[\\w-]*\\.txt$/",
-      "/^\\.github/requirements[\\w-]*\\.txt$/"
-    ]
-  },
-  "platformAutomerge": false,
-  "rebaseWhen": "conflicted",
+  "extends": [
+    "github>swisstopo/infra-github-shared-actions//renovate/ansible"
+  ],
   "prConcurrentLimit": 5,
   "packageRules": [
     {
       "matchPackageNames": ["ansible-core"],
       "allowedVersions": "!/2\\.21\\.0/",
       "description": "Skip 2.21.0 — VariableLayer circular import bug breaks playbook execution; propose 2.21.1+ when available"
-    },
-    {
-      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
-      "automerge": true,
-      "automergeStrategy": "squash",
-      "description": "Auto-merge non-major updates (bug fixes, backwards-compatible features, pins, digests) once CI passes. Major/breaking updates always stay on manual review."
     }
   ],
   "customManagers": [
     {
       "customType": "regex",
-      "description": "Update versions pinned in Ansible role defaults via inline renovate comments",
+      "description": "Update Ansible Galaxy collection versions in per-role files/requirements.yml (not covered by the shared preset's top-level requirements manager)",
       "managerFilePatterns": [
-        "/^roles/.+/defaults/main\\.yml$/"
-      ],
-      "matchStrings": [
-        "# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>[^\\s]+)( registryUrl=(?<registryUrl>[^\\s]+))?( extractVersion=(?<extractVersion>[^\\s]+))?\\n[a-z_]+: \"(?<currentValue>[^\"]+)\""
-      ]
-    },
-    {
-      "customType": "regex",
-      "description": "Update Ansible Galaxy collection versions in requirements.yml",
-      "managerFilePatterns": [
-        "/^requirements\\.yml$/",
-        "/^requirements-molecule\\.yml$/",
         "/^roles/.+/files/requirements\\.yml$/"
       ],
       "matchStrings": [
