@@ -1,0 +1,62 @@
+---
+# Verifies what can be checked in a headless container: the binary was
+# installed, the three default-behaviour settings were persisted with the
+# correct JSON types, and the zsh alias snippet was deployed with the expected
+# content. Autonomous mode itself (the --trust-all-tools runtime flag) is
+# exercised only at `kiro-cli chat` time, which needs an authenticated session
+# and a TTY, so it is verified indirectly through the alias definition rather
+# than by launching a chat.
+- name: Verify
+  hosts: all
+  gather_facts: true
+  # Load the role's own defaults so the assertions below track
+  # defaults/main.yml as their single source of truth.
+  vars_files:
+    - ../../defaults/main.yml
+  tasks:
+    - name: Stat the kiro-cli binary
+      ansible.builtin.stat:
+        path: "{{ kiro_cli_bin }}"
+      register: _kiro_cli_bin_stat
+
+    - name: Assert kiro-cli was installed
+      ansible.builtin.assert:
+        that: _kiro_cli_bin_stat.stat.exists
+        fail_msg: "kiro-cli binary was not installed at {{ kiro_cli_bin }}."
+
+    - name: Read the persisted settings file
+      ansible.builtin.slurp:
+        src: "{{ ansible_facts['env']['HOME'] }}/.kiro/settings/cli.json"
+      register: _kiro_cli_settings_file
+
+    - name: Parse the persisted settings
+      ansible.builtin.set_fact:
+        _kiro_cli_settings: "{{ _kiro_cli_settings_file.content | b64decode | from_json }}"
+
+    - name: Assert default-behaviour settings were persisted with the correct types
+      ansible.builtin.assert:
+        that:
+          - _kiro_cli_settings['chat.agentEngine'] == kiro_cli_agent_engine
+          - _kiro_cli_settings['toolSearch.enabled'] == kiro_cli_tool_search_enabled
+          - _kiro_cli_settings['chat.disableTrustAllConfirmation'] == kiro_cli_disable_trust_all_confirmation
+        fail_msg: One or more kiro-cli settings were not persisted as expected.
+
+    - name: Stat zsh alias snippet
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/kiro_cli.zsh"
+      register: _kiro_cli_zsh_snippet
+
+    - name: Assert zsh alias snippet was deployed
+      ansible.builtin.assert:
+        that: _kiro_cli_zsh_snippet.stat.exists
+
+    - name: Read zsh alias snippet content
+      ansible.builtin.slurp:
+        src: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/kiro_cli.zsh"
+      register: _kiro_cli_zsh_snippet_content
+
+    - name: Assert alias snippet defines the autonomous chat and login aliases
+      ansible.builtin.assert:
+        that:
+          - "\"alias \" + kiro_cli_alias_chat + \"='kiro-cli chat --trust-all-tools'\" in (_kiro_cli_zsh_snippet_content.content | b64decode)"
+          - "\"alias \" + kiro_cli_alias_login + \"='kiro-cli login'\" in (_kiro_cli_zsh_snippet_content.content | b64decode)"

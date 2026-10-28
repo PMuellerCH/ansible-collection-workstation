@@ -1,0 +1,44 @@
+---
+# ---- kiro-cli install ----
+kiro_cli_enabled: true
+
+# Absolute path to the kiro-cli binary. kiro-cli installs into the user's
+# ~/.local/bin, which is not guaranteed to be on $PATH for a non-interactive
+# Ansible run (no shell profile is sourced) — so every task calls the binary by
+# full path, the same way iac_tools calls ansible-galaxy. Also used to detect an
+# existing install.
+kiro_cli_bin: "{{ ansible_facts['env']['HOME'] }}/.local/bin/kiro-cli"
+
+# Official installer. kiro-cli is a self-updating single binary published only
+# through this script (https://cli.kiro.dev/install) into ~/.local/bin; upstream
+# ships no versioned, individually downloadable release asset to pin and
+# checksum the way cliphist/clipse do. The install URL is therefore an
+# unpinned remote source — a deliberate, documented deviation from this
+# collection's "pin everything" convention (see README "kiro-cli is installed
+# via the official script"). The role only runs the installer when the binary
+# is absent; keeping it current afterwards is left to `kiro-cli update`
+# (exposed through kiro_cli_update below), the tool's own supported mechanism.
+kiro_cli_install_url: "https://cli.kiro.dev/install"
+
+# Run `kiro-cli update --non-interactive` when the binary is already present,
+# so a provisioned machine converges to the latest release. Set false to leave
+# an existing install untouched (only ever install when missing).
+kiro_cli_update: true
+
+# ---- default behaviour settings (persisted via `kiro-cli settings`) ----
+# v3 agent engine ("v3 cli").
+kiro_cli_agent_engine: v3
+# Tool auto-search ("autosearch for tools").
+kiro_cli_tool_search_enabled: true
+# Autonomous mode is not a persistent setting — it is the `--trust-all-tools`
+# chat flag, baked into the `ki` alias below. This setting only stops kiro-cli
+# from prompting for confirmation each time trust-all is used, so the alias
+# runs non-interactively.
+kiro_cli_disable_trust_all_confirmation: true
+
+# ---- shell aliases ----
+kiro_cli_deploy_shell_aliases: true
+# `ki`  -> kiro-cli chat in autonomous mode (trust-all-tools).
+# `kil` -> kiro-cli login.
+kiro_cli_alias_chat: ki
+kiro_cli_alias_login: kil

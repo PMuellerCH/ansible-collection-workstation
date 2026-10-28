@@ -1,0 +1,8 @@
+# Kiro CLI aliases — managed by Ansible (kiro_cli role)
+if command -v kiro-cli &>/dev/null; then
+  # Autonomous chat: --trust-all-tools lets the agent run tools without
+  # per-action confirmation. Paired with the global
+  # chat.disableTrustAllConfirmation setting so no launch-time prompt appears.
+  alias {{ kiro_cli_alias_chat }}='kiro-cli chat --trust-all-tools'
+  alias {{ kiro_cli_alias_login }}='kiro-cli login'
+fi

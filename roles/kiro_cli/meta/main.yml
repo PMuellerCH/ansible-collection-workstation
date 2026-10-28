@@ -1,0 +1,11 @@
+---
+galaxy_info:
+  role_name: kiro_cli
+  namespace: swisstopo
+  author: swisstopo
+  license: MIT
+  description: >-
+    Install the Kiro CLI (kiro-cli) and configure it to run in autonomous mode
+    with tool auto-search and the v3 agent engine by default
+  min_ansible_version: "2.17"
+dependencies: []
