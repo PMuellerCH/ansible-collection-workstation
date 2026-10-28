@@ -889,7 +889,7 @@
     dest: "/tmp/helm-{{ iac_tools_helm_version }}-linux-amd64.tar.gz"
     mode: "0644"
   when: >-
-    iac_tools_kubernetes_tools_enabled and
+    not ansible_check_mode and iac_tools_kubernetes_tools_enabled and
     (iac_tools_helm_installed.rc != 0 or iac_tools_helm_version not in iac_tools_helm_installed.stdout)
   tags: [kubernetes_tools, iac_tools]
 
