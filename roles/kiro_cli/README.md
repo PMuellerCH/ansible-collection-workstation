@@ -59,8 +59,12 @@ convention, documented here like the
 | Ubuntu 24.04 | yes |
 
 No Ansible role dependency (this role runs standalone in Molecule) — but on a
-real workstation, run `base` first, per the [root README](../../README.md).
-Your `.zshrc` must source `~/.config/zsh/conf.d/*.zsh` for the deployed aliases
+real workstation, run `base` first, per the [root README](../../README.md). The
+official install script requires a downloader (`curl` or `wget`), `unzip` and
+`sha256sum` on the target and aborts otherwise; `base` provides `curl` and
+`unzip`, and `sha256sum` comes from `coreutils`. The Molecule scenario installs
+them in its `prepare.yml`. Your `.zshrc` must source
+`~/.config/zsh/conf.d/*.zsh` for the deployed aliases
 to take effect. Network access to `cli.kiro.dev` is required for the install
 step. Authentication (`kiro-cli login`, aliased to `kil`) is interactive and
 is left to the user; the role does not log in.
