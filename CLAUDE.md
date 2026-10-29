@@ -24,7 +24,7 @@ ansible-lint
 # Security scan
 checkov --framework ansible --directory . --quiet
 
-# Markdown lint (two-pass: standard files, then CHANGELOG.md with relaxed line length)
+# Markdown lint (two-pass: standard files, then CHANGELOG.md with release-please relaxations)
 .github/node_modules/.bin/markdownlint-cli2 --config .markdownlint-standard.yml '**/*.md' '#CHANGELOG.md' '#**/node_modules/**'
 .github/node_modules/.bin/markdownlint-cli2 --config .markdownlint-changelog.yml 'CHANGELOG.md'
 ```
