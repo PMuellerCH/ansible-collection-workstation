@@ -2,6 +2,7 @@
 cli_dev_env_lazygit_enabled: true
 cli_dev_env_neovim_enabled: true
 cli_dev_env_claude_code_enabled: true
+cli_dev_env_kiro_enabled: true
 
 # Optional GitHub API token used only to raise the rate limit when resolving
 # the neovim release-asset digest (neovim publishes no checksum file — see
@@ -42,3 +43,50 @@ cli_dev_env_claude_code_version: "2.1.312"
 cli_dev_env_claude_code_aws_profile: "default"
 cli_dev_env_claude_code_aws_region: "eu-central-1"
 cli_dev_env_claude_code_github_token: ""
+
+# ---- kiro-cli (Kiro CLI, AI coding agent) ----
+# Grouped here with Claude Code: both are CLI-first AI coding agents a
+# developer reaches for directly in the terminal, the same core-workflow
+# rationale that bundles lazygit/neovim/Claude Code in this role.
+
+# Absolute path to the kiro-cli binary. kiro-cli installs into the user's
+# ~/.local/bin, which is not guaranteed to be on $PATH for a non-interactive
+# Ansible run (no shell profile is sourced) — so every task calls the binary by
+# full path, the same way iac_tools calls ansible-galaxy. Also used to detect an
+# existing install.
+cli_dev_env_kiro_bin: "{{ ansible_facts['env']['HOME'] }}/.local/bin/kiro-cli"
+
+# Official installer. kiro-cli is a self-updating single binary published only
+# through this script (https://cli.kiro.dev/install) into ~/.local/bin; upstream
+# ships no versioned, individually downloadable release asset to pin and
+# checksum the way cliphist/clipse do. The install URL is therefore an
+# unpinned remote source — a deliberate, documented deviation from this
+# collection's "pin everything" convention (see README "kiro-cli is installed
+# via the official script"). The role only runs the installer when the binary
+# is absent; keeping it current afterwards is left to `kiro-cli update`
+# (exposed through cli_dev_env_kiro_update below), the tool's own supported
+# mechanism.
+cli_dev_env_kiro_install_url: "https://cli.kiro.dev/install"
+
+# Run `kiro-cli update --non-interactive` when the binary is already present,
+# so a provisioned machine converges to the latest release. Set false to leave
+# an existing install untouched (only ever install when missing).
+cli_dev_env_kiro_update: true
+
+# ---- kiro-cli default behaviour settings (persisted via `kiro-cli settings`) ----
+# v3 agent engine ("v3 cli").
+cli_dev_env_kiro_agent_engine: v3
+# Tool auto-search ("autosearch for tools").
+cli_dev_env_kiro_tool_search_enabled: true
+# Autonomous mode is not a persistent setting — it is the `--trust-all-tools`
+# chat flag, baked into the `ki` alias below. This setting only stops kiro-cli
+# from prompting for confirmation each time trust-all is used, so the alias
+# runs non-interactively.
+cli_dev_env_kiro_disable_trust_all_confirmation: true
+
+# ---- kiro-cli shell aliases ----
+cli_dev_env_kiro_deploy_shell_aliases: true
+# `ki`  -> kiro-cli chat in autonomous mode (trust-all-tools).
+# `kil` -> kiro-cli login.
+cli_dev_env_kiro_alias_chat: ki
+cli_dev_env_kiro_alias_login: kil

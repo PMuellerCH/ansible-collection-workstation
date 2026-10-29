@@ -10,7 +10,7 @@ name: Molecule
 # from ci.yml instead.
 #
 # For Renovate PRs specifically, only test the role(s) whose own files actually
-# changed (not the full 11-role matrix) — a Renovate PR only ever touches one
+# changed (not the full role matrix) — a Renovate PR only ever touches one
 # role's defaults/main.yml (or occasionally a shared file). README.md and meta/
 # changes within a role don't count either: every role here has an empty
 # dependencies: [] (galaxy_info is purely descriptive), so neither affects
@@ -23,7 +23,7 @@ name: Molecule
 # (ansible-core, molecule, molecule-plugins) and lint-only ones (ansible-lint,
 # yamllint, checkov) that molecule never touches. A path-only filter can't tell
 # those apart, so a checkov-only bump would otherwise trigger a pointless
-# 11-role run — confirmed live on PR #103.
+# full-matrix run — confirmed live on PR #103.
 #
 # Release-please and workflow_dispatch always run the full suite regardless:
 # release-please's own diff is just CHANGELOG.md/version bumps, but it's the

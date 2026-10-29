@@ -210,3 +210,70 @@
         that:
           - "'aws-mcp' in _cli_dev_env_claude_code_global.mcpServers"
           - _cli_dev_env_claude_code_global.mcpServers['aws-mcp'].command == 'uvx'
+
+    # kiro-cli
+    # Verifies what can be checked in a headless container: the binary was
+    # installed, the three default-behaviour settings were persisted with the
+    # correct JSON types, and the zsh alias snippet was deployed with the
+    # expected content. Autonomous mode itself (the --trust-all-tools runtime
+    # flag) is exercised only at `kiro-cli chat` time, which needs an
+    # authenticated session and a TTY, so it is verified indirectly through the
+    # alias definition rather than by launching a chat.
+    - name: Stat the kiro-cli binary
+      ansible.builtin.stat:
+        path: "{{ cli_dev_env_kiro_bin }}"
+      register: _cli_dev_env_kiro_bin_stat
+
+    - name: Assert kiro-cli was installed
+      ansible.builtin.assert:
+        that: _cli_dev_env_kiro_bin_stat.stat.exists
+        fail_msg: "kiro-cli binary was not installed at {{ cli_dev_env_kiro_bin }}."
+
+    - name: Read the persisted kiro-cli settings file
+      ansible.builtin.slurp:
+        src: "{{ ansible_facts['env']['HOME'] }}/.kiro/settings/cli.json"
+      register: _cli_dev_env_kiro_settings_file
+
+    - name: Parse the persisted kiro-cli settings
+      ansible.builtin.set_fact:
+        _cli_dev_env_kiro_settings: "{{ _cli_dev_env_kiro_settings_file.content | b64decode | from_json }}"
+
+    - name: Assert kiro-cli default-behaviour settings were persisted with the correct types
+      ansible.builtin.assert:
+        that:
+          - _cli_dev_env_kiro_settings['chat.agentEngine'] == cli_dev_env_kiro_agent_engine
+          - _cli_dev_env_kiro_settings['toolSearch.enabled'] == cli_dev_env_kiro_tool_search_enabled
+          - _cli_dev_env_kiro_settings['chat.disableTrustAllConfirmation'] == cli_dev_env_kiro_disable_trust_all_confirmation
+        fail_msg: One or more kiro-cli settings were not persisted as expected.
+
+    - name: Stat kiro-cli zsh alias snippet
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/kiro.zsh"
+      register: _cli_dev_env_kiro_zsh_snippet
+
+    - name: Assert kiro-cli zsh alias snippet was deployed
+      ansible.builtin.assert:
+        that: _cli_dev_env_kiro_zsh_snippet.stat.exists
+
+    - name: Read kiro-cli zsh alias snippet content
+      ansible.builtin.slurp:
+        src: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/kiro.zsh"
+      register: _cli_dev_env_kiro_zsh_snippet_content
+
+    - name: Assert kiro-cli alias snippet defines the autonomous chat and login aliases
+      ansible.builtin.assert:
+        that:
+          - "\"alias \" + cli_dev_env_kiro_alias_chat + \"='kiro-cli chat --trust-all-tools'\" in (_cli_dev_env_kiro_zsh_snippet_content.content | b64decode)"
+          - "\"alias \" + cli_dev_env_kiro_alias_login + \"='kiro-cli login'\" in (_cli_dev_env_kiro_zsh_snippet_content.content | b64decode)"
+
+    - name: Stat the legacy kiro_cli.zsh snippet (seeded in prepare.yml)
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/kiro_cli.zsh"
+      register: _cli_dev_env_kiro_legacy_snippet
+
+    - name: Assert the legacy kiro_cli.zsh orphan was removed on upgrade
+      # Proves the cleanup task removes the snippet the removed standalone
+      # kiro_cli role used to deploy, so it can't keep overriding kiro.zsh.
+      ansible.builtin.assert:
+        that: not _cli_dev_env_kiro_legacy_snippet.stat.exists
+        fail_msg: "Legacy kiro_cli.zsh was not removed; it would override the merged role's kiro.zsh aliases."

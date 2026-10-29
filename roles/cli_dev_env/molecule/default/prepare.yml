@@ -6,9 +6,18 @@
     http_proxy: "{{ lookup('env', 'http_proxy') }}"
     https_proxy: "{{ lookup('env', 'https_proxy') or lookup('env', 'http_proxy') }}"
   tasks:
-    - name: Install git (provided by the base role on a real workstation; this role's LazyVim clone task depends on it being present)
+    - name: Install git, curl and unzip (provided by the base role on a real workstation)
+      # git: this role's LazyVim clone task (ansible.builtin.git) depends on it.
+      # curl + unzip: the upstream kiro-cli install script aborts in its
+      # check_dependencies() unless a downloader (curl or wget), unzip and
+      # sha256sum are all present; the bare test image ships none of
+      # curl/wget/unzip (sha256sum comes from coreutils). On a real workstation
+      # all of these come from the base role.
       ansible.builtin.apt:
-        name: git
+        name:
+          - git
+          - curl
+          - unzip
         state: present
         update_cache: true
       become: true
@@ -38,4 +47,25 @@
               }
             }
           }
+      become: false
+
+    - name: Seed a legacy kiro_cli.zsh snippet from the removed standalone role
+      # Simulates a machine provisioned by an older collection version whose
+      # standalone kiro_cli role deployed ~/.config/zsh/conf.d/kiro_cli.zsh.
+      # verify.yml asserts the merged role's cleanup task removed it, so the
+      # orphan can't keep overriding the new kiro.zsh aliases.
+      ansible.builtin.file:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d"
+        state: directory
+        mode: "0755"
+      become: false
+
+    - name: Write the legacy kiro_cli.zsh content
+      ansible.builtin.copy:
+        dest: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/kiro_cli.zsh"
+        mode: "0644"
+        content: |
+          # Kiro CLI aliases — managed by Ansible (kiro_cli role)
+          alias ki='kiro-cli chat --trust-all-tools'
+          alias kil='kiro-cli login'
       become: false

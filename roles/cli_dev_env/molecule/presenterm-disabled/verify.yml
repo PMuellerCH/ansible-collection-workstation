@@ -2,6 +2,12 @@
 - name: Verify
   hosts: all
   gather_facts: true
+  # Load the role's own defaults so the pinned-version assertion below tracks
+  # cli_dev_env_neovim_version as its single source of truth, rather than a
+  # hardcoded literal that goes stale whenever Renovate bumps the version
+  # (same pattern as the default scenario's verify.yml).
+  vars_files:
+    - ../../defaults/main.yml
   tasks:
     - name: Check neovim runs
       ansible.builtin.command: nvim --version
@@ -10,7 +16,7 @@
 
     - name: Assert neovim reports the pinned version
       ansible.builtin.assert:
-        that: "'NVIM v0.12.4' in _cli_dev_env_neovim_version.stdout"
+        that: "'NVIM v' + cli_dev_env_neovim_version in _cli_dev_env_neovim_version.stdout"
 
     - name: Stat nvim plugins directory
       ansible.builtin.stat:

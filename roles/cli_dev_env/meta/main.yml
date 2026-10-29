@@ -4,6 +4,6 @@ galaxy_info:
   namespace: swisstopo
   author: swisstopo
   license: MIT
-  description: Install CLI development environment tools (lazygit, neovim/LazyVim, Claude Code CLI) and presenterm.nvim's plugin config
+  description: Install CLI development environment tools (lazygit, neovim/LazyVim, Claude Code CLI, Kiro CLI) and presenterm.nvim's plugin config
   min_ansible_version: "2.17"
 dependencies: []

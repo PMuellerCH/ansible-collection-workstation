@@ -11,3 +11,8 @@
     - role: swisstopo.workstation.cli_dev_env
       vars:
         cli_dev_env_neovim_presenterm_plugin_enabled: false
+        # This scenario exists only to test the presenterm.nvim toggle. Kiro is
+        # out of scope here and its installer needs curl/unzip that this
+        # scenario's prepare.yml does not provide, so disable it rather than
+        # pull in installer prerequisites unrelated to what this scenario tests.
+        cli_dev_env_kiro_enabled: false

@@ -2,20 +2,23 @@
 
 Installs core CLI developer-environment tools: `lazygit` (git TUI, GitHub
 release binary), `neovim` (GitHub release binary, bootstrapped into a
-[LazyVim](https://www.lazyvim.org/) configuration), and the
+[LazyVim](https://www.lazyvim.org/) configuration), the
 [Claude Code](https://docs.claude.com/en/docs/claude-code) CLI (npm, with
-Node.js sourced from NodeSource). Also deploys the
+Node.js sourced from NodeSource), and the [Kiro CLI](https://kiro.dev/cli/)
+(`kiro-cli`, official installer). Also deploys the
 [presenterm.nvim](https://github.com/Piotr1215/presenterm.nvim) LazyVim
 plugin config — the neovim-plugin half of presenterm support; the presenterm
 *binary* itself, plus its mermaid-cli dependency and zsh snippet, live in the
 `modern_cli` role instead (see "presenterm.nvim plugin toggle" below for why
 this split needs a toggle).
 
-`lazygit`, `neovim`, and Claude Code are bundled here because all three are
-CLI-first tools a developer reaches for directly in the terminal for the same
-core workflow (editing code, managing git, working with an AI coding agent) —
-unlike e.g. Slack/Teams (chat) or trivy/checkov (scanning), which got their
-own roles for their own category.
+`lazygit`, `neovim`, Claude Code, and the Kiro CLI are bundled here because
+all are CLI-first tools a developer reaches for directly in the terminal for
+the same core workflow (editing code, managing git, working with an AI coding
+agent) — unlike e.g. Slack/Teams (chat) or trivy/checkov (scanning), which got
+their own roles for their own category. Claude Code and Kiro CLI in particular
+are the two AI coding agents, kept together here rather than split across
+roles.
 
 ## What it does
 
@@ -26,6 +29,9 @@ own roles for their own category.
 - Deploys the `presenterm.nvim` plugin config (toggleable independently).
 - Installs the Claude Code CLI via npm, plus its NodeSource Node.js
   dependency, and wires up a default set of MCP servers.
+- Installs the Kiro CLI (`kiro-cli`) via its official installer, sets its
+  default behaviour (v3 agent engine, tool auto-search, autonomous mode), and
+  deploys its `ki`/`kil` shell aliases.
 
 ## Requirements
 
@@ -36,7 +42,11 @@ own roles for their own category.
 An OS-level `git` binary must already be present (the LazyVim starter clone
 uses `ansible.builtin.git`, which shells out to it) — on a real workstation
 this is provided by the `base` role, which every consuming playbook runs
-first. No collection role is otherwise required to have run first.
+first. The Kiro CLI's official install script additionally needs a downloader
+(`curl` or `wget`), `unzip` and `sha256sum` on the target and aborts
+otherwise; `base` provides `curl` and `unzip`, and `sha256sum` comes from
+`coreutils`. Network access to `cli.kiro.dev` is required for the Kiro install
+step. No collection role is otherwise required to have run first.
 
 ## Role Variables
 
@@ -55,6 +65,16 @@ first. No collection role is otherwise required to have run first.
 | `cli_dev_env_claude_code_aws_profile` | `default` | `AWS_PROFILE` passed to the `awslabs.core` MCP server |
 | `cli_dev_env_claude_code_aws_region` | `eu-central-1` | `AWS_REGION` passed to the `awslabs.core` MCP server |
 | `cli_dev_env_claude_code_github_token` | `""` | GitHub PAT passed as `GITHUB_PERSONAL_ACCESS_TOKEN` to the `github` MCP server (from the consumer's own secret store) |
+| `cli_dev_env_kiro_enabled` | `true` | Install and configure the Kiro CLI (kiro-cli) |
+| `cli_dev_env_kiro_bin` | `~/.local/bin/kiro-cli` | Absolute path to the kiro-cli binary (detection + full-path invocation) |
+| `cli_dev_env_kiro_install_url` | `https://cli.kiro.dev/install` | Official install script URL (unpinned — see "Kiro CLI" below) |
+| `cli_dev_env_kiro_update` | `true` | Run `kiro-cli update` when the binary is already present |
+| `cli_dev_env_kiro_agent_engine` | `v3` | Value for the global `chat.agentEngine` setting |
+| `cli_dev_env_kiro_tool_search_enabled` | `true` | Value for the global `toolSearch.enabled` setting |
+| `cli_dev_env_kiro_disable_trust_all_confirmation` | `true` | Value for the global `chat.disableTrustAllConfirmation` setting |
+| `cli_dev_env_kiro_deploy_shell_aliases` | `true` | Deploy `~/.config/zsh/conf.d/kiro.zsh` with the `ki`/`kil` aliases |
+| `cli_dev_env_kiro_alias_chat` | `ki` | Alias name for autonomous chat (`kiro-cli chat --trust-all-tools`) |
+| `cli_dev_env_kiro_alias_login` | `kil` | Alias name for `kiro-cli login` |
 
 ## Example Playbook
 
@@ -79,6 +99,7 @@ tag, so a consuming playbook can filter to a single tool:
 | neovim (+ LazyVim bootstrap) | `neovim`, `cli_dev_env` |
 | presenterm.nvim plugin config | `presenterm`, `cli_dev_env` |
 | Claude Code CLI (+ NodeSource Node.js) | `claude-code`, `cli_dev_env` |
+| Kiro CLI (install + settings + aliases) | `kiro`, `cli_dev_env` |
 
 **Do not** put an outer `tags:` on the role invocation in your play — that
 tag cascades to every task in the role and defeats this per-tool filtering.
@@ -320,3 +341,78 @@ version or manual edit may have left one there.
 Both JSON-writing tasks run **without `become`** (as the invoking user, not
 root) since they write into `$HOME` — same posture as the neovim/LazyVim
 config tasks above.
+
+## Kiro CLI
+
+Installs the [Kiro CLI](https://kiro.dev/cli/) (`kiro-cli`) for the target
+user and sets its default behaviour: the **v3 agent engine**, **tool
+auto-search**, and **autonomous mode** (trust-all-tools) wired into a short
+`ki` shell alias. Also deploys a zsh `conf.d` snippet with `ki` (autonomous
+chat) and `kil` (login) aliases.
+
+**Authentication (`kiro-cli login`, aliased to `kil`) is interactive and is
+left to the user** — this role installs and configures the CLI; it does not
+log in.
+
+### What it does
+
+- Installs `kiro-cli` into the user's `~/.local/bin` via the official install
+  script (`https://cli.kiro.dev/install --force`), but only when the binary is
+  not already present, then re-checks that the binary exists.
+- When the binary is already present, optionally runs `kiro-cli update
+  --non-interactive` to converge to the latest release
+  (`cli_dev_env_kiro_update`, default `true`).
+- Persists three global settings via `kiro-cli settings`, each read as JSON
+  first and written only when the current value differs (idempotent):
+  - `chat.agentEngine = v3` — the v3 CLI agent engine.
+  - `toolSearch.enabled = true` — tool auto-search.
+  - `chat.disableTrustAllConfirmation = true` — so the autonomous `ki` alias
+    starts without a per-launch confirmation prompt.
+- Deploys `~/.config/zsh/conf.d/kiro.zsh` with:
+  - `ki`  → `kiro-cli chat --trust-all-tools` (autonomous mode)
+  - `kil` → `kiro-cli login`
+
+### Autonomous mode is an alias, not a setting
+
+kiro-cli has no persistent "autonomous mode" setting. Autonomy is the
+`--trust-all-tools` chat flag, which lets the agent run tools without asking
+for confirmation. This role therefore makes autonomous mode the default by
+baking the flag into the `ki` alias, and sets the global
+`chat.disableTrustAllConfirmation` so the alias runs without an extra prompt.
+Launch kiro-cli without the alias (`kiro-cli chat`) for an interactive,
+confirm-each-tool session.
+
+### kiro-cli is installed via the official script (unpinned)
+
+`kiro-cli` is a self-updating single binary distributed only through the
+official install script. Upstream publishes no versioned, individually
+downloadable release asset, so there is nothing to exact-pin and
+checksum-verify the way the binary installs in `clipboard_tools` or `base`
+do. The install URL is therefore an **unpinned remote source** — a deliberate
+departure from this collection's "pin everything, Renovate tracks it"
+convention, documented here like the
+[apt-unpinned deviation](../../README.md#apt-package-versions-are-unpinned):
+
+- The role only runs the installer when the binary is absent, so the unpinned
+  fetch happens once per machine rather than on every run.
+- Keeping the binary current afterwards is delegated to `kiro-cli update`
+  (the tool's own supported mechanism), exposed through `cli_dev_env_kiro_update`.
+- There is no Renovate manager for this version, by design: the binary tracks
+  its own releases.
+
+### Notes
+
+- All kiro-cli tasks run as the target user (`become: false`): `kiro-cli` is a
+  per-user binary in `~/.local/bin`, its settings live in the user's data
+  directory, and the alias snippet is written under the user's home. The
+  binary is always invoked by its full path (`cli_dev_env_kiro_bin`), because
+  `~/.local/bin` is not guaranteed to be on `$PATH` for a non-interactive
+  Ansible run.
+- Install is detected with `ansible.builtin.stat` on `cli_dev_env_kiro_bin`
+  (not `command -v`, which cannot work through the `command` module), and the
+  binary is re-checked after the install step.
+- The settings tasks read each value as JSON first and write only on a
+  difference, so re-running the role reports no change once converged.
+- Under `ansible-playbook --check` the install, update, and settings tasks are
+  skipped (`not ansible_check_mode`), because they depend on the downloaded
+  installer and a working binary; the alias-snippet deployment still runs.
