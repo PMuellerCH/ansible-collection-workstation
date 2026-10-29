@@ -58,7 +58,7 @@ modern_cli_emoji_fzf_version: "0.12.0"
 # code_quality_tools_pipx_min_version; modern_cli bootstraps its own pipx
 # since it cannot assume another role already upgraded it (role independence).
 # renovate: datasource=pypi depName=pipx
-modern_cli_pipx_min_version: "1.18.7"
+modern_cli_pipx_min_version: "1.18.8"
 
 # Pinned commit of catppuccin/delta (no releases/tags published — theme is
 # fetched from an immutable ref, not the mutable "main" branch).
