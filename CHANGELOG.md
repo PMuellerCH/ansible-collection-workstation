@@ -1,5 +1,26 @@
 # Changelog
 
+## [2.0.0](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/1.3.0...2.0.0) (2026-10-29)
+
+
+### ⚠ BREAKING CHANGES
+
+* **cli_dev_env:** the swisstopo.workstation.kiro_cli role is removed. Use swisstopo.workstation.cli_dev_env instead. All kiro_cli_* variables are renamed to cli_dev_env_kiro_* (kiro_cli_enabled -> cli_dev_env_kiro_enabled, kiro_cli_bin -> cli_dev_env_kiro_bin, kiro_cli_alias_chat -> cli_dev_env_kiro_alias_chat, and so on). The --tags kiro_cli selector is replaced by --tags kiro. The deployed snippet kiro_cli.zsh is replaced by kiro.zsh (the old file is removed automatically on the next apply). cli_dev_env now installs and configures the Kiro CLI by default (cli_dev_env_kiro_enabled defaults to true), which fetches cli.kiro.dev and installs the kiro-cli binary; set cli_dev_env_kiro_enabled: false to opt out.
+
+### Features
+
+* **cli_dev_env:** merge kiro_cli role into cli_dev_env ([#277](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/277)) ([9c55401](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/9c55401024527e99b894b17b3f27c6677800d3d0))
+
+
+### Bug Fixes
+
+* relax changelog markdownlint for release-please breaking-change footers ([#278](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/278)) ([147a786](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/147a786ed155a5378db232d9eec16c84974fb36e))
+
+
+### Miscellaneous
+
+* **deps:** update dependency pipx to v1.18.9 ([#275](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/275)) ([7743cf0](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/7743cf026a02bc2ed104216323c1a3a65c70e054))
+
 ## [1.3.0](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/1.2.3...1.3.0) (2026-10-29)
 
 
