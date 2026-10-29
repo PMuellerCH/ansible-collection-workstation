@@ -1,5 +1,35 @@
 # Changelog
 
+## [1.3.0](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/1.2.3...1.3.0) (2026-10-29)
+
+
+### Features
+
+* add kiro_cli role for Kiro CLI install and autonomous defaults ([#269](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/269)) ([abf46e3](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/abf46e390632e3811d60c78c57d96fc00891f585))
+
+
+### Bug Fixes
+
+* provide curl and unzip for kiro_cli molecule scenario ([#270](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/270)) ([546159f](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/546159f6a5ff847b3a8c8069ff19ffbb221bff31))
+* skip helm archive download in check mode ([#267](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/267)) ([e006513](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/e0065133e5cedc65a518a7786b03047cee3be940))
+
+
+### Miscellaneous
+
+* **deps:** update dependency @anthropic-ai/claude-code to v2.1.312 ([#258](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/258)) ([e9bb162](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/e9bb162af8e9871016e9878c96f58f3e58433977))
+* **deps:** update dependency aws/aws-cli to v2.39.0 ([#261](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/261)) ([0d44c73](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/0d44c7323e6106771676b6343dab4592a6b826a2))
+* **deps:** update dependency aws/aws-cli to v2.39.1 ([#272](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/272)) ([5826479](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/58264793a98fd16f6a530b9e7926cde943479f55))
+* **deps:** update dependency checkov to v3.4.0 ([#273](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/273)) ([9f32d9a](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/9f32d9a714705c87839417fa767ee3dfb1022267))
+* **deps:** update dependency kubernetes/kubernetes to v1.37.2 ([#263](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/263)) ([2dd352f](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/2dd352fdc14bd82a7208348a2eaac1d8005fc69b))
+* **deps:** update dependency nektos/act to v0.2.91 ([#268](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/268)) ([1a4b6b9](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/1a4b6b932b6cd2e2898657812dc41b4325ee6cf9))
+* **deps:** update dependency nektos/act to v0.2.92 ([#271](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/271)) ([67f4061](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/67f40616c1cf7cffc2a418631aff7c3a5e3d3951))
+* **deps:** update dependency pipx to v1.18.5 ([#259](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/259)) ([c94e1cd](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/c94e1cdef0612468fa2c0d6b07f96a5d7aec5194))
+* **deps:** update dependency pipx to v1.18.7 ([#264](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/264)) ([1ac2888](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/1ac2888d7d2600a5efbabb837ac73c0dfb2df2b4))
+* **deps:** update dependency pipx to v1.18.8 ([#274](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/274)) ([2381102](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/2381102fcc28f4a85e741698a81913f3410f1050))
+* **deps:** update pre-commit hook compilerla/conventional-pre-commit to v4 ([#265](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/265)) ([a22c52f](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/a22c52f094c1bdabd5b50d9f9787cbfd9359a3d2))
+* **deps:** update pre-commit hook davidanson/markdownlint-cli2 to v0.24.0 ([#262](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/262)) ([baafc3c](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/baafc3c28698fcc8e7ce24557e7c0ce587b222f9))
+* **deps:** update pre-commit hook pre-commit/pre-commit-hooks to v6 ([#266](https://github.com/swisstopo/infra-ansible-collection-workstation/issues/266)) ([a1cf2db](https://github.com/swisstopo/infra-ansible-collection-workstation/commit/a1cf2db18335b77c30ce63e1b96004c46ef18f48))
+
 ## [1.2.3](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/1.2.2...1.2.3) (2026-10-27)
 
 
