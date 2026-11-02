@@ -147,7 +147,10 @@
     url: https://download.docker.com/linux/ubuntu/gpg
     dest: /usr/share/keyrings/docker.asc
     mode: "0644"
-    force: false
+    # force: true so a rotated upstream signing key is re-fetched. With
+    # force: false get_url skips the download whenever dest exists, leaving a
+    # stale key that fails apt signature verification after upstream rotates.
+    force: true
   become: true
   when: iac_tools_docker_enabled
   tags: [docker, iac_tools]
@@ -478,6 +481,10 @@
     url: https://apt.releases.hashicorp.com/gpg
     dest: /usr/share/keyrings/hashicorp-archive-keyring.asc
     mode: "0644"
+    # force: true so a rotated upstream signing key is re-fetched. With
+    # force: false get_url skips the download whenever dest exists, leaving a
+    # stale key that fails apt signature verification after upstream rotates.
+    force: true
   become: true
   when: iac_tools_terraform_enabled
   tags: [terraform, iac_tools]
