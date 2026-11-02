@@ -48,7 +48,7 @@ modern_cli_presenterm_download_base: "https://github.com/mfontanini/presenterm/r
 modern_cli_presenterm_archive: "presenterm-{{ modern_cli_presenterm_version }}-x86_64-unknown-linux-gnu.tar.gz"
 
 # renovate: datasource=npm depName=@mermaid-js/mermaid-cli
-modern_cli_presenterm_mermaid_cli_version: "12.0.0"
+modern_cli_presenterm_mermaid_cli_version: "12.2.0"
 
 # renovate: datasource=pypi depName=emoji-fzf
 modern_cli_emoji_fzf_version: "0.12.0"
