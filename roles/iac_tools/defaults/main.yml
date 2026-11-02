@@ -36,7 +36,7 @@ iac_tools_hvac_version: "2.4.0"
 
 # ── act ──────────────────────────────────────────────────────────────────
 # renovate: datasource=github-releases depName=nektos/act extractVersion=^v(?<version>.*)$
-iac_tools_act_version: "0.2.92"
+iac_tools_act_version: "0.2.94"
 iac_tools_act_download_base: "https://github.com/nektos/act/releases/download/v{{ iac_tools_act_version }}"
 
 # ── aws ──────────────────────────────────────────────────────────────────
