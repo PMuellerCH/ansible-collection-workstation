@@ -71,7 +71,7 @@ modern_cli_procs_version: "0.14.12"
 # run time from GitHub's per-asset digest (see tasks/main.yml).
 
 # renovate: datasource=github-releases depName=bootandy/dust extractVersion=^v(?<version>.*)$
-modern_cli_dust_version: "1.2.6"
+modern_cli_dust_version: "1.2.7"
 # bootandy/dust publishes no checksum file; the .deb checksum is derived at run
 # time from GitHub's per-asset digest (see tasks/main.yml), so there is no static
 # checksum to keep in sync when Renovate bumps the version.
