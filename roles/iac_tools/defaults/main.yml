@@ -19,7 +19,7 @@ iac_tools_vault_addr: ""
 # 24.04's apt-provided pipx is only 1.4.3. See README "pipx bootstrap"
 # section (same pattern as the code_quality_tools role).
 # renovate: datasource=pypi depName=pipx
-iac_tools_pipx_min_version: "1.18.10"
+iac_tools_pipx_min_version: "1.18.11"
 
 # ── ansible ──────────────────────────────────────────────────────────────
 # renovate: datasource=pypi depName=ansible-core
