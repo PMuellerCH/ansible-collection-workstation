@@ -30,7 +30,7 @@ base_ssh_extra_hosts: []
 
 # ---- python ----
 # renovate: datasource=github-releases depName=astral-sh/uv extractVersion=^(?<version>.*)$
-base_python_uv_version: "0.13.6"
+base_python_uv_version: "0.13.7"
 
 # ---- fonts ----
 # renovate: datasource=github-releases depName=ryanoasis/nerd-fonts extractVersion=^v(?<version>.*)$
