@@ -27,7 +27,7 @@ iac_tools_ansible_core_version: "2.22.0"
 # renovate: datasource=pypi depName=molecule
 iac_tools_ansible_molecule_version: "26.10.0"
 # renovate: datasource=pypi depName=molecule-plugins
-iac_tools_ansible_molecule_plugins_version: "26.10.12"
+iac_tools_ansible_molecule_plugins_version: "26.11.0"
 # renovate: datasource=pypi depName=hvac
 # Shared with kubernetes_tools's Pop!_OS pipx-inject branch below — both
 # inject hvac into the same ansible-core venv, so a single pinned version
