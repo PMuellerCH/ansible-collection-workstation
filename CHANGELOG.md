@@ -1,5 +1,38 @@
 # Changelog
 
+## [1.0.2](https://github.com/PMuellerCH/ansible-collection-workstation/compare/1.0.1...1.0.2) (2026-11-13)
+
+
+### Miscellaneous
+
+* **deps:** update dependency ansible-core to v2.21.5 ([#98](https://github.com/PMuellerCH/ansible-collection-workstation/issues/98)) ([5fb3b2d](https://github.com/PMuellerCH/ansible-collection-workstation/commit/5fb3b2d9473fa99af0a3936480dace0a24a931d5))
+* **deps:** update dependency ansible-core to v2.22.0 ([#120](https://github.com/PMuellerCH/ansible-collection-workstation/issues/120)) ([bcb0c39](https://github.com/PMuellerCH/ansible-collection-workstation/commit/bcb0c39bd26a7c54bb826395e58c2fedfbef1b07))
+* **deps:** update dependency ansible-lint to v26.10.0 ([#105](https://github.com/PMuellerCH/ansible-collection-workstation/issues/105)) ([63ec4f5](https://github.com/PMuellerCH/ansible-collection-workstation/commit/63ec4f53f56c8592c7b554c05dd51a605f385feb))
+* **deps:** update dependency ansible-lint to v26.10.1 ([#108](https://github.com/PMuellerCH/ansible-collection-workstation/issues/108)) ([84b4083](https://github.com/PMuellerCH/ansible-collection-workstation/commit/84b4083c10fcdc50cbf92212b74372202f704abf))
+* **deps:** update dependency ansible-lint to v26.11.0 ([#121](https://github.com/PMuellerCH/ansible-collection-workstation/issues/121)) ([f99623e](https://github.com/PMuellerCH/ansible-collection-workstation/commit/f99623e9385f0e5ca7efb543eadd12ccbcd287d7))
+* **deps:** update dependency bitwarden/clients to v2026.10.0 ([#110](https://github.com/PMuellerCH/ansible-collection-workstation/issues/110)) ([d08a6a2](https://github.com/PMuellerCH/ansible-collection-workstation/commit/d08a6a27078327c66e20a1f48318cfd9b9d7281e))
+* **deps:** update dependency bitwarden/clients to v2026.10.1 ([#112](https://github.com/PMuellerCH/ansible-collection-workstation/issues/112)) ([9f03d0d](https://github.com/PMuellerCH/ansible-collection-workstation/commit/9f03d0d1c4e819905e9c5b46585920e93a0a4251))
+* **deps:** update dependency bitwarden/clients to v2026.10.2 ([#115](https://github.com/PMuellerCH/ansible-collection-workstation/issues/115)) ([916c6b8](https://github.com/PMuellerCH/ansible-collection-workstation/commit/916c6b8828b933364f12f79a5e3dbfb0418f91ec))
+* **deps:** update dependency bitwarden/clients to v2026.10.3 ([#119](https://github.com/PMuellerCH/ansible-collection-workstation/issues/119)) ([6bdd470](https://github.com/PMuellerCH/ansible-collection-workstation/commit/6bdd470da342cbba322b3e80671190f6fa0cc269))
+* **deps:** update dependency bitwarden/clients to v2026.10.4 ([#123](https://github.com/PMuellerCH/ansible-collection-workstation/issues/123)) ([4e5d108](https://github.com/PMuellerCH/ansible-collection-workstation/commit/4e5d108ea1155f169af9f52d990055bcd1bd39e3))
+* **deps:** update dependency checkov to v3.3.24 ([#99](https://github.com/PMuellerCH/ansible-collection-workstation/issues/99)) ([e3558ca](https://github.com/PMuellerCH/ansible-collection-workstation/commit/e3558ca3b6438b6a605d43b7cb21d39af9610a87))
+* **deps:** update dependency checkov to v3.3.25 ([#101](https://github.com/PMuellerCH/ansible-collection-workstation/issues/101)) ([80640e9](https://github.com/PMuellerCH/ansible-collection-workstation/commit/80640e9713818d9b0fdaf1fe4fe548d502829ac4))
+* **deps:** update dependency checkov to v3.3.26 ([#102](https://github.com/PMuellerCH/ansible-collection-workstation/issues/102)) ([e4317df](https://github.com/PMuellerCH/ansible-collection-workstation/commit/e4317df8c5ca74d020d4fbe780e6a30c6b90e04f))
+* **deps:** update dependency checkov to v3.3.27 ([#103](https://github.com/PMuellerCH/ansible-collection-workstation/issues/103)) ([a5b8795](https://github.com/PMuellerCH/ansible-collection-workstation/commit/a5b8795d2e66ee392db1080f2af7197d8756b165))
+* **deps:** update dependency checkov to v3.3.28 ([#104](https://github.com/PMuellerCH/ansible-collection-workstation/issues/104)) ([3857b4d](https://github.com/PMuellerCH/ansible-collection-workstation/commit/3857b4da76a3dbac15e1539b2dcba209b8f4d81e))
+* **deps:** update dependency checkov to v3.3.29 ([#109](https://github.com/PMuellerCH/ansible-collection-workstation/issues/109)) ([0f1c746](https://github.com/PMuellerCH/ansible-collection-workstation/commit/0f1c746c6f0b84507c2d3ed8af83a429676165d6))
+* **deps:** update dependency checkov to v3.3.30 ([#111](https://github.com/PMuellerCH/ansible-collection-workstation/issues/111)) ([79f19a7](https://github.com/PMuellerCH/ansible-collection-workstation/commit/79f19a72f9f9cb677bd922412a11733878160b81))
+* **deps:** update dependency checkov to v3.4.0 ([#114](https://github.com/PMuellerCH/ansible-collection-workstation/issues/114)) ([0142a90](https://github.com/PMuellerCH/ansible-collection-workstation/commit/0142a905350ed9bacf072467bdcaab1fbe94c0ff))
+* **deps:** update dependency checkov to v3.4.3 ([#118](https://github.com/PMuellerCH/ansible-collection-workstation/issues/118)) ([e442f27](https://github.com/PMuellerCH/ansible-collection-workstation/commit/e442f2741d718599060b91baea22e4b723922a61))
+* **deps:** update dependency checkov to v3.4.5 ([#125](https://github.com/PMuellerCH/ansible-collection-workstation/issues/125)) ([a7a2c00](https://github.com/PMuellerCH/ansible-collection-workstation/commit/a7a2c002002b323358b596ac1de44bb366216a4b))
+* **deps:** update dependency hrkfdn/ncspot to v1.5.1 ([#124](https://github.com/PMuellerCH/ansible-collection-workstation/issues/124)) ([97a5329](https://github.com/PMuellerCH/ansible-collection-workstation/commit/97a532972271bad235ffa3e8b6f508b8b77be997))
+* **deps:** update dependency molecule to v26.10.0 ([#106](https://github.com/PMuellerCH/ansible-collection-workstation/issues/106)) ([ff7a8da](https://github.com/PMuellerCH/ansible-collection-workstation/commit/ff7a8daff8cd1565bf992c1325244f6c905a5ed5))
+* **deps:** update dependency molecule to v26.11.0 ([#122](https://github.com/PMuellerCH/ansible-collection-workstation/issues/122)) ([9f82df8](https://github.com/PMuellerCH/ansible-collection-workstation/commit/9f82df829cc2c676d567c4435134740c0623aa78))
+* **deps:** update dependency molecule-plugins to v26.10.12 ([#107](https://github.com/PMuellerCH/ansible-collection-workstation/issues/107)) ([4a553b4](https://github.com/PMuellerCH/ansible-collection-workstation/commit/4a553b47c9886c16042876bbb0281c16b7bc20bb))
+* **deps:** update dependency molecule-plugins to v26.11.0 ([#117](https://github.com/PMuellerCH/ansible-collection-workstation/issues/117)) ([c0b2248](https://github.com/PMuellerCH/ansible-collection-workstation/commit/c0b224804643190a25b48aded7a0250d3589dc8d))
+* **deps:** update pre-commit hook compilerla/conventional-pre-commit to v4.5.0 ([#116](https://github.com/PMuellerCH/ansible-collection-workstation/issues/116)) ([8ff5a8f](https://github.com/PMuellerCH/ansible-collection-workstation/commit/8ff5a8fbe23ad4b573b46ea17179555f4d9f0e4f))
+* **deps:** update pre-commit hook igorshubovych/markdownlint-cli to v0.50.0 ([#113](https://github.com/PMuellerCH/ansible-collection-workstation/issues/113)) ([e08991a](https://github.com/PMuellerCH/ansible-collection-workstation/commit/e08991a6dcca3e21d1786b300dff0f3f1d2373d9))
+
 ## [1.0.1](https://github.com/PMuellerCH/ansible-collection-workstation/compare/1.0.0...1.0.1) (2026-10-05)
 
 
