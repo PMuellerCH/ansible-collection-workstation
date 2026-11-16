@@ -1,20 +1,52 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "github>swisstopo/infra-github-shared-actions//renovate/ansible"
-  ],
+  "extends": ["config:recommended", ":enablePreCommit"],
+  "labels": ["dependencies"],
+  "pip_requirements": {
+    "managerFilePatterns": [
+      "/^requirements[\\w-]*\\.txt$/",
+      "/^\\.github/requirements[\\w-]*\\.txt$/"
+    ]
+  },
+  "platformAutomerge": false,
   "prConcurrentLimit": 5,
   "packageRules": [
     {
       "matchPackageNames": ["ansible-core"],
       "allowedVersions": "!/2\\.21\\.0/",
       "description": "Skip 2.21.0 — VariableLayer circular import bug breaks playbook execution; propose 2.21.1+ when available"
+    },
+    {
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "automerge": true,
+      "automergeStrategy": "squash",
+      "description": "Auto-merge non-major updates (bug fixes, backwards-compatible features, pins, digests) once CI passes. Major/breaking updates always stay on manual review."
     }
   ],
   "customManagers": [
     {
       "customType": "regex",
-      "description": "Update Ansible Galaxy collection versions in per-role files/requirements.yml (not covered by the shared preset's top-level requirements manager)",
+      "description": "Update versions pinned in Ansible role defaults via inline renovate comments",
+      "managerFilePatterns": [
+        "/^roles/.+/defaults/main\\.yml$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>[^\\s]+)( registryUrl=(?<registryUrl>[^\\s]+))?( extractVersion=(?<extractVersion>[^\\s]+))?\\n[a-z_]+: \"(?<currentValue>[^\"]+)\""
+      ]
+    },
+    {
+      "customType": "regex",
+      "description": "Update Ansible Galaxy collection versions in requirements.yml and requirements-molecule.yml",
+      "managerFilePatterns": [
+        "/^requirements(-molecule)?\\.yml$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>[^\\s]+)\\n  - name: [^\\n]+\\n    version: \"(?<currentValue>[^\"]+)\""
+      ]
+    },
+    {
+      "customType": "regex",
+      "description": "Update Ansible Galaxy collection versions in per-role files/requirements.yml (not covered by the managers above)",
       "managerFilePatterns": [
         "/^roles/.+/files/requirements\\.yml$/"
       ],

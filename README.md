@@ -1,6 +1,6 @@
 # infra-ansible-collection-workstation
 
-[![CI](https://github.com/swisstopo/infra-ansible-collection-workstation/actions/workflows/ci.yml/badge.svg)](https://github.com/swisstopo/infra-ansible-collection-workstation/actions/workflows/ci.yml)
+[![CI](https://github.com/PMuellerCH/infra-ansible-collection-workstation/actions/workflows/ci.yml/badge.svg)](https://github.com/PMuellerCH/infra-ansible-collection-workstation/actions/workflows/ci.yml)
 
 An Ansible Collection (`swisstopo.workstation`) for provisioning and maintaining
 IaC developer workstations running Ubuntu 24.04 with the COSMIC or GNOME desktop
@@ -50,7 +50,7 @@ below does not match it):
 ```yaml
 # requirements.yml
 collections:
-  - name: https://github.com/swisstopo/infra-ansible-collection-workstation.git
+  - name: https://github.com/PMuellerCH/infra-ansible-collection-workstation.git
     type: git
     version: "2.0.0"  # pin to a released tag >= the Kiro merge
 ```
@@ -243,29 +243,35 @@ bumps.
 
 ## Continuous Integration
 
-Lint (`ci.yml`), Molecule (`molecule.yml`), and release (`release-please.yml`) all run
-as thin wrappers around reusable workflows in
-[infra-github-shared-actions](https://github.com/swisstopo/infra-github-shared-actions),
-so tooling versions and behavior stay in sync with the other Ansible collections
-(e.g. `infra-ansible-collection-postgres`). Release-please authenticates as a GitHub
-App (org secrets `RELEASE_BOT_APP_ID` / `RELEASE_BOT_PRIVATE_KEY`) so release PRs are
-not blocked by the org policy on `github-actions[bot]`.
+Lint (`ci.yml`) and Molecule (`molecule.yml`) run as thin wrappers around reusable
+workflows in
+[PMuellerCH/shared-actions](https://github.com/PMuellerCH/shared-actions), pinned to
+`@v1` (`ansible_lint.yml` and `ansible_molecule.yml`), both called with
+`python-version: 3.14` and `install-self-collection: true`. Release
+(`release-please.yml`) runs
+[googleapis/release-please-action](https://github.com/googleapis/release-please-action)
+directly — no shared workflow and no GitHub App secrets — with `contents: write` and
+`pull-requests: write` permissions.
+
+`ci.yml` runs the lint job on every `pull_request` to `main` (it no longer runs on push)
+with read-only `contents` permission.
 
 Molecule auto-discovers every role with a `roles/<name>/molecule/default/` scenario and
 runs it as a matrix job, but only on the release-please PR, a Renovate PR, or manual
 `workflow_dispatch` — not on every ordinary feature PR, since a full matrix run is too
 slow to gate routine iteration (those get fast lint-only feedback from `ci.yml` instead).
+A Renovate PR tests only the role(s) whose own files changed; a change to a shared file
+(`requirements-molecule.yml`, `galaxy.yml`) runs the full matrix.
 
-Renovate automerges non-major updates (minor, patch, digest, pin) once CI is green;
-major bumps stay on manual review. The config and the automerge policy come from the
-shared `renovate/ansible` preset in `infra-github-shared-actions`, which this repo's
-`renovate.json` extends rather than duplicating. That preset sets `platformAutomerge:
-true`, so Renovate enables GitHub's native auto-merge on each eligible PR; the
-`auto-merge` job in `molecule.yml` (the shared `ansible_renovate_auto_merge.yml`
-reusable workflow) then supplies the single approval the default-branch ruleset requires,
-but only after lint and Molecule on the PR head have passed. Without that approval job the
-PRs would wait for a manual review. This repo keeps `prConcurrentLimit` at 5 to keep the
-Molecule matrix load manageable, and pins `ansible-core` away from the broken 2.21.0. A
-repo-local regex manager also covers `roles/*/files/requirements.yml`, which the shared
-preset's top-level requirements manager does not match. If PRs stop automerging, check
-that lint and Molecule are green on the PR head and that the `auto-merge` job approved it.
+Renovate is self-contained in this repo's `renovate.json` — it no longer extends a shared
+preset. It extends `config:recommended` and `:enablePreCommit`, defines its own
+`pip_requirements` manager (covering root and `.github/` requirements files), pins
+`ansible-core` away from the broken 2.21.0, and carries three custom regex managers for
+version strings the recommended config does not see: role `defaults/main.yml`, the root
+`requirements.yml` / `requirements-molecule.yml`, and per-role `files/requirements.yml`.
+
+Automerge is driven entirely by `renovate.json`, not by a shared approval workflow. The
+config sets `platformAutomerge: false` and a package rule that marks minor, patch, pin and
+digest updates `automerge: true` with `automergeStrategy: squash`, so Renovate merges them
+itself (squashed) once CI passes; major and breaking updates always stay on manual review.
+If a Renovate PR stops merging, check that lint and Molecule are green on the PR head.

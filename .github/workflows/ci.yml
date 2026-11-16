@@ -2,11 +2,20 @@
 name: CI
 
 "on":
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   lint:
-    uses: swisstopo/infra-github-shared-actions/.github/workflows/ansible_lint.yml@main
+    uses: PMuellerCH/shared-actions/.github/workflows/ansible_lint.yml@v1
+    with:
+      python-version: "3.14"
+      install-self-collection: "true"
+      # This repo uses split markdownlint configs (there is no .markdownlint.yml,
+      # which is the shared workflow's default); pass both explicitly, matching
+      # .pre-commit-config.yaml.
+      markdownlint-standard-config: ".markdownlint-standard.yml"
+      markdownlint-changelog-config: ".markdownlint-changelog.yml"

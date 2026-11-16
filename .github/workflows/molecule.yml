@@ -10,8 +10,8 @@ name: Molecule
 # from ci.yml instead.
 #
 # For Renovate PRs specifically, only test the role(s) whose own files actually
-# changed (not the full role matrix) — a Renovate PR only ever touches one
-# role's defaults/main.yml (or occasionally a shared file). README.md and meta/
+# changed (not the full matrix) — a Renovate PR only ever touches one role's
+# defaults/main.yml (or occasionally a shared file). README.md and meta/
 # changes within a role don't count either: every role here has an empty
 # dependencies: [] (galaxy_info is purely descriptive), so neither affects
 # runtime behavior molecule would catch. A change to a shared file
@@ -23,7 +23,7 @@ name: Molecule
 # (ansible-core, molecule, molecule-plugins) and lint-only ones (ansible-lint,
 # yamllint, checkov) that molecule never touches. A path-only filter can't tell
 # those apart, so a checkov-only bump would otherwise trigger a pointless
-# full-matrix run — confirmed live on PR #103.
+# full-matrix run.
 #
 # Release-please and workflow_dispatch always run the full suite regardless:
 # release-please's own diff is just CHANGELOG.md/version bumps, but it's the
@@ -50,17 +50,18 @@ jobs:
       # local git instead of the GitHub REST API. The API path needs
       # pull-requests: read, which GitHub silently downgrades to read-only
       # regardless of declared permissions when the PR modifies a workflow file
-      # itself (a real case here: Renovate bumping this action's own pin) —
-      # confirmed via a live "Resource not accessible by integration" failure.
+      # itself (a real case here: Renovate bumping this action's own pin).
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
-      - name: List all roles
+      # Only roles with a molecule/default scenario are testable; the others
+      # would fail on a missing molecule.yml.
+      - name: List roles with a molecule scenario
         id: list-roles
         shell: bash
         run: |
-          all=$(for d in roles/*/; do basename "$d"; done | sort | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          all=$(for d in roles/*/; do [ -f "$d/molecule/default/molecule.yml" ] && basename "$d"; done | sort | jq -R -s -c 'split("\n") | map(select(length > 0))')
           echo "all=$all" >> "$GITHUB_OUTPUT"
 
       - name: Generate per-role and shared path filters
@@ -117,7 +118,8 @@ jobs:
             echo "A shared file changed — testing every role."
             echo "roles=$ALL_ROLES" >> "$GITHUB_OUTPUT"
           else
-            roles=$(echo "$CHANGED_ROLES" | jq -c '[.[] | select(. != "shared")]')
+            roles=$(jq -c -n --argjson changed "$CHANGED_ROLES" --argjson all "$ALL_ROLES" \
+              '[$changed[] | select(. as $r | $all | index([$r]) != null)]')
             echo "Role-specific changes detected: $roles"
             echo "roles=$roles" >> "$GITHUB_OUTPUT"
           fi
@@ -135,23 +137,8 @@ jobs:
         github.event_name == 'workflow_dispatch' ||
         (startsWith(github.head_ref, 'renovate/') && needs.changes.outputs.roles != '[]')
       )
-    uses: swisstopo/infra-github-shared-actions/.github/workflows/ansible_molecule.yml@main
+    uses: PMuellerCH/shared-actions/.github/workflows/ansible_molecule.yml@v1
     with:
+      python-version: "3.14"
+      install-self-collection: "true"
       roles: ${{ startsWith(github.head_ref, 'renovate/') && needs.changes.outputs.roles || '' }}
-
-  auto-merge:
-    needs: [molecule]
-    # always() so this still runs when the molecule job was skipped — a Renovate
-    # PR that touches no role (needs.changes.outputs.roles == '[]') skips molecule
-    # but should still auto-merge once lint passes. The shared workflow only
-    # approves non-major Renovate PRs (auto-merge request present) after every
-    # check on the head commit has succeeded; a skipped molecule check does not
-    # block it. Non-Renovate PRs are excluded by the login check.
-    if: |
-      always() &&
-      github.event_name == 'pull_request' &&
-      github.event.pull_request.user.login == 'renovate[bot]'
-    permissions:
-      pull-requests: write
-      checks: read
-    uses: swisstopo/infra-github-shared-actions/.github/workflows/ansible_renovate_auto_merge.yml@main
