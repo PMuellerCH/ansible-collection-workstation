@@ -272,7 +272,9 @@ A Renovate PR tests only the role(s) whose own files changed; a change to a shar
 Renovate is self-contained in this repo's `renovate.json` — it no longer extends a shared
 preset. It extends `config:recommended` and `:enablePreCommit`, defines its own
 `pip_requirements` manager (covering root and `.github/` requirements files), pins
-`ansible-core` away from the broken 2.21.0, and carries three custom regex managers for
+`ansible-core` to the 2.21.x line (2.22+ needs Python 3.13, but the target Ubuntu 24.04
+ships Python 3.12) while still skipping the broken 2.21.0, and carries three custom regex
+managers for
 version strings the recommended config does not see: role `defaults/main.yml`, the root
 `requirements.yml` / `requirements-molecule.yml`, and per-role `files/requirements.yml`.
 

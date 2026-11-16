@@ -13,6 +13,11 @@
   "packageRules": [
     {
       "matchPackageNames": ["ansible-core"],
+      "allowedVersions": "<2.22.0",
+      "description": "Pin ansible-core below 2.22: 2.22+ requires Python >= 3.13, but the target Ubuntu 24.04 ships Python 3.12 (pipx installs ansible-core/ansible-lint against it). Keep to the 2.21.x line, the last with Python 3.12 support."
+    },
+    {
+      "matchPackageNames": ["ansible-core"],
       "allowedVersions": "!/2\\.21\\.0/",
       "description": "Skip 2.21.0 — VariableLayer circular import bug breaks playbook execution; propose 2.21.1+ when available"
     },
