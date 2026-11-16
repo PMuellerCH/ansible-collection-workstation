@@ -17,7 +17,7 @@ already in place.
 | Role | What it installs |
 | --- | --- |
 | [base](roles/base/README.md) | Base system packages, hostname, locale, corporate proxy, git, SSH, Python toolchain, fonts — run first |
-| [cli_dev_env](roles/cli_dev_env/README.md) | lazygit, neovim (LazyVim), Claude Code CLI, Kiro CLI |
+| [cli_dev_env](roles/cli_dev_env/README.md) | lazygit, neovim (LazyVim), Claude Code CLI, Kiro CLI, OpenCode |
 | [chat_clients](roles/chat_clients/README.md) | Slack, Microsoft Teams |
 | [clipboard_tools](roles/clipboard_tools/README.md) | Wayland clipboard tooling: wl-clipboard, cliphist, clipse |
 | [code_quality_tools](roles/code_quality_tools/README.md) | trivy, pre-commit, detect-secrets, yamllint, checkov, ansible-lint |
@@ -99,8 +99,8 @@ fresh proxied machine:
     - role: swisstopo.workstation.base
     # 2. terminal shell + multiplexer + terminal emulator.
     - role: swisstopo.workstation.terminal_env
-    # 3. CLI dev environment: lazygit, neovim/LazyVim, Claude Code, Kiro CLI.
-    #    Runs before modern_cli so its NodeSource Node.js wins on PATH.
+    # 3. CLI dev environment: lazygit, neovim/LazyVim, Claude Code, Kiro CLI,
+    #    OpenCode. Runs before modern_cli so its NodeSource Node.js wins on PATH.
     - role: swisstopo.workstation.cli_dev_env
     # 4. modern CLI replacements (bat, eza, fd, fzf, ripgrep, zoxide, ...).
     - role: swisstopo.workstation.modern_cli
@@ -132,14 +132,16 @@ Notes:
   `--tags neovim`).
 - After the run, open a new shell (so `~/.config/zsh/conf.d/*.zsh` is sourced),
   then authenticate the interactive tools yourself: `claude login` (Claude
-  Code) and `kil` / `kiro-cli login` (Kiro CLI).
+  Code), `kil` / `kiro-cli login` (Kiro CLI), and the `opencode` login plus a
+  `MISTRAL_API_KEY` in your environment (OpenCode).
 
 ## Shell aliases
 
 Several roles deploy zsh snippets to `~/.config/zsh/conf.d/*.zsh`. They take
 effect only in an interactive zsh that sources that directory —
 `terminal_env`'s `.zshrc` does this. Most `modern_cli` and `clipboard_tools`
-entries, and the `cli_dev_env` Kiro aliases (`ki`/`kil`), are additionally
+entries, and the `cli_dev_env` Kiro (`ki`/`kil`) and OpenCode (`oc`/`ocr`)
+aliases, are additionally
 guarded by a `command -v` check so they are defined only when the tool is
 actually installed; the `cli_dev_env` `vi`/`vim` and the `iac_tools` entries
 are plain aliases gated only by the role variable in the last column.
@@ -176,6 +178,8 @@ Items written as `name()` are shell functions rather than plain aliases.
 | `vi`, `vim` | `nvim` | cli_dev_env | `cli_dev_env_neovim_enabled` |
 | `ki` | `kiro-cli chat --trust-all-tools` (autonomous) | cli_dev_env | `cli_dev_env_kiro_enabled` + `cli_dev_env_kiro_deploy_shell_aliases` |
 | `kil` | `kiro-cli login` | cli_dev_env | `cli_dev_env_kiro_enabled` + `cli_dev_env_kiro_deploy_shell_aliases` |
+| `oc` | `opencode` (interactive TUI) | cli_dev_env | `cli_dev_env_opencode_enabled` + `cli_dev_env_opencode_deploy_shell_aliases` |
+| `ocr` | `opencode run` (headless prompt) | cli_dev_env | `cli_dev_env_opencode_enabled` + `cli_dev_env_opencode_deploy_shell_aliases` |
 | `asl` | `aws sso login` | iac_tools | `iac_tools_aws_enabled` |
 | `tfaa` | `terraform apply -auto-approve` | iac_tools | `iac_tools_terraform_enabled` |
 | `tfsl` | `terraform state list` | iac_tools | `iac_tools_terraform_enabled` |
@@ -185,7 +189,9 @@ Items written as `name()` are shell functions rather than plain aliases.
 The `cli_dev_env` role also sets `EDITOR=nvim`/`VISUAL=nvim`, `base` and
 `iac_tools` set Vault/AWS/Terraform environment variables, and `modern_cli`
 sets an `FZF_DEFAULT_OPTS` theme; the `ki`/`kil` alias names are configurable
-(`cli_dev_env_kiro_alias_chat` / `cli_dev_env_kiro_alias_login`). See each
+(`cli_dev_env_kiro_alias_chat` / `cli_dev_env_kiro_alias_login`) as are the
+`oc`/`ocr` alias names (`cli_dev_env_opencode_alias_tui` /
+`cli_dev_env_opencode_alias_run`). See each
 role's README for the authoritative list.
 
 ## apt package versions are unpinned

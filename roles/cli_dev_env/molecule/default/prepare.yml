@@ -69,3 +69,28 @@
           alias ki='kiro-cli chat --trust-all-tools'
           alias kil='kiro-cli login'
       become: false
+
+    - name: Create ~/.config/opencode directory
+      ansible.builtin.file:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/opencode"
+        state: directory
+        mode: "0755"
+      become: false
+
+    - name: Seed ~/.config/opencode/opencode.json with a stale model and a user-added key
+      # Simulates an already-provisioned machine whose opencode.json has a
+      # different model than the role default, plus a key the user added by
+      # hand. verify.yml asserts converge rewrites `model` to the role default
+      # (proving a model change is picked up, not silently ignored) while the
+      # user-added `theme` key survives (proving the merge preserves foreign
+      # keys instead of overwriting the file wholesale).
+      ansible.builtin.copy:
+        dest: "{{ ansible_facts['env']['HOME'] }}/.config/opencode/opencode.json"
+        mode: "0644"
+        content: |
+          {
+            "$schema": "https://opencode.ai/config.json",
+            "model": "mistral/codestral-2508",
+            "theme": "catppuccin"
+          }
+      become: false

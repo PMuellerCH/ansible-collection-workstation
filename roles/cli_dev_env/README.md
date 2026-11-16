@@ -4,21 +4,22 @@ Installs core CLI developer-environment tools: `lazygit` (git TUI, GitHub
 release binary), `neovim` (GitHub release binary, bootstrapped into a
 [LazyVim](https://www.lazyvim.org/) configuration), the
 [Claude Code](https://docs.claude.com/en/docs/claude-code) CLI (npm, with
-Node.js sourced from NodeSource), and the [Kiro CLI](https://kiro.dev/cli/)
-(`kiro-cli`, official installer). Also deploys the
+Node.js sourced from NodeSource), the [Kiro CLI](https://kiro.dev/cli/)
+(`kiro-cli`, official installer), and [OpenCode](https://opencode.ai/)
+(`opencode`, pinned GitHub release tarball, Mistral backend). Also deploys the
 [presenterm.nvim](https://github.com/Piotr1215/presenterm.nvim) LazyVim
 plugin config — the neovim-plugin half of presenterm support; the presenterm
 *binary* itself, plus its mermaid-cli dependency and zsh snippet, live in the
 `modern_cli` role instead (see "presenterm.nvim plugin toggle" below for why
 this split needs a toggle).
 
-`lazygit`, `neovim`, Claude Code, and the Kiro CLI are bundled here because
-all are CLI-first tools a developer reaches for directly in the terminal for
-the same core workflow (editing code, managing git, working with an AI coding
-agent) — unlike e.g. Slack/Teams (chat) or trivy/checkov (scanning), which got
-their own roles for their own category. Claude Code and Kiro CLI in particular
-are the two AI coding agents, kept together here rather than split across
-roles.
+`lazygit`, `neovim`, Claude Code, the Kiro CLI, and OpenCode are bundled
+here because all are CLI-first tools a developer reaches for directly in the
+terminal for the same core workflow (editing code, managing git, working with
+an AI coding agent) — unlike e.g. Slack/Teams (chat) or trivy/checkov
+(scanning), which got their own roles for their own category. Claude Code, the
+Kiro CLI, and OpenCode in particular are the three AI coding agents, kept
+together here rather than split across roles.
 
 ## What it does
 
@@ -32,6 +33,9 @@ roles.
 - Installs the Kiro CLI (`kiro-cli`) via its official installer, sets its
   default behaviour (v3 agent engine, tool auto-search, autonomous mode), and
   deploys its `ki`/`kil` shell aliases.
+- Installs OpenCode (`opencode`) from a pinned, checksum-verified GitHub
+  release tarball into `~/.local/bin`, deploys a config pinning its default
+  Mistral model, and deploys its `oc`/`ocr` shell aliases.
 
 ## Requirements
 
@@ -46,7 +50,10 @@ first. The Kiro CLI's official install script additionally needs a downloader
 (`curl` or `wget`), `unzip` and `sha256sum` on the target and aborts
 otherwise; `base` provides `curl` and `unzip`, and `sha256sum` comes from
 `coreutils`. Network access to `cli.kiro.dev` is required for the Kiro install
-step. No collection role is otherwise required to have run first.
+step. OpenCode is downloaded from `github.com` (the release tarball) and its
+checksum is resolved from `api.github.com` (the per-asset digest), so both
+must be reachable for the OpenCode install step. No collection role is
+otherwise required to have run first.
 
 ## Role Variables
 
@@ -75,6 +82,17 @@ step. No collection role is otherwise required to have run first.
 | `cli_dev_env_kiro_deploy_shell_aliases` | `true` | Deploy `~/.config/zsh/conf.d/kiro.zsh` with the `ki`/`kil` aliases |
 | `cli_dev_env_kiro_alias_chat` | `ki` | Alias name for autonomous chat (`kiro-cli chat --trust-all-tools`) |
 | `cli_dev_env_kiro_alias_login` | `kil` | Alias name for `kiro-cli login` |
+| `cli_dev_env_opencode_enabled` | `true` | Install OpenCode, deploy its default-model config, and deploy its shell aliases |
+| `cli_dev_env_opencode_bin` | `~/.local/bin/opencode` | Absolute path to the opencode binary (detection + version read + full-path invocation) |
+| `cli_dev_env_opencode_version` | see `defaults/main.yml` | OpenCode version (github-releases: `anomalyco/opencode`), verified against GitHub's per-asset digest |
+| `cli_dev_env_opencode_download_base` | see `defaults/main.yml` | Base URL the opencode release asset is downloaded from |
+| `cli_dev_env_opencode_asset` | `opencode-linux-x64.tar.gz` | Linux x64 release asset filename (single flat `opencode` binary, no checksum file published) |
+| `cli_dev_env_opencode_github_api_token` | `{{ cli_dev_env_github_api_token }}` | Optional GitHub API token to raise the rate limit when resolving the release-asset digest |
+| `cli_dev_env_opencode_model` | `mistral/devstral-medium-2507` | Default model written into `opencode.json` (`provider/model-id`); `mistral/codestral-2508` is a completion-focused alternative |
+| `cli_dev_env_opencode_deploy_config` | `true` | Deploy `~/.config/opencode/opencode.json`; the role owns the `model` key and rewrites the file only when it differs (user-added keys preserved) |
+| `cli_dev_env_opencode_deploy_shell_aliases` | `true` | Deploy `~/.config/zsh/conf.d/opencode.zsh` with the `oc`/`ocr` aliases |
+| `cli_dev_env_opencode_alias_tui` | `oc` | Alias name for `opencode` (interactive TUI) |
+| `cli_dev_env_opencode_alias_run` | `ocr` | Alias name for `opencode run` (headless prompt, no TUI) |
 
 ## Example Playbook
 
@@ -100,6 +118,7 @@ tag, so a consuming playbook can filter to a single tool:
 | presenterm.nvim plugin config | `presenterm`, `cli_dev_env` |
 | Claude Code CLI (+ NodeSource Node.js) | `claude-code`, `cli_dev_env` |
 | Kiro CLI (install + settings + aliases) | `kiro`, `cli_dev_env` |
+| OpenCode (install + config + aliases) | `opencode`, `cli_dev_env` |
 
 **Do not** put an outer `tags:` on the role invocation in your play — that
 tag cascades to every task in the role and defeats this per-tool filtering.
@@ -416,3 +435,91 @@ convention, documented here like the
 - Under `ansible-playbook --check` the install, update, and settings tasks are
   skipped (`not ansible_check_mode`), because they depend on the downloaded
   installer and a working binary; the alias-snippet deployment still runs.
+
+## OpenCode
+
+Installs [OpenCode](https://opencode.ai/) (`opencode`), a model-agnostic,
+CLI-first AI coding agent, for the target user from a pinned GitHub release
+tarball, deploys a config pinning its default model, and deploys `oc`/`ocr`
+shell aliases. The backend here is **Mistral AI** (see
+`cli_dev_env_opencode_model`).
+
+**The `MISTRAL_API_KEY` and the `opencode` login are left to the user** — this
+role installs and configures OpenCode but never writes the key and does not
+authenticate it, exactly as Claude Code's `claude login` and kiro-cli's
+`kiro-cli login` are left to the user. Provide the API key from your own
+environment or secret store.
+
+### What it does
+
+- Downloads the `cli_dev_env_opencode_asset` tarball
+  (`opencode-linux-x64.tar.gz` by default) for the pinned
+  `cli_dev_env_opencode_version` and extracts the single flat `opencode`
+  binary straight into `~/.local/bin`, but only when the installed version
+  (read via `opencode --version`) differs from the pinned one.
+- Deploys `~/.config/opencode/opencode.json` pinning the default model
+  (`cli_dev_env_opencode_deploy_config`, default `true`). The role owns only
+  the top-level `model` key: it reads any existing config, merges the desired
+  model onto it, and rewrites the file only when `model` differs from
+  `cli_dev_env_opencode_model`. A changed model therefore takes effect on a
+  re-run (unlike a blind `force: false`), while any other keys a user added by
+  hand are preserved (unlike a blind overwrite). This mirrors the
+  read-compare-then-write posture of the `lazyvim.json` extras task. If the
+  existing file is not valid JSON (or not a JSON object), it cannot be merged
+  into: the role replaces it with a minimal config and keeps a timestamped
+  `.bak` alongside it (`copy`'s `backup: true`).
+- Deploys `~/.config/zsh/conf.d/opencode.zsh`
+  (`cli_dev_env_opencode_deploy_shell_aliases`, default `true`) with:
+  - `oc`  → `opencode` (interactive TUI)
+  - `ocr` → `opencode run` (headless: send a prompt, print the reply, no TUI)
+
+### Model and backend
+
+The default model is `mistral/devstral-medium-2507`, Mistral AI's
+agentic/tool-use coding model — the sensible default for an agentic terminal
+tool. `mistral/codestral-2508` is a completion-focused alternative. Mistral is
+a built-in catalog provider for OpenCode, so no custom-provider config is
+needed; only the `MISTRAL_API_KEY` in the user's own environment (which this
+role never writes). Point `cli_dev_env_opencode_model` at any
+`provider/model-id` OpenCode's catalog knows to switch model or provider.
+
+### Pinned and checksum-verified (unlike kiro-cli)
+
+In contrast to kiro-cli — whose upstream ships no versioned, individually
+downloadable release asset, forcing an unpinned installer — OpenCode publishes
+versioned release tarballs, so it is **exact-version-pinned
+(`cli_dev_env_opencode_version`, Renovate-tracked via a
+`github-releases` manager) and checksum-verified**, the same as lazygit and
+neovim. This is the collection's normal "pin everything, Renovate tracks it"
+convention, **not** a deviation — so OpenCode does not belong with the
+[kiro-cli](#kiro-cli-is-installed-via-the-official-script-unpinned) or
+[apt-unpinned](../../README.md#apt-package-versions-are-unpinned) exceptions.
+
+anomalyco/opencode publishes no checksum file of any kind with its releases,
+so — exactly like neovim — the archive is verified against GitHub's own
+per-asset sha256 digest: the role fetches the release metadata from the GitHub
+API for the pinned version, reads the `sha256` digest of the asset, and feeds
+it to `get_url`. The checksum is always derived from the pinned version, so a
+Renovate version bump needs no manual checksum update, and if GitHub ever
+reports no digest for the asset the role fails loudly rather than skipping
+verification. `cli_dev_env_opencode_github_api_token` (defaulting to the same
+`GH_TOKEN`/`GITHUB_TOKEN` lookup as `cli_dev_env_github_api_token`) only raises
+the API rate limit for that digest fetch; unauthenticated runs still work,
+subject to GitHub's 60 requests/hour per-IP limit.
+
+### Notes
+
+- All opencode tasks run as the target user (`become: false`): `opencode` is a
+  per-user binary in `~/.local/bin`, its config lives under the user's home,
+  and the alias snippet is written there too — the same user-context posture as
+  kiro-cli and the Claude Code npm install. The binary is always invoked by its
+  full path (`cli_dev_env_opencode_bin`), because `~/.local/bin` is not
+  guaranteed to be on `$PATH` for a non-interactive Ansible run.
+- Install is detected by reading `opencode --version` at
+  `cli_dev_env_opencode_bin`; the download, checksum resolution, and extraction
+  only run when the installed version differs from the pinned one, so a
+  converged machine reports no change.
+- Under `ansible-playbook --check` the digest fetch, download, and install
+  tasks are skipped (`not ansible_check_mode`), because they depend on the
+  fetched metadata and downloaded archive; the config and alias-snippet
+  deployments still run.

@@ -277,3 +277,91 @@
       ansible.builtin.assert:
         that: not _cli_dev_env_kiro_legacy_snippet.stat.exists
         fail_msg: "Legacy kiro_cli.zsh was not removed; it would override the merged role's kiro.zsh aliases."
+
+    # opencode
+    # Verifies what a headless container can check: the pinned binary was
+    # installed from the checksum-verified tarball, the default-model config
+    # was deployed, and the alias snippet was deployed with the expected
+    # content. The Mistral backend and `opencode` login need an API key and an
+    # authenticated session, so they are out of scope here, exactly as Claude
+    # Code's and kiro-cli's own auth are.
+    - name: Check opencode runs
+      ansible.builtin.command: "{{ cli_dev_env_opencode_bin }} --version"
+      register: _cli_dev_env_opencode_version
+      changed_when: false
+
+    - name: Assert opencode reports the pinned version
+      ansible.builtin.assert:
+        that: "cli_dev_env_opencode_version in _cli_dev_env_opencode_version.stdout"
+
+    - name: Stat opencode config
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/opencode/opencode.json"
+      register: _cli_dev_env_opencode_config
+
+    - name: Assert opencode config was deployed
+      ansible.builtin.assert:
+        that: _cli_dev_env_opencode_config.stat.exists
+
+    - name: Read opencode config
+      ansible.builtin.slurp:
+        src: "{{ ansible_facts['env']['HOME'] }}/.config/opencode/opencode.json"
+      register: _cli_dev_env_opencode_config_raw
+
+    - name: Assert opencode config pins the default Mistral model
+      ansible.builtin.assert:
+        that: >-
+          (_cli_dev_env_opencode_config_raw.content | b64decode | from_json).model
+          == cli_dev_env_opencode_model
+
+    - name: Assert the seeded stale model differs from the role default (test precondition)
+      # prepare.yml seeds model=mistral/codestral-2508. If the role default ever
+      # becomes that same value, the converge test silently becomes a no-op —
+      # assert they differ so the "model was converged" check below is
+      # meaningful. Avoids hardcoding the default string here (verify.yml sources
+      # cli_dev_env_opencode_model from defaults via vars_files on purpose).
+      ansible.builtin.assert:
+        that: cli_dev_env_opencode_model != "mistral/codestral-2508"
+        fail_msg: >-
+          prepare.yml's seeded model equals the role default; the converge
+          test would be a no-op.
+
+    - name: Assert the seeded stale model was converged to the role default
+      # prepare.yml seeded a different model; this asserts converge rewrote it
+      # to cli_dev_env_opencode_model, proving a changed model is picked up on
+      # a re-apply rather than silently ignored.
+      ansible.builtin.assert:
+        that: >-
+          (_cli_dev_env_opencode_config_raw.content | b64decode | from_json).model
+          == cli_dev_env_opencode_model
+        fail_msg: The seeded stale model was not rewritten to the role default.
+
+    - name: Assert a user-added key (seeded in prepare.yml) survived the model converge
+      # prepare.yml seeded a "theme" key alongside the stale model. Proves the
+      # deploy merges onto the existing file instead of overwriting it, so keys
+      # the role does not own are preserved.
+      ansible.builtin.assert:
+        that: >-
+          (_cli_dev_env_opencode_config_raw.content | b64decode | from_json).theme
+          | default('') == "catppuccin"
+        fail_msg: The user-added opencode.json key was wiped by the model converge.
+
+    - name: Stat opencode zsh alias snippet
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/opencode.zsh"
+      register: _cli_dev_env_opencode_zsh_snippet
+
+    - name: Assert opencode zsh alias snippet was deployed
+      ansible.builtin.assert:
+        that: _cli_dev_env_opencode_zsh_snippet.stat.exists
+
+    - name: Read opencode zsh alias snippet content
+      ansible.builtin.slurp:
+        src: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/opencode.zsh"
+      register: _cli_dev_env_opencode_zsh_snippet_content
+
+    - name: Assert opencode alias snippet defines the TUI and headless-run aliases
+      ansible.builtin.assert:
+        that:
+          - "\"alias \" + cli_dev_env_opencode_alias_tui + \"='opencode'\" in (_cli_dev_env_opencode_zsh_snippet_content.content | b64decode)"
+          - "\"alias \" + cli_dev_env_opencode_alias_run + \"='opencode run'\" in (_cli_dev_env_opencode_zsh_snippet_content.content | b64decode)"

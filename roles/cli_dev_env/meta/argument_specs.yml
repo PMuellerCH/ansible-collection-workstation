@@ -3,10 +3,10 @@ argument_specs:
   main:
     short_description: >-
       Install CLI developer environment tools: lazygit, neovim/LazyVim, the
-      Claude Code CLI, and the Kiro CLI (kiro-cli) — each independently
-      toggleable — plus presenterm.nvim's plugin config (independently
-      toggleable, depends on the presenterm binary installed by the modern_cli
-      role) and a headless lazy.nvim plugin sync on every apply.
+      Claude Code CLI, the Kiro CLI (kiro-cli), and OpenCode — each
+      independently toggleable — plus presenterm.nvim's plugin config
+      (independently toggleable, depends on the presenterm binary installed by
+      the modern_cli role) and a headless lazy.nvim plugin sync on every apply.
     options:
       cli_dev_env_lazygit_enabled:
         type: bool
@@ -163,3 +163,89 @@ argument_specs:
         required: false
         default: kil
         description: Alias name for `kiro-cli login`.
+      cli_dev_env_github_api_token:
+        type: str
+        required: false
+        default: "{{ lookup('ansible.builtin.env', 'GH_TOKEN') or lookup('ansible.builtin.env', 'GITHUB_TOKEN') }}"
+        description: >-
+          Optional GitHub API token used only to raise the rate limit when
+          resolving the neovim and opencode release-asset digests. Defaults to
+          GH_TOKEN/GITHUB_TOKEN from the environment; unauthenticated (empty)
+          still works but is subject to GitHub's 60 requests/hour per-IP limit.
+      cli_dev_env_opencode_enabled:
+        type: bool
+        required: false
+        default: true
+        description: >-
+          Whether to install OpenCode (model-agnostic AI coding agent),
+          deploy its default-model config, and deploy its shell aliases.
+      cli_dev_env_opencode_bin:
+        type: str
+        required: false
+        default: "{{ ansible_facts['env']['HOME'] }}/.local/bin/opencode"
+        description: >-
+          Absolute path to the opencode binary. Used to detect an existing
+          install, read the installed version, and invoke the binary by full
+          path, since ~/.local/bin is not guaranteed to be on $PATH for a
+          non-interactive Ansible run.
+      cli_dev_env_opencode_version:
+        type: str
+        required: false
+        description: >-
+          OpenCode version (github-releases anomalyco/opencode), installed
+          from a release tarball verified against GitHub's per-asset digest.
+      cli_dev_env_opencode_download_base:
+        type: str
+        required: false
+        default: "https://github.com/anomalyco/opencode/releases/download/v{{ cli_dev_env_opencode_version }}"
+        description: Base URL the opencode release asset is downloaded from, before the filename.
+      cli_dev_env_opencode_asset:
+        type: str
+        required: false
+        default: "opencode-linux-x64.tar.gz"
+        description: >-
+          Linux x64 release asset filename. Contains a single flat `opencode`
+          binary and is verified against GitHub's per-asset sha256 digest
+          (OpenCode publishes no checksum file).
+      cli_dev_env_opencode_github_api_token:
+        type: str
+        required: false
+        default: "{{ cli_dev_env_github_api_token }}"
+        description: >-
+          Optional GitHub API token used only to raise the rate limit when
+          resolving the opencode release-asset digest. Defaults to the same
+          GH_TOKEN/GITHUB_TOKEN env lookup as cli_dev_env_github_api_token.
+      cli_dev_env_opencode_model:
+        type: str
+        required: false
+        default: "mistral/devstral-medium-2507"
+        description: >-
+          Default model OpenCode talks to ("provider/model-id"), written into
+          the deployed opencode.json. Defaults to Mistral AI's agentic coding
+          model; mistral/codestral-2508 is a completion-focused alternative.
+          The MISTRAL_API_KEY and `opencode` login are left to the user.
+      cli_dev_env_opencode_deploy_config:
+        type: bool
+        required: false
+        default: true
+        description: >-
+          Whether to deploy ~/.config/opencode/opencode.json. The role owns
+          only the top-level `model` key, rewriting the file only when it
+          differs (user-added keys are preserved).
+      cli_dev_env_opencode_deploy_shell_aliases:
+        type: bool
+        required: false
+        default: true
+        description: >-
+          Whether to deploy ~/.config/zsh/conf.d/opencode.zsh with the TUI and
+          headless-run aliases.
+      cli_dev_env_opencode_alias_tui:
+        type: str
+        required: false
+        default: oc
+        description: Alias name for `opencode` (interactive TUI).
+      cli_dev_env_opencode_alias_run:
+        type: str
+        required: false
+        default: ocr
+        description: Alias name for `opencode run` (headless prompt, no TUI).
