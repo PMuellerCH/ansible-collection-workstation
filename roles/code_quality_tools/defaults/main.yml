@@ -27,8 +27,11 @@ code_quality_tools_checkov_version: "3.4.3"
 # renovate: datasource=pypi depName=ansible-lint
 code_quality_tools_ansible_lint_version: "26.10.1"
 
+# Held on the 2.21.x line: ansible-core 2.22+ requires Python >= 3.13, but the
+# target Ubuntu 24.04 ships Python 3.12, which this pipx venv runs on.
+# renovate.json constrains ansible-core to <2.22.0 accordingly.
 # renovate: datasource=pypi depName=ansible-core
-code_quality_tools_ansible_core_version: "2.22.0"
+code_quality_tools_ansible_core_version: "2.21.6"
 
 # Minimum pipx version community.general.pipx requires (Ubuntu 24.04's apt-provided
 # pipx is only 1.4.3 — see README "pipx bootstrap" section).

@@ -22,8 +22,11 @@ iac_tools_vault_addr: ""
 iac_tools_pipx_min_version: "1.18.13"
 
 # ── ansible ──────────────────────────────────────────────────────────────
+# Held on the 2.21.x line: ansible-core 2.22+ requires Python >= 3.13, but the
+# target Ubuntu 24.04 ships Python 3.12, which this pipx venv runs on.
+# renovate.json constrains ansible-core to <2.22.0 accordingly.
 # renovate: datasource=pypi depName=ansible-core
-iac_tools_ansible_core_version: "2.22.0"
+iac_tools_ansible_core_version: "2.21.6"
 # renovate: datasource=pypi depName=molecule
 iac_tools_ansible_molecule_version: "26.10.0"
 # renovate: datasource=pypi depName=molecule-plugins
