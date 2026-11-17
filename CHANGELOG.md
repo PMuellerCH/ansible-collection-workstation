@@ -1,5 +1,52 @@
 # Changelog
 
+## [2.1.0](https://github.com/PMuellerCH/infra-ansible-collection-workstation/compare/2.0.0...2.1.0) (2026-11-17)
+
+
+### Features
+
+* **cli_dev_env:** add OpenCode AI coding agent with Mistral backend ([#309](https://github.com/PMuellerCH/infra-ansible-collection-workstation/issues/309)) ([90173e4](https://github.com/PMuellerCH/infra-ansible-collection-workstation/commit/90173e4ddf1054df6de0a54dd1791c886a493e0a))
+
+
+### Bug Fixes
+
+* **ci:** pin ansible-core to the 2.21.x line for Python 3.12 targets ([#311](https://github.com/PMuellerCH/infra-ansible-collection-workstation/issues/311)) ([36968a7](https://github.com/PMuellerCH/infra-ansible-collection-workstation/commit/36968a7cbd37822eeb40d3ce2391410c37ba1705))
+* re-fetch rotated HashiCorp and Docker apt signing keys ([#290](https://github.com/PMuellerCH/infra-ansible-collection-workstation/issues/290)) ([c0e74b0](https://github.com/PMuellerCH/infra-ansible-collection-workstation/commit/c0e74b058ba53b1d75b57f8e0a6d6f63938d4afa))
+* **roles:** pin role ansible-core to 2.21.6 for Python 3.12 targets ([#312](https://github.com/PMuellerCH/infra-ansible-collection-workstation/issues/312)) ([4e6942e](https://github.com/PMuellerCH/infra-ansible-collection-workstation/commit/4e6942efc3df1fc994c52a9d49e8cd48d5e8b2a4))
+
+
+### Miscellaneous
+
+* **deps:** update dependency @anthropic-ai/claude-code to v2.1.314 ([#285](https://github.com/PMuellerCH/infra-ansible-collection-workstation/issues/285)) ([3d75250](https://github.com/PMuellerCH/infra-ansible-collection-workstation/commit/3d7525073528aa8e0e0a2e64a142eaff7c36e9e9))
+* **deps:** update dependency @anthropic-ai/claude-code to v2.1.316 ([#287](https://github.com/PMuellerCH/infra-ansible-collection-workstation/issues/287)) ([2a10d0b](https://github.com/PMuellerCH/infra-ansible-collection-workstation/commit/2a10d0b9b4a2cec3951f618598862471b34a7fb2))
+* **deps:** update dependency @anthropic-ai/claude-code to v2.1.317 ([#297](https://github.com/PMuellerCH/infra-ansible-collection-workstation/issues/297)) ([5202820](https://github.com/PMuellerCH/infra-ansible-collection-workstation/commit/5202820b184acfb7e994d5d176033a63fdf509d9))
+* **deps:** update dependency @anthropic-ai/claude-code to v2.1.318 ([#305](https://github.com/PMuellerCH/infra-ansible-collection-workstation/issues/305)) ([a1199df](https://github.com/PMuellerCH/infra-ansible-collection-workstation/commit/a1199df8709f3ab0e8acb46c5a4518039be698ef))
+* **deps:** update dependency @mermaid-js/mermaid-cli to v12.2.0 ([#293](https://github.com/PMuellerCH/infra-ansible-collection-workstation/issues/293)) ([a578411](https://github.com/PMuellerCH/infra-ansible-collection-workstation/commit/a57841130e55df357406f8e2277341a7431cf559))
+* **deps:** update dependency ansible-core to v2.22.0 ([#301](https://github.com/PMuellerCH/infra-ansible-collection-workstation/issues/301)) ([45869bb](https://github.com/PMuellerCH/infra-ansible-collection-workstation/commit/45869bb4f5e7f312f2a36b90b9305c51e248d113))
+* **deps:** update dependency astral-sh/uv to v0.13.7 ([#298](https://github.com/PMuellerCH/infra-ansible-collection-workstation/issues/298)) ([a441d4e](https://github.com/PMuellerCH/infra-ansible-collection-workstation/commit/a441d4eee11a87c10f466e20150eb229e8a307de))
+* **deps:** update dependency aws/aws-cli to v2.39.2 ([#279](https://github.com/PMuellerCH/infra-ansible-collection-workstation/issues/279)) ([a17cee9](https://github.com/PMuellerCH/infra-ansible-collection-workstation/commit/a17cee9c61ae83cbcdd99496889fe68d3076d041))
+* **deps:** update dependency aws/aws-cli to v2.39.3 ([#286](https://github.com/PMuellerCH/infra-ansible-collection-workstation/issues/286)) ([a429db6](https://github.com/PMuellerCH/infra-ansible-collection-workstation/commit/a429db64cf5974e90176ff81e1bb1c6f709578cf))
+* **deps:** update dependency bootandy/dust to v1.2.7 ([#291](https://github.com/PMuellerCH/infra-ansible-collection-workstation/issues/291)) ([b4e8b08](https://github.com/PMuellerCH/infra-ansible-collection-workstation/commit/b4e8b0854cb1e81d9eb871b251961280e6436469))
+* **deps:** update dependency checkov to v3.4.2 ([#292](https://github.com/PMuellerCH/infra-ansible-collection-workstation/issues/292)) ([fa83fdd](https://github.com/PMuellerCH/infra-ansible-collection-workstation/commit/fa83fdd5c5350f40e3349ce15c00f32631cfd6be))
+* **deps:** update dependency checkov to v3.4.3 ([#295](https://github.com/PMuellerCH/infra-ansible-collection-workstation/issues/295)) ([f678915](https://github.com/PMuellerCH/infra-ansible-collection-workstation/commit/f6789153729653326b17b7995e4633d4d27e018e))
+* **deps:** update dependency community.general to v13.5.1 ([#296](https://github.com/PMuellerCH/infra-ansible-collection-workstation/issues/296)) ([a055c96](https://github.com/PMuellerCH/infra-ansible-collection-workstation/commit/a055c966034a5303ca93499186b0e58fa9dcd560))
+* **deps:** update dependency community.general to v14 ([#306](https://github.com/PMuellerCH/infra-ansible-collection-workstation/issues/306)) ([7ad6da3](https://github.com/PMuellerCH/infra-ansible-collection-workstation/commit/7ad6da3ad337beaff4adaedc72b89f9b24ac1081))
+* **deps:** update dependency ismaelmartinez/teams-for-linux to v2.28.0 ([#284](https://github.com/PMuellerCH/infra-ansible-collection-workstation/issues/284)) ([747acb1](https://github.com/PMuellerCH/infra-ansible-collection-workstation/commit/747acb11493a6a33abeb1eb38f79558aeed341cd))
+* **deps:** update dependency jsonpatch to v1.39 ([#294](https://github.com/PMuellerCH/infra-ansible-collection-workstation/issues/294)) ([3b1e92c](https://github.com/PMuellerCH/infra-ansible-collection-workstation/commit/3b1e92c51154fb8e04ff7663a314f863fd014ff3))
+* **deps:** update dependency jsonpatch to v1.41 ([#302](https://github.com/PMuellerCH/infra-ansible-collection-workstation/issues/302)) ([df80c2d](https://github.com/PMuellerCH/infra-ansible-collection-workstation/commit/df80c2d57dd6d5fdc328cd7e820f608a8dc9b31f))
+* **deps:** update dependency jsonpatch to v1.42 ([#308](https://github.com/PMuellerCH/infra-ansible-collection-workstation/issues/308)) ([2024c05](https://github.com/PMuellerCH/infra-ansible-collection-workstation/commit/2024c05ad19a9adcb3d8cc8cc0e639613d90a789))
+* **deps:** update dependency molecule-plugins to v26.11.0 ([#304](https://github.com/PMuellerCH/infra-ansible-collection-workstation/issues/304)) ([a291f66](https://github.com/PMuellerCH/infra-ansible-collection-workstation/commit/a291f6616087ec20d61014c2dd7944bae58c0868))
+* **deps:** update dependency nektos/act to v0.2.94 ([#289](https://github.com/PMuellerCH/infra-ansible-collection-workstation/issues/289)) ([5f77f27](https://github.com/PMuellerCH/infra-ansible-collection-workstation/commit/5f77f27e094132a240c7b8f974d1ce0e865a440b))
+* **deps:** update dependency nektos/act to v0.2.95 ([#299](https://github.com/PMuellerCH/infra-ansible-collection-workstation/issues/299)) ([5a9223a](https://github.com/PMuellerCH/infra-ansible-collection-workstation/commit/5a9223a969ce58c78496a37bf63123941357ac02))
+* **deps:** update dependency nektos/act to v0.2.96 ([#303](https://github.com/PMuellerCH/infra-ansible-collection-workstation/issues/303)) ([af72b63](https://github.com/PMuellerCH/infra-ansible-collection-workstation/commit/af72b630df9f7f292e2e0b2ba8cae6fedc493647))
+* **deps:** update dependency pipx to v1.18.10 ([#283](https://github.com/PMuellerCH/infra-ansible-collection-workstation/issues/283)) ([7b5619f](https://github.com/PMuellerCH/infra-ansible-collection-workstation/commit/7b5619f4450d3ee8bda04cc36903b9dbfd43b509))
+* **deps:** update dependency pipx to v1.18.11 ([#288](https://github.com/PMuellerCH/infra-ansible-collection-workstation/issues/288)) ([1436af6](https://github.com/PMuellerCH/infra-ansible-collection-workstation/commit/1436af6387f4574d085ef1a6ab40cab9855b2277))
+* **deps:** update dependency pipx to v1.18.12 ([#300](https://github.com/PMuellerCH/infra-ansible-collection-workstation/issues/300)) ([372be51](https://github.com/PMuellerCH/infra-ansible-collection-workstation/commit/372be515da05054b54fdd1d302ec9bd6bb9d88f8))
+* **deps:** update dependency pipx to v1.18.13 ([#307](https://github.com/PMuellerCH/infra-ansible-collection-workstation/issues/307)) ([5224530](https://github.com/PMuellerCH/infra-ansible-collection-workstation/commit/52245309943d83599a88ccda36fd45f6c032d555))
+* **deps:** update dependency walles/moar to v2.19.6 ([#280](https://github.com/PMuellerCH/infra-ansible-collection-workstation/issues/280)) ([4812e84](https://github.com/PMuellerCH/infra-ansible-collection-workstation/commit/4812e84cf8a0b1a5bce857a7b94bdde85a061b4f))
+* **deps:** update pre-commit hook compilerla/conventional-pre-commit to v4.5.0 ([#282](https://github.com/PMuellerCH/infra-ansible-collection-workstation/issues/282)) ([24aeab2](https://github.com/PMuellerCH/infra-ansible-collection-workstation/commit/24aeab2a611ba87aab05203cd2648ed371658b09))
+* migrate CI/CD and Renovate to the private shared-actions setup ([#310](https://github.com/PMuellerCH/infra-ansible-collection-workstation/issues/310)) ([0d9da2c](https://github.com/PMuellerCH/infra-ansible-collection-workstation/commit/0d9da2c9dbc71c9a2d3968d496d7676870379a4c))
+
 ## [2.0.0](https://github.com/swisstopo/infra-ansible-collection-workstation/compare/1.3.0...2.0.0) (2026-10-29)
 
 
