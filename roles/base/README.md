@@ -57,6 +57,7 @@ consuming playbook runs.
 | `base_locale_format` | `de_CH.UTF-8` | Locale for date/time, number, currency, paper, and measurement formats |
 | `base_locale_ui` | `en_US.UTF-8` | Locale for UI display language and error messages |
 | `base_http_proxy` | `""` | Corporate HTTP proxy URL; leave empty on machines without a proxy |
+| `base_proxy_ca_cert_content` | `""` | PEM content of the corporate proxy CA certificate; installed when `base_http_proxy` is set |
 | `base_https_proxy` | `base_http_proxy` | Corporate HTTPS proxy URL; set explicitly only if HTTP and HTTPS use different proxies |
 | `base_no_proxy` | `""` | Comma-separated list of hosts/CIDRs that bypass the proxy |
 | `base_vault_addr` | `""` | HashiCorp Vault address, exported as `VAULT_ADDR`; leave empty without Vault access |
@@ -119,9 +120,10 @@ cascades to every task in the role and defeats this per-tool filtering.
 
 ## Notes
 
-- The corporate proxy CA cert bundled in `files/BITProxyCA06C.crt` is the
-  currently active intermediate (valid until Sep 2026) — must be replaced when
-  corporate IT rotates to a new CA generation.
+- The corporate proxy CA certificate is not shipped with this collection. Pass
+  its PEM content via `base_proxy_ca_cert_content` (e.g.
+  `"{{ lookup('ansible.builtin.file', 'files/proxy-ca.crt') }}"`) and renew it
+  there when corporate IT rotates to a new CA generation.
 - `community.general.dconf` (locale, proxy) requires a running D-Bus session —
   run this role while logged into a graphical session, not over a headless SSH
   connection.

@@ -289,3 +289,7 @@ config sets `platformAutomerge: false` and a package rule that marks minor, patc
 digest updates `automerge: true` with `automergeStrategy: squash`, so Renovate merges them
 itself (squashed) once CI passes; major and breaking updates always stay on manual review.
 If a Renovate PR stops merging, check that lint and Molecule are green on the PR head.
+
+## License
+
+[MIT](LICENSE)

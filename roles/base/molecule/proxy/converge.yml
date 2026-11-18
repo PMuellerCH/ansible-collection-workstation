@@ -19,3 +19,4 @@
         # actually exercised, instead of being skipped like in the default
         # scenario.
         base_http_proxy: "{{ lookup('env', 'http_proxy') }}"
+        base_proxy_ca_cert_content: "{{ lookup('ansible.builtin.file', playbook_dir ~ '/files/test-proxy-ca.crt') }}"

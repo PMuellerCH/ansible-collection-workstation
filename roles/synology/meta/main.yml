@@ -3,7 +3,7 @@ galaxy_info:
   role_name: synology
   author: Philipp Müller
   description: Installs Synology Drive, Chat, and Note Station clients, with pre-seeded Drive sync config
-  license: Apache-2.0
+  license: MIT
   min_ansible_version: "2.17"
   platforms:
     - name: Ubuntu

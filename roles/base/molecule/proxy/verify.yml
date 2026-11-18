@@ -8,7 +8,7 @@
   tasks:
     - name: Check corporate CA certificate was installed
       ansible.builtin.stat:
-        path: /usr/local/share/ca-certificates/BITProxyCA06C.crt
+        path: /usr/local/share/ca-certificates/base-proxy-ca.crt
       register: _base_ca_cert
 
     - name: Assert corporate CA certificate is present

@@ -241,17 +241,17 @@
 # The corporate proxy (BIT Proxy) performs TLS inspection and re-signs all
 # HTTPS traffic with its own CA. Without the CA in the trust store, all HTTPS
 # connections fail with "self-signed certificate" errors.
-# CA 06 C is the currently active intermediate CA (valid until Sep 2026);
-# the cert is bundled in the role's files/ directory and must be updated here
-# when the corporate IT rotates to a new CA generation.
+# The PEM certificate is supplied by the consumer via
+# base_proxy_ca_cert_content (it is organisation-specific and rotates, so it
+# is deliberately not shipped with this public collection).
 
 - name: Install corporate proxy CA certificate
   ansible.builtin.copy:
-    src: BITProxyCA06C.crt
-    dest: /usr/local/share/ca-certificates/BITProxyCA06C.crt
+    content: "{{ base_proxy_ca_cert_content }}"
+    dest: /usr/local/share/ca-certificates/base-proxy-ca.crt
     mode: "0644"
   become: true
-  when: base_http_proxy != ''
+  when: base_http_proxy != '' and base_proxy_ca_cert_content != ''
   notify: Update CA certificates
   tags: [base]
 

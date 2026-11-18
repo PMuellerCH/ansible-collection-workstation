@@ -5,7 +5,7 @@ version: 1.0.1 # x-release-please-version
 readme: README.md
 description: Ansible collection for provisioning and maintaining developer workstations
 license:
-  - Apache-2.0
+  - MIT
 authors:
   - Philipp Müller <philipp@mueller-vu.ch>
 tags:

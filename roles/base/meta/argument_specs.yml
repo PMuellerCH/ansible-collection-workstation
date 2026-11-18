@@ -26,6 +26,13 @@ argument_specs:
         required: false
         default: ""
         description: Corporate HTTP proxy URL. Leave empty on machines without a proxy.
+      base_proxy_ca_cert_content:
+        type: str
+        required: false
+        default: ""
+        description: >-
+          PEM content of the corporate proxy CA certificate, installed into the
+          system trust store when base_http_proxy is set. Leave empty if not needed.
       base_https_proxy:
         type: str
         required: false

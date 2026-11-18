@@ -8,6 +8,9 @@ base_locale_format: "de_CH.UTF-8"
 base_locale_ui: "en_US.UTF-8"
 # Corporate proxy — leave empty on machines without a proxy
 base_http_proxy: ""
+# PEM content of the corporate proxy's CA certificate (TLS inspection). Leave
+# empty if the proxy CA is already in the system trust store.
+base_proxy_ca_cert_content: ""
 base_https_proxy: "{{ base_http_proxy }}"
 base_no_proxy: ""
 # HashiCorp Vault — leave empty on machines without Vault access
