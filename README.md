@@ -273,7 +273,7 @@ runs it as a matrix job, but only on the release-please PR, a Renovate PR, or ma
 `workflow_dispatch` — not on every ordinary feature PR, since a full matrix run is too
 slow to gate routine iteration (those get fast lint-only feedback from `ci.yml` instead).
 A Renovate PR tests only the role(s) whose own files changed; a change to a shared file
-(`requirements-molecule.yml`, `galaxy.yml`) runs the full matrix.
+(`requirements.yml`, `requirements-molecule.yml`, `galaxy.yml`) runs the full matrix.
 
 Renovate is self-contained in this repo's `renovate.json` — it no longer extends a shared
 preset. It extends `config:recommended` and `:enablePreCommit`, defines its own
