@@ -108,7 +108,7 @@ cli_dev_env_kiro_alias_login: kil
 cli_dev_env_opencode_bin: "{{ ansible_facts['env']['HOME'] }}/.local/bin/opencode"
 
 # renovate: datasource=github-releases depName=anomalyco/opencode extractVersion=^v(?<version>.*)$
-cli_dev_env_opencode_version: "1.19.5"
+cli_dev_env_opencode_version: "1.19.6"
 cli_dev_env_opencode_download_base: "https://github.com/anomalyco/opencode/releases/download/v{{ cli_dev_env_opencode_version }}"
 # The Linux x64 release asset. The tarball contains a single flat `opencode`
 # binary (no top-level directory), so it is unarchived straight into
