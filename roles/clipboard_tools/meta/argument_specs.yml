@@ -1,0 +1,59 @@
+---
+argument_specs:
+  main:
+    short_description: >-
+      Install Wayland clipboard tooling: wl-clipboard, cliphist, clipse —
+      each independently toggleable. Kept as its own role (not folded into
+      desktop_customization) because clipse is a console/TUI tool, not GUI
+      desktop customization, and the three tools are a genuinely coupled
+      functional unit (cliphist's autostart shells out to wl-paste, and the
+      deployed `ch` alias pipes cliphist | fzf | wl-copy across all three).
+    options:
+      clipboard_tools_wl_clipboard_enabled:
+        type: bool
+        required: false
+        default: true
+        description: >-
+          Whether to install wl-clipboard (provides wl-copy/wl-paste).
+          cliphist's autostart entry and the deployed `ch` shell function
+          both depend on wl-copy/wl-paste at runtime — see README "Soft
+          cross-tool dependencies" if disabling this while cliphist stays
+          enabled.
+      clipboard_tools_cliphist_enabled:
+        type: bool
+        required: false
+        default: true
+        description: >-
+          Whether to install cliphist and deploy its autostart entry
+          (`wl-paste --watch cliphist store`). Requires wl-clipboard at
+          runtime — not hard-gated, see README.
+      clipboard_tools_clipse_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install clipse (clipboard history TUI).
+      clipboard_tools_cliphist_version:
+        type: str
+        required: false
+        description: cliphist version (github-releases sentriz/cliphist), installed from a checksum-verified binary.
+      clipboard_tools_clipse_version:
+        type: str
+        required: false
+        description: clipse version (github-releases savedra1/clipse), installed from a checksum-verified archive.
+      clipboard_tools_clipse_archive:
+        type: str
+        required: false
+        default: "clipse_v{{ clipboard_tools_clipse_version }}_linux_wayland_amd64.tar.gz"
+        description: Filename of the clipse release archive to download.
+      clipboard_tools_clipse_download_base:
+        type: str
+        required: false
+        default: "https://github.com/savedra1/clipse/releases/download/v{{ clipboard_tools_clipse_version }}"
+        description: Base URL the clipse archive and its checksums.txt are downloaded from.
+      clipboard_tools_deploy_shell_aliases:
+        type: bool
+        required: false
+        default: true
+        description: >-
+          Whether to deploy a zsh conf.d snippet (~/.config/zsh/conf.d/clipboard_tools.zsh)
+          with the `ch` function (cliphist) and `clipboard` alias (clipse) for enabled tools.

@@ -5,7 +5,8 @@ This file provides guidance to Claude Code when working with this repository.
 ## What this repo is
 
 An Ansible Galaxy collection (`pmuellerch.workstation`) containing roles for provisioning
-personal/home workstation tools. Targets Ubuntu 24.04 (Noble) with the COSMIC desktop
+developer and personal/home workstation tools. It is the merge of the former
+`swisstopo.workstation` (`infra-ansible-collection-workstation`, archived) and the personal roles. Targets Ubuntu 24.04 (Noble) with the COSMIC desktop
 environment. Role code is generic and public; personal configuration lives in the private
 `PMuellerCH/computer-setup` repo as variables.
 
@@ -16,7 +17,9 @@ environment. Role code is generic and public; personal configuration lives in th
 # declared in galaxy.yml's `dependencies:` (e.g. community.general)
 ansible-galaxy collection install . --force
 
-# Install molecule's own driver dependency (community.docker)
+# Install collection dependencies and molecule's own driver dependency
+ansible-galaxy collection install -r requirements.yml
+# (molecule driver dependency: community.docker)
 ansible-galaxy collection install -r requirements-molecule.yml
 
 # Lint
@@ -27,7 +30,7 @@ ansible-lint
 checkov --framework ansible --directory . --quiet
 
 # Markdown lint
-npx --prefix .github markdownlint --config .markdownlint.yml '**/*.md'
+pre-commit run markdownlint-cli2 --all-files
 
 # Molecule test a single role (needs Docker)
 cd roles/<name> && molecule test
@@ -54,15 +57,14 @@ roles/<name>/
 
 ## Testing
 
-Mirrors the pattern used in `swisstopo/infra-ansible-collection-postgres`, inlined
-because this repo has no access to swisstopo's private `infra-github-shared-actions`.
+Lint and Molecule run as thin wrappers around `PMuellerCH/shared-actions` reusable workflows.
 
 - **Lint** (`ci.yml`) runs yamllint, ansible-lint, markdownlint, checkov on every push
   and PR to `main`. Fast, always on.
 - **Molecule** (`molecule.yml`) auto-discovers any role with a `roles/<name>/molecule/default/`
-  scenario and runs `molecule test` for it as a matrix job. It only fires on the
-  release-please PR (`head_ref` starting with `release-please--`) or manual
-  `workflow_dispatch` — not on every feature PR, since a full molecule run is too slow
+  scenario and runs `molecule test` for it as a matrix job. It fires on the
+  release-please PR (`head_ref` starting with `release-please--`), on `renovate/*` PRs (only the roles whose
+  files changed) or manual `workflow_dispatch` — not on every feature PR, since a full molecule run is too slow
   to gate ordinary iteration. This means **a release is never cut without molecule
   passing** on the release-please PR — merge it only once that check is green.
 - A role only gets tested once it has a `molecule/default/` scenario; adding one is
@@ -77,8 +79,8 @@ because this repo has no access to swisstopo's private `infra-github-shared-acti
 
 Every version string must be pinned to an exact version and covered by a Renovate manager:
 
-- **apt packages**: version variable in `defaults/main.yml` with `# renovate: datasource=deb` comment;
-  `dpkg_selections: hold` applied after install to prevent `apt upgrade` from overriding
+- **apt packages**: installed unpinned from real apt repos (see README "apt package versions are unpinned"); only
+  packages that need a fixed version (e.g. `trivy`, `dust`, `yazi`) are pinned in `defaults/main.yml` with a Renovate comment
 - **GitHub releases / pipx / npm**: version variable in `defaults/main.yml` with appropriate Renovate datasource comment
 - **Python CI tools** (`.github/requirements.txt`): exact pin, tracked by `pip_requirements` manager
 - **Node CI tools** (`.github/package.json`): exact pin, tracked by npm manager
@@ -112,8 +114,8 @@ machine, then fail in CI with `couldn't resolve module/action`.
 ### Role naming
 
 All role names use underscores (never hyphens) — matches this collection's existing roles
-(`bitwarden`, `synology`, `betterbird`, `multimedia`, `graphics`) and the sibling
-`swisstopo.workstation` collection's convention (`emoji_picker`, `gui_customization`, etc.).
+(`bitwarden`, `synology`, `betterbird`, `multimedia`, `graphics`) and the roles merged from `swisstopo.workstation`
+(`cli_dev_env`, `modern_cli`, `iac_tools`, etc.).
 
 ### Theming
 

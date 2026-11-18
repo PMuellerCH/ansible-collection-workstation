@@ -1,0 +1,228 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: true
+  # Source the role's defaults so the verify always checks the versions the
+  # role actually installs. Hard-coding them here let the two drift: a Renovate
+  # bump to the role default (e.g. catppuccin/tmux v2.3.2 in #198) left the
+  # verify pinned to the old version, so it asserted against a different commit
+  # and failed even though converge installed the new one.
+  vars_files:
+    - ../../defaults/main.yml
+  vars:
+    _terminal_env_expected_zdotdir_line: 'export ZDOTDIR="$HOME/.config/zsh"'
+  tasks:
+    - name: Gather package facts
+      ansible.builtin.package_facts:
+        manager: apt
+
+    - name: Assert zsh, tmux, kitty are installed
+      ansible.builtin.assert:
+        that:
+          - "'zsh' in ansible_facts.packages"
+          - "'tmux' in ansible_facts.packages"
+          - "'kitty' in ansible_facts.packages"
+
+    # --- zsh ---
+    - name: Check oh-my-zsh is installed
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.oh-my-zsh/oh-my-zsh.sh"
+      register: _terminal_env_omz
+
+    - name: Assert oh-my-zsh is installed
+      ansible.builtin.assert:
+        that: _terminal_env_omz.stat.exists
+
+    - name: Check powerlevel10k installed tag
+      ansible.builtin.command:
+        cmd: git -C "{{ ansible_facts['env']['HOME'] }}/.oh-my-zsh/custom/themes/powerlevel10k" tag --points-at HEAD
+      register: _terminal_env_p10k_tag
+      changed_when: false
+      # noqa: command-instead-of-module - ansible.builtin.git cannot query the current tag; no module alternative exists
+
+    - name: Assert powerlevel10k is cloned at the pinned version
+      ansible.builtin.assert:
+        that: "('v' + terminal_env_zsh_powerlevel10k_version) in _terminal_env_p10k_tag.stdout"
+
+    - name: Check fzf-tab, zsh-autosuggestions, zsh-syntax-highlighting are cloned
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.oh-my-zsh/custom/plugins/{{ item }}"
+      register: _terminal_env_zsh_plugins
+      loop:
+        - fzf-tab
+        - zsh-autosuggestions
+        - zsh-syntax-highlighting
+
+    - name: Assert zsh plugins are cloned
+      ansible.builtin.assert:
+        that: item.stat.exists and item.stat.isdir
+      loop: "{{ _terminal_env_zsh_plugins.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+    - name: Check Catppuccin zsh-syntax-highlighting theme is cloned
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/catppuccin-zsh-syntax-highlighting"
+      register: _terminal_env_zsh_catppuccin
+
+    - name: Assert Catppuccin zsh-syntax-highlighting theme is cloned
+      ansible.builtin.assert:
+        that: _terminal_env_zsh_catppuccin.stat.exists and _terminal_env_zsh_catppuccin.stat.isdir
+
+    # A grep-based command task here would be tempting but wrong: the
+    # command/shell modules' expand_argument_vars behavior (default true
+    # since ansible-core 2.16) expands "$HOME" in the pattern to the
+    # controller-resolved value (e.g. "/root") before grep ever runs, while
+    # the file itself legitimately contains the literal, unexpanded string
+    # "$HOME" — so a literal-match grep would never match. slurp + assert
+    # sidesteps this entirely (no shell-style var expansion applied to
+    # assert conditions).
+    - name: Slurp /etc/zsh/zshenv
+      ansible.builtin.slurp:
+        src: /etc/zsh/zshenv
+      register: _terminal_env_zshenv_raw
+
+    - name: Assert ZDOTDIR is set in /etc/zsh/zshenv
+      ansible.builtin.assert:
+        that: _terminal_env_expected_zdotdir_line in (_terminal_env_zshenv_raw.content | b64decode)
+
+    - name: Check .zshrc was deployed
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/.zshrc"
+      register: _terminal_env_zshrc
+
+    - name: Assert .zshrc was deployed
+      ansible.builtin.assert:
+        that: _terminal_env_zshrc.stat.exists
+
+    - name: Check ~/.zshrc symlink
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.zshrc"
+      register: _terminal_env_zshrc_symlink
+
+    - name: Assert ~/.zshrc is a symlink to the XDG config location
+      ansible.builtin.assert:
+        that:
+          - _terminal_env_zshrc_symlink.stat.islnk
+          - _terminal_env_zshrc_symlink.stat.lnk_target == ansible_facts['env']['HOME'] + '/.config/zsh/.zshrc'
+
+    - name: Check .p10k.zsh was deployed
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/.p10k.zsh"
+      register: _terminal_env_p10k_zsh
+
+    - name: Assert .p10k.zsh was deployed
+      ansible.builtin.assert:
+        that: _terminal_env_p10k_zsh.stat.exists
+
+    - name: Check default shell
+      ansible.builtin.command: "getent passwd {{ ansible_facts['user_id'] }}"
+      register: _terminal_env_passwd
+      changed_when: false
+
+    - name: Assert zsh is the default shell
+      ansible.builtin.assert:
+        that: _terminal_env_passwd.stdout.endswith('/usr/bin/zsh')
+
+    - name: Check direnv zsh hook was deployed
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/direnv.zsh"
+      register: _terminal_env_direnv_hook
+
+    - name: Assert direnv zsh hook was deployed
+      ansible.builtin.assert:
+        that: _terminal_env_direnv_hook.stat.exists
+
+    # --- kitty ---
+    - name: Check kitty.conf was deployed
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/kitty/kitty.conf"
+      register: _terminal_env_kitty_conf
+
+    - name: Assert kitty.conf was deployed
+      ansible.builtin.assert:
+        that: _terminal_env_kitty_conf.stat.exists
+
+    # --- tmux ---
+    - name: Check TPM was cloned
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.tmux/plugins/tpm/tpm"
+      register: _terminal_env_tpm
+
+    - name: Assert TPM was cloned
+      ansible.builtin.assert:
+        that: _terminal_env_tpm.stat.exists
+
+    - name: Resolve Catppuccin tmux pinned tag commit
+      ansible.builtin.command:
+        cmd: >-
+          git -C "{{ ansible_facts['env']['HOME'] }}/.config/tmux/plugins/catppuccin/tmux"
+          rev-parse --verify --quiet "refs/tags/v{{ terminal_env_tmux_catppuccin_version }}^{commit}"
+      register: _terminal_env_tmux_catppuccin_pinned_commit
+      changed_when: false
+      failed_when: false
+      # noqa: command-instead-of-module - ansible.builtin.git cannot resolve a tag to a commit; no module alternative exists
+
+    - name: Resolve Catppuccin tmux checked-out HEAD commit
+      ansible.builtin.command:
+        cmd: >-
+          git -C "{{ ansible_facts['env']['HOME'] }}/.config/tmux/plugins/catppuccin/tmux"
+          rev-parse --verify --quiet HEAD
+      register: _terminal_env_tmux_catppuccin_head_commit
+      changed_when: false
+      failed_when: false
+      # noqa: command-instead-of-module - ansible.builtin.git cannot query the current commit; no module alternative exists
+
+    - name: Assert Catppuccin tmux plugin is checked out at the pinned version
+      # Compare HEAD against the pinned tag's commit instead of matching tag
+      # names from `git tag --points-at HEAD`: the latter depends on which tags
+      # a shallow clone fetches and on upstream's moving latest/v2 tags, which
+      # made this assertion flaky across git versions.
+      ansible.builtin.assert:
+        that:
+          - _terminal_env_tmux_catppuccin_pinned_commit.rc == 0
+          - _terminal_env_tmux_catppuccin_head_commit.rc == 0
+          - _terminal_env_tmux_catppuccin_pinned_commit.stdout | trim
+            == _terminal_env_tmux_catppuccin_head_commit.stdout | trim
+        fail_msg: >-
+          catppuccin/tmux is not checked out at v{{ terminal_env_tmux_catppuccin_version }}.
+          pinned-tag commit rc={{ _terminal_env_tmux_catppuccin_pinned_commit.rc }}
+          stdout='{{ _terminal_env_tmux_catppuccin_pinned_commit.stdout | trim }}';
+          HEAD rc={{ _terminal_env_tmux_catppuccin_head_commit.rc }}
+          stdout='{{ _terminal_env_tmux_catppuccin_head_commit.stdout | trim }}'.
+
+    - name: Check TPM-managed tmux plugins are cloned
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/tmux/plugins/{{ item }}"
+      register: _terminal_env_tpm_plugins
+      loop:
+        - tmux-sensible
+        - tmux-resurrect
+        - tmux-continuum
+        - tmux-yank
+        - tmux-open
+
+    - name: Assert TPM-managed tmux plugins are cloned
+      ansible.builtin.assert:
+        that: item.stat.exists and item.stat.isdir
+      loop: "{{ _terminal_env_tpm_plugins.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+    - name: Check tmux.conf was deployed
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/tmux/tmux.conf"
+      register: _terminal_env_tmux_conf
+
+    - name: Assert tmux.conf was deployed
+      ansible.builtin.assert:
+        that: _terminal_env_tmux_conf.stat.exists
+
+    - name: Check tmux auto-start snippet was deployed
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/tmux.zsh"
+      register: _terminal_env_tmux_snippet
+
+    - name: Assert tmux auto-start snippet was deployed
+      ansible.builtin.assert:
+        that: _terminal_env_tmux_snippet.stat.exists

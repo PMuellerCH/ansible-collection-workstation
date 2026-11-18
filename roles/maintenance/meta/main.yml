@@ -1,0 +1,11 @@
+---
+galaxy_info:
+  role_name: maintenance
+  namespace: pmuellerch
+  author: Philipp Müller
+  license: MIT
+  description: >-
+    System maintenance: apt update + safe upgrade, autoremove/autoclean,
+    systemd journal vacuum, Docker and Flatpak cleanup
+  min_ansible_version: "2.17"
+dependencies: []

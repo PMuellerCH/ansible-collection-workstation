@@ -1,0 +1,14 @@
+---
+- name: Prepare
+  hosts: all
+  gather_facts: true
+  environment:
+    http_proxy: "{{ lookup('env', 'http_proxy') }}"
+    https_proxy: "{{ lookup('env', 'https_proxy') or lookup('env', 'http_proxy') }}"
+  tasks:
+    - name: Install git (provided by the base role on a real workstation; this role's LazyVim clone task depends on it being present)
+      ansible.builtin.apt:
+        name: git
+        state: present
+        update_cache: true
+      become: true

@@ -1,0 +1,40 @@
+---
+# ---- base ----
+# base_hostname has no default — required, see meta/argument_specs.yml
+
+# Format locale: dates, numbers, currency, paper, measurement
+base_locale_format: "de_CH.UTF-8"
+# UI locale: display language, error messages, app text
+base_locale_ui: "en_US.UTF-8"
+# Corporate proxy — leave empty on machines without a proxy
+base_http_proxy: ""
+# PEM content of the corporate proxy's CA certificate (TLS inspection). Leave
+# empty if the proxy CA is already in the system trust store.
+base_proxy_ca_cert_content: ""
+base_https_proxy: "{{ base_http_proxy }}"
+base_no_proxy: ""
+# HashiCorp Vault — leave empty on machines without Vault access
+base_vault_addr: ""
+# Desktop environment: gnome or cosmic. Shared across roles that touch DE settings.
+base_desktop_environment: gnome
+
+# ---- git ----
+# base_git_user_name and base_git_user_email have no default — required, see meta/argument_specs.yml
+
+base_git_default_branch: main
+base_git_pull_rebase: true
+base_git_push_default: simple
+base_git_editor: vim
+base_git_signing_enabled: true
+base_git_signing_key: "{{ ansible_facts['env']['HOME'] }}/.ssh/id_ed25519.pub"
+
+# ---- ssh ----
+base_ssh_extra_hosts: []
+
+# ---- python ----
+# renovate: datasource=github-releases depName=astral-sh/uv extractVersion=^(?<version>.*)$
+base_python_uv_version: "0.13.7"
+
+# ---- fonts ----
+# renovate: datasource=github-releases depName=ryanoasis/nerd-fonts extractVersion=^v(?<version>.*)$
+base_fonts_nerd_font_version: "3.5.1"

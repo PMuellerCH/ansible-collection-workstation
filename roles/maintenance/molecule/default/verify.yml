@@ -1,0 +1,42 @@
+---
+# This role is pure system housekeeping (apt/journal/docker/flatpak
+# commands), not file/config deployment, so there's little persistent state
+# to assert against. The base test image has neither Docker nor Flatpak
+# installed, which exercises the "skip gracefully when the tool isn't
+# present" path for both cleanup steps — convergence succeeding at all
+# (including idempotence, which molecule.yml's test_sequence checks
+# separately) is itself the main assertion for this role.
+- name: Verify
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Confirm apt cache is populated after the role's update task
+      ansible.builtin.command: apt-cache policy
+      register: _maintenance_apt_cache_check
+      changed_when: false
+
+    - name: Assert apt cache lookup succeeded
+      ansible.builtin.assert:
+        that: _maintenance_apt_cache_check.rc == 0
+
+    - name: Confirm Docker is absent in this test image
+      # which (not `command -v`) — ansible.builtin.command execs argv
+      # directly with no shell, and `command` has no standalone executable.
+      ansible.builtin.command: which docker
+      register: _maintenance_docker_check
+      changed_when: false
+      failed_when: false
+
+    - name: Assert the Docker-prune step's absence-detection premise holds
+      ansible.builtin.assert:
+        that: _maintenance_docker_check.rc != 0
+
+    - name: Confirm Flatpak is absent in this test image
+      ansible.builtin.command: which flatpak
+      register: _maintenance_flatpak_check
+      changed_when: false
+      failed_when: false
+
+    - name: Assert the Flatpak-cleanup step's absence-detection premise holds
+      ansible.builtin.assert:
+        that: _maintenance_flatpak_check.rc != 0

@@ -15,8 +15,8 @@ name: Molecule
 # changes within a role don't count either: every role here has an empty
 # dependencies: [] (galaxy_info is purely descriptive), so neither affects
 # runtime behavior molecule would catch. A change to a shared file
-# (requirements-molecule.yml, galaxy.yml) still runs the full matrix, since
-# those affect every role's test environment.
+# (requirements.yml, requirements-molecule.yml, galaxy.yml) still runs the full
+# matrix, since those affect every role's test environment.
 #
 # .github/requirements.txt gets its own content-aware check rather than a
 # blanket path match: it bundles both molecule's own dependencies
@@ -56,7 +56,7 @@ jobs:
           fetch-depth: 0
 
       # Only roles with a molecule/default scenario are testable; the others
-      # (opt-in per role, see CLAUDE.md) would fail on a missing molecule.yml.
+      # would fail on a missing molecule.yml.
       - name: List roles with a molecule scenario
         id: list-roles
         shell: bash
@@ -71,6 +71,7 @@ jobs:
           {
             echo "filters<<FILTERS_EOF"
             echo "shared:"
+            echo "  - 'requirements.yml'"
             echo "  - 'requirements-molecule.yml'"
             echo "  - 'galaxy.yml'"
             for d in roles/*/; do

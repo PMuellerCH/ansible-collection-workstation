@@ -1,0 +1,13 @@
+---
+- name: Converge
+  hosts: all
+  gather_facts: true
+  environment:
+    http_proxy: "{{ lookup('env', 'http_proxy') }}"
+    https_proxy: "{{ lookup('env', 'https_proxy') or lookup('env', 'http_proxy') }}"
+    HTTP_PROXY: "{{ lookup('env', 'http_proxy') }}"
+    HTTPS_PROXY: "{{ lookup('env', 'https_proxy') or lookup('env', 'http_proxy') }}"
+  roles:
+    - role: pmuellerch.workstation.desktop_customization
+      vars:
+        desktop_customization_desktop_environment: gnome

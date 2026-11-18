@@ -1,0 +1,11 @@
+---
+galaxy_info:
+  role_name: base
+  namespace: pmuellerch
+  author: Philipp Müller
+  license: MIT
+  description: >-
+    Foundational workstation setup: base system packages, hostname, locale,
+    corporate proxy, git, SSH, Python toolchain, and fonts.
+  min_ansible_version: "2.17"
+dependencies: []

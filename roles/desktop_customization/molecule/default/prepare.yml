@@ -1,0 +1,32 @@
+---
+- name: Prepare
+  hosts: all
+  gather_facts: true
+  environment:
+    http_proxy: "{{ lookup('env', 'http_proxy') }}"
+    https_proxy: "{{ lookup('env', 'https_proxy') or lookup('env', 'http_proxy') }}"
+  tasks:
+    # community.general.dconf needs psutil to detect a running D-Bus session
+    # and dbus-x11 (dbus-launch) to start one — neither is present in the
+    # bare test image and neither is something this role itself should
+    # install (real workstations already have a full desktop session).
+    - name: Install dconf test dependencies
+      ansible.builtin.apt:
+        name:
+          - python3-psutil
+          - dbus-x11
+          - dconf-cli
+          - dconf-service
+        state: present
+        update_cache: true
+      become: true
+
+    # Simulates a user who already has an unrelated custom keybinding
+    # configured before this role ever runs — verify.yml asserts it survives
+    # alongside the Flameshot entry the role adds, proving the role merges
+    # into the existing custom-keybindings list instead of overwriting it.
+    - name: Seed a pre-existing unrelated GNOME custom keybinding
+      community.general.dconf:
+        key: /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings
+        value: "['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/pre-existing-test/']"
+      become: false

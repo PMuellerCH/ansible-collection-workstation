@@ -1,0 +1,319 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: true
+  # Load the role's own defaults so the pinned-version assertion below tracks
+  # iac_tools_ansible_core_version as its single source of truth, rather than
+  # a second hardcoded literal that would silently go stale whenever Renovate
+  # bumps defaults/main.yml.
+  vars_files:
+    - ../../defaults/main.yml
+  vars:
+    _iac_tools_local_bin: "{{ ansible_facts['env']['HOME'] }}/.local/bin"
+  tasks:
+    # ── ansible ──────────────────────────────────────────────────────────
+    - name: Check ansible-core is importable via its pipx-installed binary
+      ansible.builtin.command: "{{ _iac_tools_local_bin }}/ansible --version"
+      register: _iac_tools_ansible_core_check
+      changed_when: false
+
+    - name: Assert ansible-core reports the pinned version
+      ansible.builtin.assert:
+        that: "iac_tools_ansible_core_version in _iac_tools_ansible_core_check.stdout"
+
+    - name: Inspect hvac injected into the ansible-core pipx venv
+      ansible.builtin.command: "{{ _iac_tools_local_bin }}/pipx runpip ansible-core show hvac"
+      register: _iac_tools_hvac_check
+      changed_when: false
+
+    - name: Assert the injected hvac is the expected version
+      ansible.builtin.assert:
+        that: "'Version: ' + iac_tools_hvac_version in _iac_tools_hvac_check.stdout"
+
+    - name: Inspect molecule injected into the ansible-core pipx venv
+      ansible.builtin.command: "{{ _iac_tools_local_bin }}/pipx runpip ansible-core show molecule"
+      register: _iac_tools_molecule_check
+      changed_when: false
+
+    - name: Assert the injected molecule is the expected version
+      ansible.builtin.assert:
+        that: "'Version: ' + iac_tools_ansible_molecule_version in _iac_tools_molecule_check.stdout"
+
+    - name: Inspect boto3 injected into the ansible-core pipx venv
+      ansible.builtin.command: "{{ _iac_tools_local_bin }}/pipx runpip ansible-core show boto3"
+      register: _iac_tools_boto3_check
+      changed_when: false
+
+    - name: Assert the injected boto3 is the expected version
+      ansible.builtin.assert:
+        that: "'Version: ' + iac_tools_aws_boto3_version in _iac_tools_boto3_check.stdout"
+
+    - name: Check Galaxy collections were installed
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.ansible/collections/ansible_collections/community/general"
+      register: _iac_tools_galaxy_check
+
+    - name: Assert community.general Galaxy collection is present
+      ansible.builtin.assert:
+        that: _iac_tools_galaxy_check.stat.exists
+
+    # ── docker ───────────────────────────────────────────────────────────
+    - name: Gather package facts
+      ansible.builtin.package_facts:
+        manager: apt
+
+    - name: Assert Docker packages are present
+      ansible.builtin.assert:
+        that:
+          - "'docker-ce' in ansible_facts.packages"
+          - "'docker-ce-cli' in ansible_facts.packages"
+          - "'containerd.io' in ansible_facts.packages"
+
+    - name: Check docker user is in the docker group
+      ansible.builtin.command: "id -nG {{ ansible_facts['user_id'] }}"
+      register: _iac_tools_docker_group_check
+      changed_when: false
+
+    - name: Assert user was added to the docker group
+      ansible.builtin.assert:
+        that: "'docker' in _iac_tools_docker_group_check.stdout"
+
+    # ── act ──────────────────────────────────────────────────────────────
+    - name: Check act reports the pinned version
+      ansible.builtin.command: act --version
+      register: _iac_tools_act_check
+      changed_when: false
+
+    - name: Assert act reports the pinned version
+      ansible.builtin.assert:
+        that: "iac_tools_act_version in _iac_tools_act_check.stdout"
+
+    # ── aws ──────────────────────────────────────────────────────────────
+    - name: Check AWS CLI reports the pinned version
+      ansible.builtin.command: aws --version
+      register: _iac_tools_aws_cli_check
+      changed_when: false
+
+    - name: Assert AWS CLI reports the pinned version
+      ansible.builtin.assert:
+        that: "iac_tools_aws_cli_version in _iac_tools_aws_cli_check.stdout"
+
+    - name: Check session-manager-plugin reports the pinned version
+      ansible.builtin.command: session-manager-plugin --version
+      register: _iac_tools_smp_check
+      changed_when: false
+
+    - name: Assert session-manager-plugin reports the pinned version
+      ansible.builtin.assert:
+        that: "iac_tools_aws_session_manager_plugin_version in _iac_tools_smp_check.stdout"
+
+    - name: Slurp deployed AWS config
+      ansible.builtin.slurp:
+        src: "{{ ansible_facts['env']['HOME'] }}/.aws/config"
+      register: _iac_tools_aws_config_slurp
+
+    - name: Assert AWS config contains the test profile
+      ansible.builtin.assert:
+        that:
+          - "'[profile molecule-test]' in (_iac_tools_aws_config_slurp.content | b64decode)"
+          - "'sso_account_id = 123456789012' in (_iac_tools_aws_config_slurp.content | b64decode)"
+
+    # ── terraform ────────────────────────────────────────────────────────
+    - name: Check terraform runs
+      ansible.builtin.command: terraform version
+      register: _iac_tools_terraform_check
+      changed_when: false
+
+    - name: Assert terraform reports a version
+      ansible.builtin.assert:
+        that: "'Terraform v' in _iac_tools_terraform_check.stdout"
+
+    - name: Check tflint reports the pinned version
+      ansible.builtin.command: tflint --version
+      register: _iac_tools_tflint_check
+      changed_when: false
+
+    - name: Assert tflint reports the pinned version
+      ansible.builtin.assert:
+        that: "iac_tools_tflint_version in _iac_tools_tflint_check.stdout"
+
+    - name: Check terraform-docs reports the pinned version
+      ansible.builtin.command: terraform-docs --version
+      register: _iac_tools_terraform_docs_check
+      changed_when: false
+
+    - name: Assert terraform-docs reports the pinned version
+      ansible.builtin.assert:
+        that: "iac_tools_terraform_docs_version in _iac_tools_terraform_docs_check.stdout"
+
+    - name: Check tfswitch reports the pinned version
+      ansible.builtin.command: tfswitch --version
+      register: _iac_tools_tfswitch_check
+      changed_when: false
+
+    - name: Assert tfswitch reports the pinned version
+      ansible.builtin.assert:
+        that: "iac_tools_tfswitch_version in _iac_tools_tfswitch_check.stdout"
+
+    - name: Check floci reports the pinned version
+      ansible.builtin.command: floci --version
+      register: _iac_tools_floci_check
+      changed_when: false
+
+    - name: Assert floci reports the pinned version
+      ansible.builtin.assert:
+        that: "iac_tools_floci_version in _iac_tools_floci_check.stdout"
+
+    - name: Slurp deployed terraformrc
+      ansible.builtin.slurp:
+        src: "{{ ansible_facts['env']['HOME'] }}/.config/terraform/terraformrc"
+      register: _iac_tools_terraformrc_slurp
+      no_log: true
+
+    - name: Assert terraformrc sets the plugin cache dir
+      ansible.builtin.assert:
+        that: "'plugin_cache_dir' in (_iac_tools_terraformrc_slurp.content | b64decode)"
+
+    # ── kubernetes_tools ─────────────────────────────────────────────────
+    - name: Check kubectl reports the pinned version
+      ansible.builtin.command: kubectl version --client
+      register: _iac_tools_kubectl_check
+      changed_when: false
+
+    - name: Assert kubectl reports the pinned version
+      ansible.builtin.assert:
+        that: "iac_tools_kubectl_version in _iac_tools_kubectl_check.stdout"
+
+    - name: Check k9s reports the pinned version
+      ansible.builtin.command: k9s version --short
+      register: _iac_tools_k9s_check
+      changed_when: false
+
+    - name: Assert k9s reports the pinned version
+      ansible.builtin.assert:
+        that: "iac_tools_k9s_version in _iac_tools_k9s_check.stdout"
+
+    - name: Check helm reports the pinned version
+      ansible.builtin.command: helm version --short
+      register: _iac_tools_helm_check
+      changed_when: false
+
+    - name: Assert helm reports the pinned version
+      ansible.builtin.assert:
+        that: "iac_tools_helm_version in _iac_tools_helm_check.stdout"
+
+    - name: Check kubectx reports the pinned version
+      ansible.builtin.command: kubectx --version
+      register: _iac_tools_kubectx_check
+      changed_when: false
+
+    - name: Assert kubectx reports the pinned version
+      ansible.builtin.assert:
+        that: "iac_tools_kubectx_version in _iac_tools_kubectx_check.stdout"
+
+    - name: Check kubens is installed
+      ansible.builtin.stat:
+        path: /usr/local/bin/kubens
+      register: _iac_tools_kubens_check
+
+    - name: Assert kubens is installed
+      ansible.builtin.assert:
+        that: _iac_tools_kubens_check.stat.exists
+
+    - name: Check stern reports the pinned version
+      ansible.builtin.command: stern --version
+      register: _iac_tools_stern_check
+      changed_when: false
+
+    - name: Assert stern reports the pinned version
+      ansible.builtin.assert:
+        that: "iac_tools_stern_version in _iac_tools_stern_check.stdout"
+
+    - name: Check krew is installed
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.krew/bin/kubectl-krew"
+      register: _iac_tools_krew_check
+
+    - name: Assert krew is installed
+      ansible.builtin.assert:
+        that: _iac_tools_krew_check.stat.exists
+
+    - name: Check kubeconform reports the pinned version
+      ansible.builtin.command: kubeconform -v
+      register: _iac_tools_kubeconform_check
+      changed_when: false
+
+    - name: Assert kubeconform reports the pinned version
+      ansible.builtin.assert:
+        that: "iac_tools_kubeconform_version in _iac_tools_kubeconform_check.stdout"
+
+    - name: Check kube-linter reports the pinned version
+      ansible.builtin.command: kube-linter version
+      register: _iac_tools_kube_linter_check
+      changed_when: false
+
+    - name: Assert kube-linter reports the pinned version
+      ansible.builtin.assert:
+        that: "iac_tools_kube_linter_version in _iac_tools_kube_linter_check.stdout"
+
+    - name: Check helm-diff plugin is installed
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.local/share/helm/plugins/helm-diff"
+      register: _iac_tools_helm_diff_check
+
+    - name: Assert helm-diff plugin is installed
+      ansible.builtin.assert:
+        that: _iac_tools_helm_diff_check.stat.exists
+
+    - name: Assert python3-kubernetes libraries are present (Ubuntu)
+      ansible.builtin.assert:
+        that:
+          - "'python3-kubernetes' in ansible_facts.packages"
+          - "'python3-hvac' in ansible_facts.packages"
+          - "'python3-jsonpatch' in ansible_facts.packages"
+          - "'python3-pyhcl' in ansible_facts.packages"
+      when: ansible_facts['distribution'] == 'Ubuntu'
+
+    - name: Slurp deployed kubeconfig
+      ansible.builtin.slurp:
+        src: "{{ ansible_facts['env']['HOME'] }}/.kube/config"
+      register: _iac_tools_kube_config_slurp
+
+    - name: Assert kubeconfig contains the test cluster/context
+      ansible.builtin.assert:
+        that:
+          - "'molecule-test-dev' in (_iac_tools_kube_config_slurp.content | b64decode)"
+          - "'arn:aws:eks:eu-central-1:123456789012:cluster/dev' in (_iac_tools_kube_config_slurp.content | b64decode)"
+          - "'current-context: molecule-test-dev' in (_iac_tools_kube_config_slurp.content | b64decode)"
+
+    # ── empty-list skip behavior (templates only render content when the
+    # driving list is non-empty; combined with the tasks' `length > 0`
+    # when: guard this is what actually skips deploying the file) ────────
+    - name: Render AWS config template with an empty profiles list
+      ansible.builtin.set_fact:
+        _iac_tools_empty_aws_render: "{{ lookup('template', playbook_dir ~ '/../../templates/aws-config.j2') }}"
+      vars:
+        iac_tools_aws_profiles: []
+
+    - name: Assert the AWS config template renders empty for an empty profiles list
+      # lookup('template', ...) on a template that renders to an empty
+      # string returns Python None (not "") under a real remote connection
+      # with gathered facts — an ansible-core quirk, not template behavior.
+      # default('', true) normalizes both None and Undefined to '' before
+      # comparing.
+      ansible.builtin.assert:
+        that: _iac_tools_empty_aws_render | default('', true) | trim == ""
+
+    - name: Render kubeconfig template with an empty clusters list
+      ansible.builtin.set_fact:
+        _iac_tools_empty_kube_render: "{{ lookup('template', playbook_dir ~ '/../../templates/kube-config.j2') }}"
+      vars:
+        iac_tools_kubernetes_clusters: []
+        iac_tools_kubernetes_current_context: ""
+
+    - name: Assert the kubeconfig template renders no cluster/context/user entries for an empty clusters list
+      ansible.builtin.assert:
+        that:
+          - "'cluster/' not in _iac_tools_empty_kube_render"
+          - "'current-context:' in _iac_tools_empty_kube_render"
+          - "'current-context: molecule' not in _iac_tools_empty_kube_render"

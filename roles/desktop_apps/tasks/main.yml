@@ -1,0 +1,245 @@
+---
+# --- onlyoffice ---
+- name: Create apt keyrings directory
+  ansible.builtin.file:
+    path: /usr/share/keyrings
+    state: directory
+    mode: "0755"
+  become: true
+  when: desktop_apps_onlyoffice_enabled
+  tags: [onlyoffice, desktop_apps]
+
+- name: Download OnlyOffice GPG key
+  ansible.builtin.get_url:
+    url: https://download.onlyoffice.com/GPG-KEY-ONLYOFFICE
+    dest: /usr/share/keyrings/onlyoffice.asc
+    mode: "0644"
+    force: false
+  become: true
+  when: desktop_apps_onlyoffice_enabled
+  tags: [onlyoffice, desktop_apps]
+
+- name: Install python3-debian (required by deb822_repository)
+  # deb822_repository can normally auto-install this dependency itself on a
+  # real run, but not under --check ("python3-debian must be installed to
+  # use check mode") — install it explicitly up front so the apt-repository
+  # task below behaves consistently in either mode. Same pattern as this
+  # collection's iac_tools role (Docker/Terraform apt repositories).
+  ansible.builtin.apt:
+    name: python3-debian
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: desktop_apps_onlyoffice_enabled
+  tags: [onlyoffice, desktop_apps]
+
+- name: Add OnlyOffice apt repository
+  ansible.builtin.deb822_repository:
+    name: onlyoffice
+    types: deb
+    uris: https://download.onlyoffice.com/repo/debian
+    # Suite squeeze is intentional — this is OnlyOffice's actual apt suite
+    # name regardless of Ubuntu version, not a stale/incorrect value.
+    suites: squeeze
+    components: main
+    signed_by: /usr/share/keyrings/onlyoffice.asc
+    state: present
+  become: true
+  # python3-debian is only installed for real on a real (non-check) run —
+  # see the task above — so under --check it would still be missing at this
+  # point (a normal apt task never installs anything for real in check
+  # mode). Skip here rather than fail, matching this collection's general
+  # pattern for resources that would only exist after a real run.
+  when: desktop_apps_onlyoffice_enabled and not ansible_check_mode
+  tags: [onlyoffice, desktop_apps]
+
+- name: Install OnlyOffice Desktop Editors
+  ansible.builtin.apt:
+    name: onlyoffice-desktopeditors
+    state: present
+    update_cache: true
+  become: true
+  # Depends on both the GPG key download and the apt repository having
+  # actually happened for real — neither does under --check (get_url
+  # reports changed without writing; deb822_repository is skipped outright
+  # above) — so this must be skipped too, not merely tolerated via
+  # ignore_errors. See "Check-mode guards for chained download→consume
+  # tasks" in this collection's conventions.
+  when: desktop_apps_onlyoffice_enabled and not ansible_check_mode
+  tags: [onlyoffice, desktop_apps]
+
+# --- firefox ---
+# Firefox itself is not installed by this role — it ships pre-installed with
+# Pop!_OS / most Ubuntu desktop images. This only deploys system-wide policy.
+- name: Create Firefox policies directory
+  ansible.builtin.file:
+    path: /etc/firefox/policies
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  become: true
+  when: desktop_apps_firefox_enabled
+  tags: [firefox, desktop_apps]
+
+- name: Deploy Firefox policies (Bitwarden extension, de-CH dictionary, password manager disabled)
+  ansible.builtin.copy:
+    src: policies.json
+    dest: /etc/firefox/policies/policies.json
+    owner: root
+    group: root
+    mode: "0644"
+  become: true
+  when: desktop_apps_firefox_enabled
+  tags: [firefox, desktop_apps]
+
+# --- brave (opt-in alternative browser; Firefox remains the default —
+# neither this nor librewolf below change that) ---
+- name: Create apt keyrings directory
+  # Deliberately duplicates the onlyoffice section's copy of this task so
+  # --tags brave alone is self-sufficient, same reasoning as presenterm.nvim's
+  # redundant directory task in the cli_dev_env role.
+  ansible.builtin.file:
+    path: /usr/share/keyrings
+    state: directory
+    mode: "0755"
+  become: true
+  when: desktop_apps_brave_enabled
+  tags: [brave, desktop_apps]
+
+- name: Download Brave GPG key
+  ansible.builtin.get_url:
+    url: https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
+    dest: /usr/share/keyrings/brave-browser-archive-keyring.gpg
+    mode: "0644"
+    force: false
+  become: true
+  when: desktop_apps_brave_enabled
+  tags: [brave, desktop_apps]
+
+- name: Install python3-debian (required by deb822_repository)
+  # See the onlyoffice section above for why this is needed explicitly
+  # rather than relying on deb822_repository's own auto-install (which
+  # doesn't work under --check).
+  ansible.builtin.apt:
+    name: python3-debian
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: desktop_apps_brave_enabled
+  tags: [brave, desktop_apps]
+
+- name: Add Brave apt repository
+  ansible.builtin.deb822_repository:
+    name: brave-browser-release
+    types: deb
+    uris: https://brave-browser-apt-release.s3.brave.com/
+    suites: stable
+    components: main
+    signed_by: /usr/share/keyrings/brave-browser-archive-keyring.gpg
+    state: present
+  become: true
+  when: desktop_apps_brave_enabled and not ansible_check_mode
+  tags: [brave, desktop_apps]
+
+- name: Install Brave
+  ansible.builtin.apt:
+    name: brave-browser
+    state: present
+    update_cache: true
+  become: true
+  when: desktop_apps_brave_enabled and not ansible_check_mode
+  tags: [brave, desktop_apps]
+
+- name: Create Brave managed policies directory
+  ansible.builtin.file:
+    path: /etc/brave/policies/managed
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  become: true
+  when: desktop_apps_brave_enabled
+  tags: [brave, desktop_apps]
+
+- name: Deploy Brave policies (crypto wallet/rewards disabled, Bitwarden extension, password manager disabled)
+  ansible.builtin.copy:
+    src: brave_policies.json
+    dest: /etc/brave/policies/managed/policies.json
+    owner: root
+    group: root
+    mode: "0644"
+  become: true
+  when: desktop_apps_brave_enabled
+  tags: [brave, desktop_apps]
+
+# --- librewolf (opt-in alternative browser) ---
+- name: Install extrepo (repository manager LibreWolf's apt repo is distributed through)
+  ansible.builtin.apt:
+    name: extrepo
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: desktop_apps_librewolf_enabled
+  tags: [librewolf, desktop_apps]
+
+- name: Check if the LibreWolf extrepo source is already enabled
+  ansible.builtin.stat:
+    path: /etc/apt/sources.list.d/extrepo_librewolf.sources
+  register: desktop_apps_librewolf_extrepo_stat
+  when: desktop_apps_librewolf_enabled
+  tags: [librewolf, desktop_apps]
+
+- name: Enable the LibreWolf extrepo source
+  # extrepo has no dedicated Ansible module; it fetches the repository's
+  # signed policy (URL + GPG key) from extrepo's own curated index and
+  # writes /etc/apt/sources.list.d/extrepo_librewolf.sources — no manual
+  # key/sources-file handling needed, unlike Brave above. Needs real
+  # network access (skipped under --check, same as the apt repo tasks
+  # above), and is guarded by the stat check so it only ever runs once.
+  ansible.builtin.command: extrepo enable librewolf
+  become: true
+  changed_when: true
+  when: >-
+    not ansible_check_mode and
+    desktop_apps_librewolf_enabled and
+    not desktop_apps_librewolf_extrepo_stat.stat.exists
+  # noqa: command-instead-of-module - extrepo has no Ansible module; this is its own CLI's documented interface
+  tags: [librewolf, desktop_apps]
+
+- name: Install LibreWolf
+  ansible.builtin.apt:
+    name: librewolf
+    state: present
+    update_cache: true
+  become: true
+  when: desktop_apps_librewolf_enabled and not ansible_check_mode
+  tags: [librewolf, desktop_apps]
+
+- name: Create LibreWolf policies directory
+  ansible.builtin.file:
+    path: /etc/librewolf/policies
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  become: true
+  when: desktop_apps_librewolf_enabled
+  tags: [librewolf, desktop_apps]
+
+- name: Deploy LibreWolf policies (Bitwarden extension, de-CH dictionary, password manager disabled)
+  # LibreWolf is a Firefox fork and reads the identical Mozilla policies.json
+  # schema from its own /etc/librewolf/policies/ path — the same file
+  # Firefox uses above is reused as-is, not duplicated.
+  ansible.builtin.copy:
+    src: policies.json
+    dest: /etc/librewolf/policies/policies.json
+    owner: root
+    group: root
+    mode: "0644"
+  become: true
+  when: desktop_apps_librewolf_enabled
+  tags: [librewolf, desktop_apps]

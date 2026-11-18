@@ -1,0 +1,1140 @@
+---
+# bat
+- name: Install bat
+  ansible.builtin.apt:
+    name: bat
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: modern_cli_bat_enabled
+  tags: [bat, modern_cli]
+
+- name: Create bat config and themes directories
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/bat/themes"
+    state: directory
+    mode: "0755"
+  become: false
+  when: modern_cli_bat_enabled
+  tags: [bat, modern_cli]
+
+- name: Deploy bat config
+  ansible.builtin.copy:
+    src: bat_config
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/bat/config"
+    mode: "0644"
+    force: false
+  become: false
+  when: modern_cli_bat_enabled
+  tags: [bat, modern_cli]
+
+- name: Download Catppuccin Mocha theme for bat
+  ansible.builtin.get_url:
+    url: "https://raw.githubusercontent.com/catppuccin/bat/{{ modern_cli_bat_theme_ref }}/themes/Catppuccin%20Mocha.tmTheme"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/bat/themes/Catppuccin Mocha.tmTheme"
+    checksum: "{{ modern_cli_bat_theme_checksum }}"
+    mode: "0644"
+  become: false
+  when: modern_cli_bat_enabled
+  notify: Rebuild bat cache
+  ignore_errors: "{{ ansible_check_mode }}"
+  tags: [bat, modern_cli]
+
+# btop
+- name: Install btop
+  ansible.builtin.apt:
+    name: btop
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: modern_cli_btop_enabled
+  tags: [btop, modern_cli]
+
+- name: Create btop themes directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/btop/themes"
+    state: directory
+    mode: "0755"
+  become: false
+  when: modern_cli_btop_enabled
+  tags: [btop, modern_cli]
+
+- name: Check if Catppuccin Mocha btop theme is installed
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/btop/themes/catppuccin_mocha.theme"
+  register: modern_cli_btop_theme_stat
+  become: false
+  when: modern_cli_btop_enabled
+  tags: [btop, modern_cli]
+
+- name: Download Catppuccin btop themes archive
+  ansible.builtin.get_url:
+    url: "https://github.com/catppuccin/btop/releases/download/{{ modern_cli_btop_catppuccin_version }}/themes.tar.gz"
+    dest: "/tmp/catppuccin-btop-themes.tar.gz"
+    checksum: "{{ modern_cli_btop_catppuccin_checksum }}"
+    mode: "0644"
+  register: modern_cli_btop_theme_archive
+  when: modern_cli_btop_enabled
+  tags: [btop, modern_cli]
+
+- name: Extract Catppuccin Mocha btop theme
+  ansible.builtin.unarchive:
+    src: "/tmp/catppuccin-btop-themes.tar.gz"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/btop/themes"
+    include:
+      - themes/catppuccin_mocha.theme
+    extra_opts:
+      - --strip-components=1
+    remote_src: true
+  become: false
+  when: >-
+    modern_cli_btop_enabled and
+    (modern_cli_btop_theme_archive.changed or not modern_cli_btop_theme_stat.stat.exists)
+  ignore_errors: "{{ ansible_check_mode }}"
+  tags: [btop, modern_cli]
+
+- name: Configure btop to use Catppuccin Mocha theme
+  ansible.builtin.copy:
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/btop/btop.conf"
+    content: |
+      color_theme = "catppuccin_mocha"
+    mode: "0644"
+    force: false
+  become: false
+  when: modern_cli_btop_enabled
+  tags: [btop, modern_cli]
+
+# htop
+- name: Install htop
+  ansible.builtin.apt:
+    name: htop
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: modern_cli_htop_enabled
+  tags: [htop, modern_cli]
+
+# eza
+- name: Install eza
+  ansible.builtin.apt:
+    name: eza
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: modern_cli_eza_enabled
+  tags: [cli-tools, modern_cli]
+
+# fd
+- name: Install fd-find
+  ansible.builtin.apt:
+    name: fd-find
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: modern_cli_fd_enabled
+  tags: [cli-tools, modern_cli]
+
+- name: Create /usr/local/bin/fd symlink (fd-find installs as fdfind on Debian/Ubuntu)
+  ansible.builtin.file:
+    src: /usr/bin/fdfind
+    dest: /usr/local/bin/fd
+    state: link
+    force: true
+  become: true
+  when: modern_cli_fd_enabled
+  ignore_errors: "{{ ansible_check_mode }}"
+  tags: [cli-tools, modern_cli]
+
+# ripgrep
+- name: Install ripgrep
+  ansible.builtin.apt:
+    name: ripgrep
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: modern_cli_ripgrep_enabled
+  tags: [cli-tools, modern_cli]
+
+# zoxide
+- name: Install zoxide
+  ansible.builtin.apt:
+    name: zoxide
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: modern_cli_zoxide_enabled
+  tags: [cli-tools, modern_cli]
+
+# fzf
+- name: Get installed fzf version
+  ansible.builtin.command: fzf --version
+  register: modern_cli_fzf_current_version
+  changed_when: false
+  failed_when: false
+  when: modern_cli_fzf_enabled
+  tags: [fzf, modern_cli]
+
+- name: Download fzf archive
+  ansible.builtin.get_url:
+    url: "https://github.com/junegunn/fzf/releases/download/v{{ modern_cli_fzf_version }}/fzf-{{ modern_cli_fzf_version }}-linux_amd64.tar.gz"
+    dest: "/tmp/fzf-{{ modern_cli_fzf_version }}-linux_amd64.tar.gz"
+    # junegunn/fzf publishes a plain sha256sum-format checksums file per
+    # release; get_url fetches and matches against it by the source URL's
+    # basename, so there's no static checksum to keep in sync by hand when
+    # Renovate bumps modern_cli_fzf_version.
+    checksum: "sha256:https://github.com/junegunn/fzf/releases/download/v{{ modern_cli_fzf_version }}/fzf_{{ modern_cli_fzf_version }}_checksums.txt"
+    mode: "0644"
+  when: >-
+    modern_cli_fzf_enabled and
+    (modern_cli_fzf_current_version.rc != 0 or modern_cli_fzf_version not in modern_cli_fzf_current_version.stdout)
+  tags: [fzf, modern_cli]
+
+- name: Install fzf binary to /usr/local/bin
+  ansible.builtin.unarchive:
+    src: "/tmp/fzf-{{ modern_cli_fzf_version }}-linux_amd64.tar.gz"
+    dest: /usr/local/bin/
+    include:
+      - fzf
+    remote_src: true
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and
+    modern_cli_fzf_enabled and
+    (modern_cli_fzf_current_version.rc != 0 or modern_cli_fzf_version not in modern_cli_fzf_current_version.stdout)
+  tags: [fzf, modern_cli]
+
+# presenterm (binary + mermaid-cli only — the neovim plugin config is not
+# deployed here; that belongs to the cli_dev_env role's own neovim plugin
+# management, not modern_cli)
+- name: Get installed presenterm version
+  ansible.builtin.command: presenterm --version
+  register: modern_cli_presenterm_current_version
+  changed_when: false
+  failed_when: false
+  when: modern_cli_presenterm_enabled
+  tags: [presenterm, modern_cli]
+
+- name: Download presenterm archive
+  ansible.builtin.get_url:
+    url: "{{ modern_cli_presenterm_download_base }}/{{ modern_cli_presenterm_archive }}"
+    dest: "/tmp/{{ modern_cli_presenterm_archive }}"
+    # mfontanini/presenterm publishes a matching .sha512 file per release
+    # asset — get_url fetches and verifies against it directly (matched by
+    # the source URL's basename), so there's no static checksum to keep in
+    # sync by hand when Renovate bumps modern_cli_presenterm_version.
+    checksum: "sha512:{{ modern_cli_presenterm_download_base }}/{{ modern_cli_presenterm_archive }}.sha512"
+    mode: "0644"
+  when: >-
+    modern_cli_presenterm_enabled and
+    (modern_cli_presenterm_current_version.rc != 0 or modern_cli_presenterm_version not in modern_cli_presenterm_current_version.stdout)
+  tags: [presenterm, modern_cli]
+
+- name: Install presenterm binary to /usr/local/bin
+  ansible.builtin.unarchive:
+    src: "/tmp/{{ modern_cli_presenterm_archive }}"
+    dest: /usr/local/bin/
+    include:
+      - "presenterm-{{ modern_cli_presenterm_version }}/presenterm"
+    extra_opts:
+      - --strip-components=1
+    remote_src: true
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and
+    modern_cli_presenterm_enabled and
+    (modern_cli_presenterm_current_version.rc != 0 or modern_cli_presenterm_version not in modern_cli_presenterm_current_version.stdout)
+  tags: [presenterm, modern_cli]
+
+- name: Check if a working npm is already available
+  # mermaid-cli only needs *some* working Node/npm, not this exact pinned
+  # version — if another role already provided one (e.g. a newer NodeSource
+  # install), pinning/holding our own older apt version below would force
+  # an unwanted downgrade of a shared system runtime other tools may
+  # depend on at a specific major version.
+  #
+  # become: true here matters: the later "Install mermaid-cli globally via
+  # npm" task also runs with become: true, and sudo does not preserve the
+  # invoking user's $PATH. Checking as the unprivileged user could find a
+  # user-local npm (e.g. via nvm) that root can't see, skip the apt
+  # install below, and then fail downstream once mermaid-cli's install
+  # runs as root. Checking with the same privilege keeps this guard
+  # consistent with what actually runs later.
+  ansible.builtin.command: npm --version
+  register: modern_cli_npm_check
+  become: true
+  changed_when: false
+  failed_when: false
+  when: modern_cli_presenterm_enabled
+  tags: [presenterm, modern_cli]
+
+- name: Install nodejs and npm (required for mermaid-cli)
+  # Ubuntu's nodejs apt package does not depend on or provide npm — it's a
+  # separate package. Without it, community.general.npm below fails with
+  # "Failed to find required executable npm" on a host where no other role
+  # already installed npm (e.g. via NodeSource).
+  ansible.builtin.apt:
+    name:
+      - nodejs
+      - npm
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: modern_cli_presenterm_enabled and modern_cli_npm_check.rc != 0
+  tags: [presenterm, modern_cli]
+
+- name: Install mermaid-cli globally via npm
+  community.general.npm:
+    name: "@mermaid-js/mermaid-cli"
+    version: "{{ modern_cli_presenterm_mermaid_cli_version }}"
+    global: true
+    state: present
+  become: true
+  environment:
+    PUPPETEER_SKIP_DOWNLOAD: "true"
+  when: modern_cli_presenterm_enabled
+  tags: [presenterm, modern_cli]
+
+- name: Ensure mermaid config directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/mermaid"
+    state: directory
+    mode: "0755"
+  become: false
+  when: modern_cli_presenterm_enabled
+  tags: [presenterm, modern_cli]
+
+- name: Deploy puppeteer config for mermaid-cli
+  ansible.builtin.copy:
+    src: puppeteer-config.json
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/mermaid/puppeteer-config.json"
+    mode: "0644"
+    force: false
+  become: false
+  when: modern_cli_presenterm_enabled
+  tags: [presenterm, modern_cli]
+
+# emoji-fzf (CLI half of emoji-picker; the GUI half, smile, belongs to
+# desktop_customization). Installed via pipx — this is the first pipx-based
+# tool in modern_cli, so it bootstraps its own adequate pipx, self-contained,
+# same pattern as the code_quality_tools role: community.general.pipx
+# requires pipx >= 1.7.0, but Ubuntu 24.04's apt-provided pipx is only 1.4.3.
+- name: Install python3-pip and python3-venv (required to bootstrap a newer pipx and its managed venvs)
+  ansible.builtin.apt:
+    name:
+      - python3-pip
+      - python3-venv
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: modern_cli_emoji_fzf_enabled
+  tags: [emoji_fzf, modern_cli]
+
+- name: Ensure pipx >= minimum version is importable via `python -m pipx`
+  ansible.builtin.pip:
+    name: "pipx=={{ modern_cli_pipx_min_version }}"
+    extra_args: "--user --break-system-packages"
+    executable: pip3
+  become: false
+  when: modern_cli_emoji_fzf_enabled
+  tags: [emoji_fzf, modern_cli]
+
+- name: Install emoji-fzf via pipx
+  community.general.pipx:
+    name: "emoji-fzf=={{ modern_cli_emoji_fzf_version }}"
+    state: present
+  become: false
+  when: not ansible_check_mode and modern_cli_emoji_fzf_enabled
+  tags: [emoji_fzf, modern_cli]
+
+# sd
+- name: Install sd
+  ansible.builtin.apt:
+    name: sd
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: modern_cli_sd_enabled
+  tags: [cli-tools, modern_cli]
+
+# duf
+- name: Install duf
+  ansible.builtin.apt:
+    name: duf
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: modern_cli_duf_enabled
+  tags: [cli-tools, modern_cli]
+
+# gping
+- name: Install gping
+  ansible.builtin.apt:
+    name: gping
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: modern_cli_gping_enabled
+  tags: [cli-tools, modern_cli]
+
+# hexyl
+- name: Install hexyl
+  ansible.builtin.apt:
+    name: hexyl
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: modern_cli_hexyl_enabled
+  tags: [cli-tools, modern_cli]
+
+# delta (apt package name git-delta, binary name delta) — includes Catppuccin
+# Mocha theming via git config, since delta only has meaningful theming once
+# wired into git itself (unlike bat/btop, which have standalone config files).
+- name: Install delta
+  ansible.builtin.apt:
+    name: git-delta
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: modern_cli_delta_enabled
+  tags: [delta, modern_cli]
+
+- name: Create git conf.d directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/git"
+    state: directory
+    mode: "0755"
+  become: false
+  when: modern_cli_delta_enabled
+  tags: [delta, modern_cli]
+
+- name: Download Catppuccin Mocha theme for delta
+  ansible.builtin.get_url:
+    url: "https://raw.githubusercontent.com/catppuccin/delta/{{ modern_cli_delta_catppuccin_ref }}/catppuccin.gitconfig"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/git/catppuccin-delta.gitconfig"
+    checksum: "{{ modern_cli_delta_catppuccin_checksum }}"
+    mode: "0644"
+  become: false
+  when: modern_cli_delta_enabled
+  tags: [delta, modern_cli]
+
+- name: Include Catppuccin delta theme file in global gitconfig
+  community.general.git_config:
+    name: include.path
+    value: "{{ ansible_facts['env']['HOME'] }}/.config/git/catppuccin-delta.gitconfig"
+    scope: global
+  become: false
+  when: modern_cli_delta_enabled and not ansible_check_mode
+  tags: [delta, modern_cli]
+
+- name: Set delta as git's diff pager, with the Catppuccin Mocha theme
+  community.general.git_config:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    scope: global
+  become: false
+  loop:
+    - name: core.pager
+      value: delta
+    - name: delta.features
+      value: catppuccin-mocha
+  when: modern_cli_delta_enabled and not ansible_check_mode
+  tags: [delta, modern_cli]
+
+# procs (github release zip; dalance/procs publishes no checksum file, so the
+# checksum is derived at run time from GitHub's per-asset digest — see README)
+- name: Install unzip (required to extract the procs zip archive)
+  ansible.builtin.apt:
+    name: unzip
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: modern_cli_procs_enabled
+  tags: [procs, modern_cli]
+
+- name: Get installed procs version
+  ansible.builtin.command: procs --version
+  register: modern_cli_procs_current_version
+  changed_when: false
+  failed_when: false
+  when: modern_cli_procs_enabled
+  tags: [procs, modern_cli]
+
+- name: Fetch procs release metadata for the GitHub asset digest
+  # dalance/procs publishes no checksum file, so the checksum is derived at run
+  # time from GitHub's own per-asset digest for the pinned version (see the
+  # "Checksum verification" note in README).
+  ansible.builtin.get_url:
+    url: "https://api.github.com/repos/dalance/procs/releases/tags/v{{ modern_cli_procs_version }}"
+    dest: "/tmp/procs-{{ modern_cli_procs_version }}_release.json"
+    force: true
+    headers: >-
+      {{ {'Accept': 'application/vnd.github+json'}
+         | combine({'Authorization': 'Bearer ' + modern_cli_github_api_token}
+                   if modern_cli_github_api_token else {}) }}
+    mode: "0644"
+  no_log: "{{ modern_cli_github_api_token | length > 0 }}"
+  when: >-
+    not ansible_check_mode and
+    modern_cli_procs_enabled and
+    (modern_cli_procs_current_version.rc != 0 or
+     modern_cli_procs_version not in modern_cli_procs_current_version.stdout)
+  tags: [procs, modern_cli]
+
+- name: Read procs release metadata
+  ansible.builtin.slurp:
+    path: "/tmp/procs-{{ modern_cli_procs_version }}_release.json"
+  register: modern_cli_procs_release_raw
+  when: >-
+    not ansible_check_mode and
+    modern_cli_procs_enabled and
+    (modern_cli_procs_current_version.rc != 0 or
+     modern_cli_procs_version not in modern_cli_procs_current_version.stdout)
+  tags: [procs, modern_cli]
+
+- name: Resolve procs archive checksum from the release metadata
+  ansible.builtin.set_fact:
+    modern_cli_procs_checksum: >-
+      {{ (modern_cli_procs_release_raw.content | b64decode | from_json).assets
+         | selectattr('name', 'equalto', 'procs-v' + modern_cli_procs_version + '-x86_64-linux.zip')
+         | map(attribute='digest') | select('string') | first | default('') }}
+  when: >-
+    not ansible_check_mode and
+    modern_cli_procs_enabled and
+    (modern_cli_procs_current_version.rc != 0 or
+     modern_cli_procs_version not in modern_cli_procs_current_version.stdout)
+  tags: [procs, modern_cli]
+
+- name: Assert GitHub published a sha256 digest for the procs archive
+  ansible.builtin.assert:
+    that: modern_cli_procs_checksum.startswith('sha256:')
+    fail_msg: >-
+      GitHub published no sha256 digest for procs-v{{ modern_cli_procs_version }}-x86_64-linux.zip;
+      cannot verify the download.
+  when: >-
+    not ansible_check_mode and
+    modern_cli_procs_enabled and
+    (modern_cli_procs_current_version.rc != 0 or
+     modern_cli_procs_version not in modern_cli_procs_current_version.stdout)
+  tags: [procs, modern_cli]
+
+- name: Download procs archive
+  ansible.builtin.get_url:
+    url: "https://github.com/dalance/procs/releases/download/v{{ modern_cli_procs_version }}/procs-v{{ modern_cli_procs_version }}-x86_64-linux.zip"
+    dest: "/tmp/procs-{{ modern_cli_procs_version }}.zip"
+    checksum: "{{ modern_cli_procs_checksum }}"
+    mode: "0644"
+  when: >-
+    not ansible_check_mode and
+    modern_cli_procs_enabled and
+    (modern_cli_procs_current_version.rc != 0 or
+     modern_cli_procs_version not in modern_cli_procs_current_version.stdout)
+  tags: [procs, modern_cli]
+
+- name: Install procs binary to /usr/local/bin
+  ansible.builtin.unarchive:
+    src: "/tmp/procs-{{ modern_cli_procs_version }}.zip"
+    dest: /usr/local/bin/
+    include:
+      - procs
+    remote_src: true
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and
+    modern_cli_procs_enabled and
+    (modern_cli_procs_current_version.rc != 0 or
+     modern_cli_procs_version not in modern_cli_procs_current_version.stdout)
+  tags: [procs, modern_cli]
+
+# dust (github release .deb; bootandy/dust publishes no checksum file, so the
+# checksum is derived at run time from GitHub's own per-asset digest for the
+# pinned version — see the digest-checksum note in README. Nothing to keep in
+# sync by hand when Renovate bumps the version. Installed .deb is apt-held like
+# any other, same pattern as trivy in code_quality_tools.)
+- name: Get installed dust version
+  ansible.builtin.command: dust --version
+  register: modern_cli_dust_current_version
+  changed_when: false
+  failed_when: false
+  when: modern_cli_dust_enabled
+  tags: [dust, modern_cli]
+
+- name: Fetch dust release metadata for the GitHub asset digest
+  ansible.builtin.get_url:
+    url: "https://api.github.com/repos/bootandy/dust/releases/tags/v{{ modern_cli_dust_version }}"
+    dest: "/tmp/du-dust_{{ modern_cli_dust_version }}_release.json"
+    force: true
+    headers: >-
+      {{ {'Accept': 'application/vnd.github+json'}
+         | combine({'Authorization': 'Bearer ' + modern_cli_github_api_token}
+                   if modern_cli_github_api_token else {}) }}
+    mode: "0644"
+  # Suppress output only when a token is in use, so the Bearer header cannot
+  # leak into invocation.module_args under -v or on failure. Unauthenticated
+  # runs keep full logging.
+  no_log: "{{ modern_cli_github_api_token | length > 0 }}"
+  when: >-
+    not ansible_check_mode and
+    modern_cli_dust_enabled and
+    (modern_cli_dust_current_version.rc != 0 or
+     modern_cli_dust_version not in modern_cli_dust_current_version.stdout)
+  tags: [dust, modern_cli]
+
+- name: Read dust release metadata
+  ansible.builtin.slurp:
+    path: "/tmp/du-dust_{{ modern_cli_dust_version }}_release.json"
+  register: modern_cli_dust_release_raw
+  when: >-
+    not ansible_check_mode and
+    modern_cli_dust_enabled and
+    (modern_cli_dust_current_version.rc != 0 or
+     modern_cli_dust_version not in modern_cli_dust_current_version.stdout)
+  tags: [dust, modern_cli]
+
+- name: Resolve dust .deb checksum from the release metadata
+  ansible.builtin.set_fact:
+    modern_cli_dust_checksum: >-
+      {{ (modern_cli_dust_release_raw.content | b64decode | from_json).assets
+         | selectattr('name', 'equalto', 'du-dust_' + modern_cli_dust_version + '-1_amd64.deb')
+         | map(attribute='digest') | select('string') | first | default('') }}
+  when: >-
+    not ansible_check_mode and
+    modern_cli_dust_enabled and
+    (modern_cli_dust_current_version.rc != 0 or
+     modern_cli_dust_version not in modern_cli_dust_current_version.stdout)
+  tags: [dust, modern_cli]
+
+- name: Assert GitHub published a sha256 digest for the dust .deb
+  ansible.builtin.assert:
+    that: modern_cli_dust_checksum.startswith('sha256:')
+    fail_msg: >-
+      GitHub published no sha256 digest for du-dust_{{ modern_cli_dust_version }}-1_amd64.deb;
+      cannot verify the download.
+  when: >-
+    not ansible_check_mode and
+    modern_cli_dust_enabled and
+    (modern_cli_dust_current_version.rc != 0 or
+     modern_cli_dust_version not in modern_cli_dust_current_version.stdout)
+  tags: [dust, modern_cli]
+
+- name: Download dust .deb
+  ansible.builtin.get_url:
+    url: "https://github.com/bootandy/dust/releases/download/v{{ modern_cli_dust_version }}/du-dust_{{ modern_cli_dust_version }}-1_amd64.deb"
+    dest: "/tmp/du-dust_{{ modern_cli_dust_version }}_amd64.deb"
+    checksum: "{{ modern_cli_dust_checksum }}"
+    mode: "0644"
+  when: >-
+    not ansible_check_mode and
+    modern_cli_dust_enabled and
+    (modern_cli_dust_current_version.rc != 0 or
+     modern_cli_dust_version not in modern_cli_dust_current_version.stdout)
+  tags: [dust, modern_cli]
+
+- name: Install dust
+  ansible.builtin.apt:
+    deb: "/tmp/du-dust_{{ modern_cli_dust_version }}_amd64.deb"
+    # A machine provisioned by an older version of this role may still have
+    # du-dust dpkg-held from before the hold task was removed — without
+    # this, apt refuses to install a newer pinned .deb over a held package.
+    allow_change_held_packages: true
+  become: true
+  when: >-
+    not ansible_check_mode and
+    modern_cli_dust_enabled and
+    (modern_cli_dust_current_version.rc != 0 or
+     modern_cli_dust_version not in modern_cli_dust_current_version.stdout)
+  tags: [dust, modern_cli]
+
+# viddy (github release, per-asset .sha256 file — dynamic checksum)
+- name: Get installed viddy version
+  ansible.builtin.command: viddy --version
+  register: modern_cli_viddy_current_version
+  changed_when: false
+  failed_when: false
+  when: modern_cli_viddy_enabled
+  tags: [viddy, modern_cli]
+
+- name: Download viddy archive
+  ansible.builtin.get_url:
+    url: "{{ _modern_cli_viddy_release_base }}.tar.gz"
+    dest: "/tmp/viddy-{{ modern_cli_viddy_version }}.tar.gz"
+    # sachaos/viddy publishes a matching .sha256 file per release asset —
+    # get_url fetches and verifies against it directly, so there's no static
+    # checksum to keep in sync by hand when Renovate bumps
+    # modern_cli_viddy_version.
+    checksum: "sha256:{{ _modern_cli_viddy_release_base }}.sha256"
+    mode: "0644"
+  vars:
+    _modern_cli_viddy_release_base: >-
+      https://github.com/sachaos/viddy/releases/download/v{{ modern_cli_viddy_version }}/viddy-v{{ modern_cli_viddy_version }}-linux-x86_64
+  when: >-
+    modern_cli_viddy_enabled and
+    (modern_cli_viddy_current_version.rc != 0 or
+     modern_cli_viddy_version not in modern_cli_viddy_current_version.stdout)
+  tags: [viddy, modern_cli]
+
+- name: Install viddy binary to /usr/local/bin
+  ansible.builtin.unarchive:
+    src: "/tmp/viddy-{{ modern_cli_viddy_version }}.tar.gz"
+    dest: /usr/local/bin/
+    include:
+      - viddy
+    remote_src: true
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and
+    modern_cli_viddy_enabled and
+    (modern_cli_viddy_current_version.rc != 0 or
+     modern_cli_viddy_version not in modern_cli_viddy_current_version.stdout)
+  tags: [viddy, modern_cli]
+
+# xcp (github release tar.gz; tarka/xcp publishes no checksum file, so the
+# checksum is derived at run time from GitHub's per-asset digest — see README.
+# Note the xcp-v<version> tag prefix.)
+- name: Get installed xcp version
+  ansible.builtin.command: xcp --version
+  register: modern_cli_xcp_current_version
+  changed_when: false
+  failed_when: false
+  when: modern_cli_xcp_enabled
+  tags: [xcp, modern_cli]
+
+- name: Fetch xcp release metadata for the GitHub asset digest
+  ansible.builtin.get_url:
+    url: "https://api.github.com/repos/tarka/xcp/releases/tags/xcp-v{{ modern_cli_xcp_version }}"
+    dest: "/tmp/xcp-{{ modern_cli_xcp_version }}_release.json"
+    force: true
+    headers: >-
+      {{ {'Accept': 'application/vnd.github+json'}
+         | combine({'Authorization': 'Bearer ' + modern_cli_github_api_token}
+                   if modern_cli_github_api_token else {}) }}
+    mode: "0644"
+  no_log: "{{ modern_cli_github_api_token | length > 0 }}"
+  when: >-
+    not ansible_check_mode and
+    modern_cli_xcp_enabled and
+    (modern_cli_xcp_current_version.rc != 0 or
+     modern_cli_xcp_version not in modern_cli_xcp_current_version.stdout)
+  tags: [xcp, modern_cli]
+
+- name: Read xcp release metadata
+  ansible.builtin.slurp:
+    path: "/tmp/xcp-{{ modern_cli_xcp_version }}_release.json"
+  register: modern_cli_xcp_release_raw
+  when: >-
+    not ansible_check_mode and
+    modern_cli_xcp_enabled and
+    (modern_cli_xcp_current_version.rc != 0 or
+     modern_cli_xcp_version not in modern_cli_xcp_current_version.stdout)
+  tags: [xcp, modern_cli]
+
+- name: Resolve xcp archive checksum from the release metadata
+  ansible.builtin.set_fact:
+    modern_cli_xcp_checksum: >-
+      {{ (modern_cli_xcp_release_raw.content | b64decode | from_json).assets
+         | selectattr('name', 'equalto', 'xcp-v' + modern_cli_xcp_version + '-x86_64-unknown-linux-gnu.tar.gz')
+         | map(attribute='digest') | select('string') | first | default('') }}
+  when: >-
+    not ansible_check_mode and
+    modern_cli_xcp_enabled and
+    (modern_cli_xcp_current_version.rc != 0 or
+     modern_cli_xcp_version not in modern_cli_xcp_current_version.stdout)
+  tags: [xcp, modern_cli]
+
+- name: Assert GitHub published a sha256 digest for the xcp archive
+  ansible.builtin.assert:
+    that: modern_cli_xcp_checksum.startswith('sha256:')
+    fail_msg: >-
+      GitHub published no sha256 digest for xcp-v{{ modern_cli_xcp_version }}-x86_64-unknown-linux-gnu.tar.gz;
+      cannot verify the download.
+  when: >-
+    not ansible_check_mode and
+    modern_cli_xcp_enabled and
+    (modern_cli_xcp_current_version.rc != 0 or
+     modern_cli_xcp_version not in modern_cli_xcp_current_version.stdout)
+  tags: [xcp, modern_cli]
+
+- name: Download xcp archive
+  ansible.builtin.get_url:
+    url: "https://github.com/tarka/xcp/releases/download/xcp-v{{ modern_cli_xcp_version }}/xcp-v{{ modern_cli_xcp_version }}-x86_64-unknown-linux-gnu.tar.gz"
+    dest: "/tmp/xcp-{{ modern_cli_xcp_version }}.tar.gz"
+    checksum: "{{ modern_cli_xcp_checksum }}"
+    mode: "0644"
+  when: >-
+    not ansible_check_mode and
+    modern_cli_xcp_enabled and
+    (modern_cli_xcp_current_version.rc != 0 or
+     modern_cli_xcp_version not in modern_cli_xcp_current_version.stdout)
+  tags: [xcp, modern_cli]
+
+- name: Install xcp binary to /usr/local/bin
+  ansible.builtin.unarchive:
+    src: "/tmp/xcp-{{ modern_cli_xcp_version }}.tar.gz"
+    dest: /usr/local/bin/
+    include:
+      - "xcp-v{{ modern_cli_xcp_version }}-x86_64-unknown-linux-gnu/bin/xcp"
+    extra_opts:
+      - --strip-components=2
+    remote_src: true
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and
+    modern_cli_xcp_enabled and
+    (modern_cli_xcp_current_version.rc != 0 or
+     modern_cli_xcp_version not in modern_cli_xcp_current_version.stdout)
+  tags: [xcp, modern_cli]
+
+# doggo (github release, aggregate checksums.txt — dynamic checksum)
+- name: Get installed doggo version
+  ansible.builtin.command: doggo --version
+  register: modern_cli_doggo_current_version
+  changed_when: false
+  failed_when: false
+  when: modern_cli_doggo_enabled
+  tags: [doggo, modern_cli]
+
+- name: Download doggo archive
+  ansible.builtin.get_url:
+    url: "https://github.com/mr-karan/doggo/releases/download/v{{ modern_cli_doggo_version }}/doggo-linux-x86_64.tar.gz"
+    dest: "/tmp/doggo-{{ modern_cli_doggo_version }}.tar.gz"
+    # mr-karan/doggo publishes an aggregate, version-named checksums.txt per
+    # release — get_url fetches it and matches the entry by the source URL's
+    # basename, so there's no static checksum to keep in sync by hand when
+    # Renovate bumps modern_cli_doggo_version.
+    checksum: "sha256:https://github.com/mr-karan/doggo/releases/download/v{{ modern_cli_doggo_version }}/doggo_{{ modern_cli_doggo_version }}_checksums.txt"
+    mode: "0644"
+  when: >-
+    modern_cli_doggo_enabled and
+    (modern_cli_doggo_current_version.rc != 0 or
+     modern_cli_doggo_version not in modern_cli_doggo_current_version.stdout)
+  tags: [doggo, modern_cli]
+
+- name: Install doggo binary to /usr/local/bin
+  ansible.builtin.unarchive:
+    src: "/tmp/doggo-{{ modern_cli_doggo_version }}.tar.gz"
+    dest: /usr/local/bin/
+    include:
+      - doggo
+    remote_src: true
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and
+    modern_cli_doggo_enabled and
+    (modern_cli_doggo_current_version.rc != 0 or
+     modern_cli_doggo_version not in modern_cli_doggo_current_version.stdout)
+  tags: [doggo, modern_cli]
+
+# jaq (github release bare binary; 01mf02/jaq publishes no checksum file, so the
+# checksum is derived at run time from GitHub's per-asset digest — see README)
+- name: Get installed jaq version
+  ansible.builtin.command: jaq --version
+  register: modern_cli_jaq_current_version
+  changed_when: false
+  failed_when: false
+  when: modern_cli_jaq_enabled
+  tags: [jaq, modern_cli]
+
+- name: Fetch jaq release metadata for the GitHub asset digest
+  ansible.builtin.get_url:
+    url: "https://api.github.com/repos/01mf02/jaq/releases/tags/v{{ modern_cli_jaq_version }}"
+    dest: "/tmp/jaq-{{ modern_cli_jaq_version }}_release.json"
+    force: true
+    headers: >-
+      {{ {'Accept': 'application/vnd.github+json'}
+         | combine({'Authorization': 'Bearer ' + modern_cli_github_api_token}
+                   if modern_cli_github_api_token else {}) }}
+    mode: "0644"
+  no_log: "{{ modern_cli_github_api_token | length > 0 }}"
+  when: >-
+    not ansible_check_mode and
+    modern_cli_jaq_enabled and
+    (modern_cli_jaq_current_version.rc != 0 or
+     modern_cli_jaq_version not in modern_cli_jaq_current_version.stdout)
+  tags: [jaq, modern_cli]
+
+- name: Read jaq release metadata
+  ansible.builtin.slurp:
+    path: "/tmp/jaq-{{ modern_cli_jaq_version }}_release.json"
+  register: modern_cli_jaq_release_raw
+  when: >-
+    not ansible_check_mode and
+    modern_cli_jaq_enabled and
+    (modern_cli_jaq_current_version.rc != 0 or
+     modern_cli_jaq_version not in modern_cli_jaq_current_version.stdout)
+  tags: [jaq, modern_cli]
+
+- name: Resolve jaq binary checksum from the release metadata
+  ansible.builtin.set_fact:
+    modern_cli_jaq_checksum: >-
+      {{ (modern_cli_jaq_release_raw.content | b64decode | from_json).assets
+         | selectattr('name', 'equalto', 'jaq-x86_64-unknown-linux-gnu')
+         | map(attribute='digest') | select('string') | first | default('') }}
+  when: >-
+    not ansible_check_mode and
+    modern_cli_jaq_enabled and
+    (modern_cli_jaq_current_version.rc != 0 or
+     modern_cli_jaq_version not in modern_cli_jaq_current_version.stdout)
+  tags: [jaq, modern_cli]
+
+- name: Assert GitHub published a sha256 digest for the jaq binary
+  ansible.builtin.assert:
+    that: modern_cli_jaq_checksum.startswith('sha256:')
+    fail_msg: >-
+      GitHub published no sha256 digest for jaq-x86_64-unknown-linux-gnu
+      ({{ modern_cli_jaq_version }}); cannot verify the download.
+  when: >-
+    not ansible_check_mode and
+    modern_cli_jaq_enabled and
+    (modern_cli_jaq_current_version.rc != 0 or
+     modern_cli_jaq_version not in modern_cli_jaq_current_version.stdout)
+  tags: [jaq, modern_cli]
+
+- name: Install jaq binary to /usr/local/bin
+  ansible.builtin.get_url:
+    url: "https://github.com/01mf02/jaq/releases/download/v{{ modern_cli_jaq_version }}/jaq-x86_64-unknown-linux-gnu"
+    dest: /usr/local/bin/jaq
+    checksum: "{{ modern_cli_jaq_checksum }}"
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and
+    modern_cli_jaq_enabled and
+    (modern_cli_jaq_current_version.rc != 0 or
+     modern_cli_jaq_version not in modern_cli_jaq_current_version.stdout)
+  tags: [jaq, modern_cli]
+
+# moor (github release, bare binary; walles/moar publishes no checksum file, so
+# the checksum is derived at run time from GitHub's own per-asset digest for the
+# pinned version — see the digest-checksum note in README. Upstream renamed the
+# tool itself from "moar" to "moor", see the version var comment in
+# defaults/main.yml.)
+- name: Get installed moor version
+  ansible.builtin.command: moor --version
+  register: modern_cli_moor_current_version
+  changed_when: false
+  failed_when: false
+  when: modern_cli_moor_enabled
+  tags: [moor, modern_cli]
+
+- name: Fetch moor release metadata for the GitHub asset digest
+  ansible.builtin.get_url:
+    url: "https://api.github.com/repos/walles/moar/releases/tags/v{{ modern_cli_moor_version }}"
+    dest: "/tmp/moor-v{{ modern_cli_moor_version }}_release.json"
+    force: true
+    headers: >-
+      {{ {'Accept': 'application/vnd.github+json'}
+         | combine({'Authorization': 'Bearer ' + modern_cli_github_api_token}
+                   if modern_cli_github_api_token else {}) }}
+    mode: "0644"
+  no_log: "{{ modern_cli_github_api_token | length > 0 }}"
+  when: >-
+    not ansible_check_mode and
+    modern_cli_moor_enabled and
+    (modern_cli_moor_current_version.rc != 0 or
+     modern_cli_moor_version not in modern_cli_moor_current_version.stdout)
+  tags: [moor, modern_cli]
+
+- name: Read moor release metadata
+  ansible.builtin.slurp:
+    path: "/tmp/moor-v{{ modern_cli_moor_version }}_release.json"
+  register: modern_cli_moor_release_raw
+  when: >-
+    not ansible_check_mode and
+    modern_cli_moor_enabled and
+    (modern_cli_moor_current_version.rc != 0 or
+     modern_cli_moor_version not in modern_cli_moor_current_version.stdout)
+  tags: [moor, modern_cli]
+
+- name: Resolve moor binary checksum from the release metadata
+  ansible.builtin.set_fact:
+    modern_cli_moor_checksum: >-
+      {{ (modern_cli_moor_release_raw.content | b64decode | from_json).assets
+         | selectattr('name', 'equalto', 'moor-v' + modern_cli_moor_version + '-linux-amd64')
+         | map(attribute='digest') | select('string') | first | default('') }}
+  when: >-
+    not ansible_check_mode and
+    modern_cli_moor_enabled and
+    (modern_cli_moor_current_version.rc != 0 or
+     modern_cli_moor_version not in modern_cli_moor_current_version.stdout)
+  tags: [moor, modern_cli]
+
+- name: Assert GitHub published a sha256 digest for the moor binary
+  ansible.builtin.assert:
+    that: modern_cli_moor_checksum.startswith('sha256:')
+    fail_msg: >-
+      GitHub published no sha256 digest for moor-v{{ modern_cli_moor_version }}-linux-amd64;
+      cannot verify the download.
+  when: >-
+    not ansible_check_mode and
+    modern_cli_moor_enabled and
+    (modern_cli_moor_current_version.rc != 0 or
+     modern_cli_moor_version not in modern_cli_moor_current_version.stdout)
+  tags: [moor, modern_cli]
+
+- name: Install moor binary to /usr/local/bin
+  ansible.builtin.get_url:
+    url: "https://github.com/walles/moar/releases/download/v{{ modern_cli_moor_version }}/moor-v{{ modern_cli_moor_version }}-linux-amd64"
+    dest: /usr/local/bin/moor
+    checksum: "{{ modern_cli_moor_checksum }}"
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and
+    modern_cli_moor_enabled and
+    (modern_cli_moor_current_version.rc != 0 or
+     modern_cli_moor_version not in modern_cli_moor_current_version.stdout)
+  tags: [moor, modern_cli]
+
+# yazi (github release .deb; sxyazi/yazi publishes no checksum file, so the
+# checksum is derived at run time from GitHub's own per-asset digest for the
+# pinned version — see the digest-checksum note in README. Installs both `yazi`
+# and its companion `ya` CLI, apt-held like any other installed .deb, same
+# pattern as trivy in code_quality_tools and dust above.)
+- name: Get installed yazi version
+  ansible.builtin.command: yazi --version
+  register: modern_cli_yazi_current_version
+  changed_when: false
+  failed_when: false
+  when: modern_cli_yazi_enabled
+  tags: [yazi, modern_cli]
+
+- name: Fetch yazi release metadata for the GitHub asset digest
+  ansible.builtin.get_url:
+    url: "https://api.github.com/repos/sxyazi/yazi/releases/tags/v{{ modern_cli_yazi_version }}"
+    dest: "/tmp/yazi_{{ modern_cli_yazi_version }}_release.json"
+    force: true
+    headers: >-
+      {{ {'Accept': 'application/vnd.github+json'}
+         | combine({'Authorization': 'Bearer ' + modern_cli_github_api_token}
+                   if modern_cli_github_api_token else {}) }}
+    mode: "0644"
+  no_log: "{{ modern_cli_github_api_token | length > 0 }}"
+  when: >-
+    not ansible_check_mode and
+    modern_cli_yazi_enabled and
+    (modern_cli_yazi_current_version.rc != 0 or
+     modern_cli_yazi_version not in modern_cli_yazi_current_version.stdout)
+  tags: [yazi, modern_cli]
+
+- name: Read yazi release metadata
+  ansible.builtin.slurp:
+    path: "/tmp/yazi_{{ modern_cli_yazi_version }}_release.json"
+  register: modern_cli_yazi_release_raw
+  when: >-
+    not ansible_check_mode and
+    modern_cli_yazi_enabled and
+    (modern_cli_yazi_current_version.rc != 0 or
+     modern_cli_yazi_version not in modern_cli_yazi_current_version.stdout)
+  tags: [yazi, modern_cli]
+
+- name: Resolve yazi .deb checksum from the release metadata
+  ansible.builtin.set_fact:
+    modern_cli_yazi_checksum: >-
+      {{ (modern_cli_yazi_release_raw.content | b64decode | from_json).assets
+         | selectattr('name', 'equalto', 'yazi-x86_64-unknown-linux-gnu.deb')
+         | map(attribute='digest') | select('string') | first | default('') }}
+  when: >-
+    not ansible_check_mode and
+    modern_cli_yazi_enabled and
+    (modern_cli_yazi_current_version.rc != 0 or
+     modern_cli_yazi_version not in modern_cli_yazi_current_version.stdout)
+  tags: [yazi, modern_cli]
+
+- name: Assert GitHub published a sha256 digest for the yazi .deb
+  ansible.builtin.assert:
+    that: modern_cli_yazi_checksum.startswith('sha256:')
+    fail_msg: >-
+      GitHub published no sha256 digest for yazi-x86_64-unknown-linux-gnu.deb
+      ({{ modern_cli_yazi_version }}); cannot verify the download.
+  when: >-
+    not ansible_check_mode and
+    modern_cli_yazi_enabled and
+    (modern_cli_yazi_current_version.rc != 0 or
+     modern_cli_yazi_version not in modern_cli_yazi_current_version.stdout)
+  tags: [yazi, modern_cli]
+
+- name: Download yazi .deb
+  ansible.builtin.get_url:
+    url: "https://github.com/sxyazi/yazi/releases/download/v{{ modern_cli_yazi_version }}/yazi-x86_64-unknown-linux-gnu.deb"
+    dest: "/tmp/yazi_{{ modern_cli_yazi_version }}_amd64.deb"
+    checksum: "{{ modern_cli_yazi_checksum }}"
+    mode: "0644"
+  when: >-
+    not ansible_check_mode and
+    modern_cli_yazi_enabled and
+    (modern_cli_yazi_current_version.rc != 0 or
+     modern_cli_yazi_version not in modern_cli_yazi_current_version.stdout)
+  tags: [yazi, modern_cli]
+
+- name: Install yazi
+  ansible.builtin.apt:
+    deb: "/tmp/yazi_{{ modern_cli_yazi_version }}_amd64.deb"
+    # A machine provisioned by an older version of this role may still have
+    # yazi dpkg-held from before the hold task was removed — without this,
+    # apt refuses to install a newer pinned .deb over a held package.
+    allow_change_held_packages: true
+  become: true
+  when: >-
+    not ansible_check_mode and
+    modern_cli_yazi_enabled and
+    (modern_cli_yazi_current_version.rc != 0 or
+     modern_cli_yazi_version not in modern_cli_yazi_current_version.stdout)
+  tags: [yazi, modern_cli]
+
+- name: Create yazi config directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/yazi"
+    state: directory
+    mode: "0755"
+  become: false
+  when: modern_cli_yazi_enabled
+  tags: [yazi, modern_cli]
+
+- name: Deploy Catppuccin Mocha theme for yazi
+  ansible.builtin.get_url:
+    url: "https://raw.githubusercontent.com/catppuccin/yazi/{{ modern_cli_yazi_theme_ref }}/themes/mocha/catppuccin-mocha-mauve.toml"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/yazi/theme.toml"
+    checksum: "{{ modern_cli_yazi_theme_checksum }}"
+    mode: "0644"
+  become: false
+  when: modern_cli_yazi_enabled
+  tags: [yazi, modern_cli]
+
+# shell integration
+- name: Create zsh conf.d directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d"
+    state: directory
+    mode: "0755"
+  become: false
+  when: modern_cli_deploy_shell_aliases
+  tags: [bat, btop, cli-tools, delta, doggo, dust, emoji_fzf, fzf, jaq, moor, presenterm, procs, viddy, xcp, yazi, modern_cli]
+
+- name: Deploy modern_cli shell aliases
+  ansible.builtin.template:
+    src: modern_cli.zsh.j2
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/modern_cli.zsh"
+    mode: "0644"
+  become: false
+  when: modern_cli_deploy_shell_aliases
+  tags: [bat, btop, cli-tools, delta, doggo, dust, emoji_fzf, fzf, jaq, moor, presenterm, procs, viddy, xcp, yazi, modern_cli]

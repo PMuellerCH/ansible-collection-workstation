@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Flameshot
+Comment=Flameshot screenshot tool (system tray)
+Exec=flameshot
+Icon=flameshot
+X-GNOME-Autostart-enabled=true
