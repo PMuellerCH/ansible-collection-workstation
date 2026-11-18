@@ -1,0 +1,89 @@
+---
+argument_specs:
+  main:
+    short_description: >-
+      Install code-quality/security tooling: trivy, pre-commit, detect-secrets,
+      yamllint, checkov, ansible-lint — each independently toggleable.
+    options:
+      code_quality_tools_trivy_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install trivy.
+      code_quality_tools_actionlint_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install actionlint.
+      code_quality_tools_pre_commit_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install the pre-commit apt package.
+      code_quality_tools_detect_secrets_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install detect-secrets via pipx (also gates the pipx bootstrap).
+      code_quality_tools_yamllint_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install yamllint via pipx (also gates the pipx bootstrap).
+      code_quality_tools_checkov_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install checkov via pipx (also gates the pipx bootstrap).
+      code_quality_tools_ansible_lint_enabled:
+        type: bool
+        required: false
+        default: true
+        description: >-
+          Whether to install ansible-lint via pipx, with ansible-core injected
+          into its venv (also gates the pipx bootstrap).
+      code_quality_tools_trivy_version:
+        type: str
+        required: false
+        description: trivy version (github-releases aquasecurity/trivy), installed from a checksum-verified .deb.
+      code_quality_tools_trivy_download_base:
+        type: str
+        required: false
+        default: "https://github.com/aquasecurity/trivy/releases/download/v{{ code_quality_tools_trivy_version }}"
+        description: Base URL the trivy .deb and its checksums file are downloaded from, before the filename.
+      code_quality_tools_actionlint_version:
+        type: str
+        required: false
+        description: actionlint version (github-releases rhysd/actionlint), installed from a checksum-verified tar.gz.
+      code_quality_tools_actionlint_download_base:
+        type: str
+        required: false
+        default: "https://github.com/rhysd/actionlint/releases/download/v{{ code_quality_tools_actionlint_version }}"
+        description: Base URL the actionlint archive and its checksums file are downloaded from, before the filename.
+      code_quality_tools_detect_secrets_version:
+        type: str
+        required: false
+        description: detect-secrets version (pypi), installed via pipx.
+      code_quality_tools_yamllint_version:
+        type: str
+        required: false
+        description: yamllint version (pypi), installed via pipx.
+      code_quality_tools_checkov_version:
+        type: str
+        required: false
+        description: checkov version (pypi), installed via pipx.
+      code_quality_tools_ansible_lint_version:
+        type: str
+        required: false
+        description: ansible-lint version (pypi), installed via pipx.
+      code_quality_tools_ansible_core_version:
+        type: str
+        required: false
+        description: ansible-core version (pypi), injected into the ansible-lint pipx venv.
+      code_quality_tools_pipx_min_version:
+        type: str
+        required: false
+        description: >-
+          pipx version (pypi) installed via pip --user to satisfy
+          community.general.pipx's >= 1.7.0 requirement, since Ubuntu 24.04's
+          apt-provided pipx is only 1.4.3.

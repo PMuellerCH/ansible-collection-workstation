@@ -1,0 +1,90 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: true
+  vars:
+    _proxy_host: "{{ lookup('env', 'http_proxy') | urlsplit('hostname') }}"
+    _proxy_port: "{{ lookup('env', 'http_proxy') | urlsplit('port') }}"
+  tasks:
+    - name: Check corporate CA certificate was installed
+      ansible.builtin.stat:
+        path: /usr/local/share/ca-certificates/BITProxyCA06C.crt
+      register: _base_ca_cert
+
+    - name: Assert corporate CA certificate is present
+      ansible.builtin.assert:
+        that: _base_ca_cert.stat.exists
+
+    - name: Check system CA bundle contains the corporate CA
+      ansible.builtin.command: grep -q "BEGIN CERTIFICATE" /etc/ssl/certs/ca-certificates.crt
+      register: _base_ca_bundle_check
+      changed_when: false
+
+    - name: Check Flatpak-accessible CA bundle was synced
+      ansible.builtin.stat:
+        path: /var/lib/ca-certificates/ca-bundle.crt
+      register: _base_flatpak_ca_bundle
+
+    - name: Assert Flatpak-accessible CA bundle exists and is non-empty
+      ansible.builtin.assert:
+        that:
+          - _base_flatpak_ca_bundle.stat.exists
+          - _base_flatpak_ca_bundle.stat.size > 0
+
+    - name: Read /etc/environment
+      ansible.builtin.slurp:
+        src: /etc/environment
+      register: _base_etc_environment
+
+    - name: Assert proxy vars and NODE_EXTRA_CA_CERTS are in /etc/environment
+      ansible.builtin.assert:
+        that:
+          - "'http_proxy=' in (_base_etc_environment.content | b64decode)"
+          - "'NODE_EXTRA_CA_CERTS=/var/lib/ca-certificates/ca-bundle.crt' in (_base_etc_environment.content | b64decode)"
+
+    - name: Read Flatpak proxy override
+      ansible.builtin.slurp:
+        src: /var/lib/flatpak/overrides/global
+      register: _base_flatpak_override
+
+    - name: Assert Flatpak override has proxy settings
+      ansible.builtin.assert:
+        that:
+          - "'http_proxy=' in (_base_flatpak_override.content | b64decode)"
+          - "'SSL_CERT_FILE=/var/lib/ca-certificates/ca-bundle.crt' in (_base_flatpak_override.content | b64decode)"
+
+    - name: Read deployed npmrc
+      ansible.builtin.slurp:
+        src: "{{ ansible_facts['env']['HOME'] }}/.npmrc"
+      register: _base_npmrc
+
+    - name: Assert npmrc has proxy config and no strict-ssl=false
+      ansible.builtin.assert:
+        that:
+          - "'proxy=' in (_base_npmrc.content | b64decode)"
+          - "'strict-ssl=false' not in (_base_npmrc.content | b64decode)"
+
+    - name: Read GNOME dconf proxy mode
+      community.general.dconf:
+        key: /org/gnome/system/proxy/mode
+        state: read
+      register: _base_dconf_mode
+
+    - name: Read GNOME dconf http proxy host
+      community.general.dconf:
+        key: /org/gnome/system/proxy/http/host
+        state: read
+      register: _base_dconf_http_host
+
+    - name: Read GNOME dconf http proxy port
+      community.general.dconf:
+        key: /org/gnome/system/proxy/http/port
+        state: read
+      register: _base_dconf_http_port
+
+    - name: Assert GNOME dconf proxy settings parsed the host/port correctly
+      ansible.builtin.assert:
+        that:
+          - _base_dconf_mode.value == "'manual'"
+          - _base_dconf_http_host.value == "'" + _proxy_host + "'"
+          - _base_dconf_http_port.value == _proxy_port | string

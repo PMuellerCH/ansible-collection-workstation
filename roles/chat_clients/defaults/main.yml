@@ -1,0 +1,7 @@
+---
+chat_clients_slack_enabled: true
+chat_clients_teams_enabled: true
+
+# renovate: datasource=github-releases depName=IsmaelMartinez/teams-for-linux extractVersion=^v(?<version>.*)$
+chat_clients_teams_version: "2.28.0"
+chat_clients_teams_download_base: "https://github.com/IsmaelMartinez/teams-for-linux/releases/download/v{{ chat_clients_teams_version }}"

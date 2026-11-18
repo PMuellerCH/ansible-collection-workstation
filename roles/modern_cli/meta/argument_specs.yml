@@ -1,0 +1,240 @@
+---
+argument_specs:
+  main:
+    short_description: >-
+      Install a set of modern CLI tool replacements: bat, btop, delta, doggo,
+      duf, dust, emoji-fzf, eza, fd, fzf, gping, hexyl, htop, jaq, moor,
+      presenterm, procs, ripgrep, sd, viddy, xcp, yazi, zoxide — each
+      independently toggleable. Catppuccin Mocha theming is applied to bat,
+      btop, delta, fzf, and yazi; the other tools have no themeable config.
+    options:
+      modern_cli_bat_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install bat.
+      modern_cli_btop_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install btop.
+      modern_cli_emoji_fzf_enabled:
+        type: bool
+        required: false
+        default: true
+        description: >-
+          Whether to install emoji-fzf via pipx (also gates the pipx bootstrap).
+          Requires fzf and wl-copy (this collection's clipboard_tools role,
+          clipboard_tools_wl_clipboard_enabled) at runtime for the deployed
+          `emoji` shell function.
+      modern_cli_eza_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install eza.
+      modern_cli_fd_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install fd-find (and symlink it to fd).
+      modern_cli_fzf_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install fzf.
+      modern_cli_htop_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install htop.
+      modern_cli_presenterm_enabled:
+        type: bool
+        required: false
+        default: true
+        description: >-
+          Whether to install presenterm (binary + mermaid-cli only; no
+          neovim plugin integration — that's owned by the cli_dev_env role).
+      modern_cli_ripgrep_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install ripgrep.
+      modern_cli_zoxide_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install zoxide.
+      modern_cli_sd_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install sd.
+      modern_cli_duf_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install duf.
+      modern_cli_delta_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install delta (apt package git-delta), with Catppuccin Mocha theming wired into git config.
+      modern_cli_gping_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install gping.
+      modern_cli_hexyl_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install hexyl.
+      modern_cli_procs_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install procs.
+      modern_cli_dust_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install dust (from a GitHub-released .deb).
+      modern_cli_viddy_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install viddy.
+      modern_cli_xcp_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install xcp.
+      modern_cli_doggo_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install doggo.
+      modern_cli_jaq_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install jaq.
+      modern_cli_moor_enabled:
+        type: bool
+        required: false
+        default: true
+        description: >-
+          Whether to install moor (the tool formerly known as "moar" —
+          upstream renamed it; the GitHub repo path is unchanged).
+      modern_cli_yazi_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install yazi (from a GitHub-released .deb).
+      modern_cli_bat_theme_ref:
+        type: str
+        required: false
+        default: "6810349b28055dce54076712fc05fc68da4b8ec0"  # pragma: allowlist secret
+        description: Pinned commit of catppuccin/bat the theme file is downloaded from (immutable, unlike the "main" branch).
+      modern_cli_bat_theme_checksum:
+        type: str
+        required: false
+        default: "sha256:395566f08ceb301b936b91c077690ef94f7aeb651b121553f201c99c2bd4aa77"
+        description: Checksum of the bat theme file at modern_cli_bat_theme_ref, verified by get_url.
+      modern_cli_btop_catppuccin_version:
+        type: str
+        required: false
+        description: Release tag of catppuccin/btop to download the Mocha theme archive from.
+      modern_cli_btop_catppuccin_checksum:
+        type: str
+        required: false
+        default: "sha256:5331e055f239d2b42a15496905c6f357493940e1213cc91acfcba67b3fd7a281"
+        description: Checksum of the themes.tar.gz archive at modern_cli_btop_catppuccin_version, verified by get_url.
+      modern_cli_fzf_version:
+        type: str
+        required: false
+        description: fzf version (github-releases junegunn/fzf), installed from a checksum-verified binary tarball.
+      modern_cli_presenterm_version:
+        type: str
+        required: false
+        description: presenterm version (github-releases mfontanini/presenterm), installed from a checksum-verified binary tarball.
+      modern_cli_presenterm_download_base:
+        type: str
+        required: false
+        default: "https://github.com/mfontanini/presenterm/releases/download/v{{ modern_cli_presenterm_version }}"
+        description: Base URL the presenterm archive and its .sha512 checksum file are downloaded from, before the filename.
+      modern_cli_presenterm_archive:
+        type: str
+        required: false
+        default: "presenterm-{{ modern_cli_presenterm_version }}-x86_64-unknown-linux-gnu.tar.gz"
+        description: Filename of the presenterm release archive to download.
+      modern_cli_presenterm_mermaid_cli_version:
+        type: str
+        required: false
+        description: "@mermaid-js/mermaid-cli npm version, installed globally for presenterm's mermaid diagram rendering."
+      modern_cli_emoji_fzf_version:
+        type: str
+        required: false
+        description: emoji-fzf version (pypi), installed via pipx.
+      modern_cli_pipx_min_version:
+        type: str
+        required: false
+        description: >-
+          pipx version (pypi) installed via pip --user to satisfy
+          community.general.pipx's >= 1.7.0 requirement, since Ubuntu 24.04's
+          apt-provided pipx is only 1.4.3. Only used when modern_cli_emoji_fzf_enabled.
+      modern_cli_delta_catppuccin_ref:
+        type: str
+        required: false
+        description: Pinned commit of catppuccin/delta the theme gitconfig is downloaded from (no releases/tags published upstream).
+      modern_cli_delta_catppuccin_checksum:
+        type: str
+        required: false
+        description: Checksum of the catppuccin.gitconfig file at modern_cli_delta_catppuccin_ref, verified by get_url.
+      modern_cli_procs_version:
+        type: str
+        required: false
+        description: procs version (github-releases dalance/procs), installed from a checksum-verified zip.
+      modern_cli_dust_version:
+        type: str
+        required: false
+        description: dust version (github-releases bootandy/dust), installed from a checksum-verified .deb.
+      modern_cli_viddy_version:
+        type: str
+        required: false
+        description: viddy version (github-releases sachaos/viddy), installed from a checksum-verified binary tarball.
+      modern_cli_xcp_version:
+        type: str
+        required: false
+        description: xcp version (github-releases tarka/xcp), installed from a checksum-verified binary tarball.
+      modern_cli_doggo_version:
+        type: str
+        required: false
+        description: doggo version (github-releases mr-karan/doggo), installed from a checksum-verified binary tarball.
+      modern_cli_jaq_version:
+        type: str
+        required: false
+        description: jaq version (github-releases 01mf02/jaq), installed from a checksum-verified bare binary.
+      modern_cli_moor_version:
+        type: str
+        required: false
+        description: moor version (github-releases walles/moar), installed from a checksum-verified bare binary.
+      modern_cli_yazi_version:
+        type: str
+        required: false
+        description: yazi version (github-releases sxyazi/yazi), installed from a checksum-verified .deb.
+      modern_cli_yazi_theme_ref:
+        type: str
+        required: false
+        description: Pinned commit of catppuccin/yazi the theme file is downloaded from (no releases/tags published upstream).
+      modern_cli_yazi_theme_checksum:
+        type: str
+        required: false
+        description: Checksum of the yazi theme file at modern_cli_yazi_theme_ref, verified by get_url.
+      modern_cli_deploy_shell_aliases:
+        type: bool
+        required: false
+        default: true
+        description: >-
+          Whether to deploy a zsh conf.d snippet (~/.config/zsh/conf.d/modern_cli.zsh)
+          with aliases for each enabled tool.

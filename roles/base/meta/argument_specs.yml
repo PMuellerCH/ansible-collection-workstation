@@ -1,0 +1,118 @@
+---
+argument_specs:
+  main:
+    short_description: >-
+      Foundational workstation setup: base packages, hostname, locale,
+      corporate proxy, git, SSH, Python toolchain, and fonts.
+    options:
+      base_hostname:
+        type: str
+        required: true
+        description: >-
+          Hostname to assign to the machine. No sensible generic default
+          exists — must be supplied by the consumer.
+      base_locale_format:
+        type: str
+        required: false
+        default: "de_CH.UTF-8"
+        description: Locale for date/time, number, currency, paper, and measurement formats.
+      base_locale_ui:
+        type: str
+        required: false
+        default: "en_US.UTF-8"
+        description: Locale for UI display language and error messages.
+      base_http_proxy:
+        type: str
+        required: false
+        default: ""
+        description: Corporate HTTP proxy URL. Leave empty on machines without a proxy.
+      base_https_proxy:
+        type: str
+        required: false
+        default: ""
+        description: >-
+          Corporate HTTPS proxy URL. Defaults to base_http_proxy (see
+          defaults/main.yml) so a single proxy URL covers both protocols;
+          set explicitly only if HTTP and HTTPS use different proxies.
+      base_no_proxy:
+        type: str
+        required: false
+        default: ""
+        description: Comma-separated list of hosts/CIDRs that bypass the proxy.
+      base_vault_addr:
+        type: str
+        required: false
+        default: ""
+        description: HashiCorp Vault address, exported as VAULT_ADDR. Leave empty without Vault access.
+      base_desktop_environment:
+        type: str
+        required: false
+        default: gnome
+        choices: [gnome, cosmic]
+        description: Desktop environment in use. Controls which proxy integration path is applied.
+      base_git_user_name:
+        type: str
+        required: true
+        description: >-
+          Value for git's global user.name. No sensible generic default
+          exists — must be supplied by the consumer.
+      base_git_user_email:
+        type: str
+        required: true
+        description: >-
+          Value for git's global user.email. No sensible generic default
+          exists — must be supplied by the consumer.
+      base_git_default_branch:
+        type: str
+        required: false
+        default: main
+        description: Value for git's global init.defaultBranch.
+      base_git_pull_rebase:
+        type: bool
+        required: false
+        default: true
+        description: Whether git pull rebases instead of merges (pull.rebase).
+      base_git_push_default:
+        type: str
+        required: false
+        default: simple
+        description: Value for git's global push.default.
+      base_git_editor:
+        type: str
+        required: false
+        default: vim
+        description: >-
+          Value for git's global core.editor. Defaults to vim (always present
+          on Debian/Ubuntu); override to your preferred editor.
+      base_git_signing_enabled:
+        type: bool
+        required: false
+        default: true
+        description: >-
+          Whether to configure SSH-based commit/tag signing (gpg.format=ssh,
+          user.signingkey, commit.gpgsign, tag.gpgSign). Disable if you don't
+          sign commits.
+      base_git_signing_key:
+        type: str
+        required: false
+        default: "{{ ansible_facts['env']['HOME'] }}/.ssh/id_ed25519.pub"
+        description: >-
+          Path to the SSH public key used as git's user.signingkey. Only
+          applied when base_git_signing_enabled is true.
+      base_ssh_extra_hosts:
+        type: list
+        elements: dict
+        required: false
+        default: []
+        description: >-
+          Extra SSH host blocks to inject into the config. Each entry
+          supports name (Host alias), hostname (IP/FQDN), user, and
+          optionally identity_file.
+      base_python_uv_version:
+        type: str
+        required: false
+        description: uv version (github-releases astral-sh/uv).
+      base_fonts_nerd_font_version:
+        type: str
+        required: false
+        description: Nerd Fonts release version (github-releases ryanoasis/nerd-fonts).

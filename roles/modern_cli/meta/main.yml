@@ -1,0 +1,12 @@
+---
+galaxy_info:
+  role_name: modern_cli
+  namespace: pmuellerch
+  author: Philipp Müller
+  license: MIT
+  description: >-
+    Install modern CLI tool replacements (bat, btop, emoji-fzf, eza, fd, fzf,
+    htop, presenterm, ripgrep, zoxide); Catppuccin Mocha theming applied to
+    bat, btop, and fzf only
+  min_ansible_version: "2.17"
+dependencies: []

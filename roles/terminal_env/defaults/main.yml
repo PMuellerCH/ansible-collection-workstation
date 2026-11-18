@@ -1,0 +1,21 @@
+---
+# zsh
+# oh-my-zsh publishes no tags/releases (rolling project by design) — pinned
+# to an immutable commit SHA instead of tracking the mutable "master"
+# branch. Not Renovate-tracked (no versioned datasource exists for this);
+# same pattern as modern_cli_bat_theme_ref. Bump manually by fetching the
+# latest master SHA when a refresh is wanted.
+terminal_env_zsh_omz_commit: "0912e05c0589d26ea20d79555487900880aad4d5"  # pragma: allowlist secret
+
+# renovate: datasource=github-tags depName=romkatv/powerlevel10k extractVersion=^v(?<version>.*)$
+terminal_env_zsh_powerlevel10k_version: "1.20.0"
+# renovate: datasource=github-tags depName=Aloxaf/fzf-tab extractVersion=^v(?<version>.*)$
+terminal_env_zsh_fzf_tab_version: "1.3.0"
+# renovate: datasource=github-tags depName=zsh-users/zsh-autosuggestions extractVersion=^v(?<version>.*)$
+terminal_env_zsh_autosuggestions_version: "0.7.1"
+# renovate: datasource=github-tags depName=zsh-users/zsh-syntax-highlighting
+terminal_env_zsh_syntax_highlighting_version: "0.8.0"
+
+# tmux
+# renovate: datasource=github-releases depName=catppuccin/tmux extractVersion=^v(?<version>.*)$
+terminal_env_tmux_catppuccin_version: "2.3.2"

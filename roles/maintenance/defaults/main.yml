@@ -1,0 +1,8 @@
+---
+maintenance_apt_upgrade_enabled: true
+maintenance_apt_autoremove_enabled: true
+maintenance_apt_autoclean_enabled: true
+maintenance_journal_vacuum_enabled: true
+maintenance_journal_vacuum_time: "2weeks"
+maintenance_docker_prune_enabled: true
+maintenance_flatpak_cleanup_enabled: true

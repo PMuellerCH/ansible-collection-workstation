@@ -1,0 +1,11 @@
+{
+  "extras": [
+    "ai.claudecode",
+    "lang.markdown",
+    "lang.terraform",
+    "lang.ansible",
+    "lang.yaml",
+    "lang.python",
+    "lang.json"
+  ]
+}

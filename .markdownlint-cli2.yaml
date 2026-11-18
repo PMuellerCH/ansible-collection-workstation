@@ -1,0 +1,6 @@
+---
+# Respect .gitignore so gitignored paths (e.g. .ansible/, .github/node_modules/)
+# are not linted when running locally.
+# Rule config is NOT set here — both CI and pre-commit pass explicit --config so
+# that CHANGELOG.md can use a different (more permissive) config file.
+gitignore: true

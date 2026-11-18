@@ -1,0 +1,28 @@
+---
+- name: Prepare
+  hosts: all
+  gather_facts: true
+  environment:
+    http_proxy: "{{ lookup('env', 'http_proxy') }}"
+    https_proxy: "{{ lookup('env', 'https_proxy') or lookup('env', 'http_proxy') }}"
+    HTTP_PROXY: "{{ lookup('env', 'http_proxy') }}"
+    HTTPS_PROXY: "{{ lookup('env', 'https_proxy') or lookup('env', 'http_proxy') }}"
+  tasks:
+    # curl (oh-my-zsh shell installer) and git (ansible.builtin.git, used for
+    # every plugin/theme clone) are required but not installed by this role
+    # itself. Real workstations always have both already (installed by the
+    # `base` role, which every consuming playbook runs first) — same as this
+    # role doesn't install the JetBrains Mono Nerd Font that kitty assumes is
+    # present. The bare test container has neither `base` nor these tools,
+    # so they're provisioned here purely for test purposes. Unlike
+    # converge.yml, this play was missing the proxy environment block —
+    # without it, apt-get inside the container has no route to the internet
+    # behind the corporate proxy and every cache refresh times out.
+    - name: Install curl and git
+      ansible.builtin.apt:
+        name:
+          - curl
+          - git
+        state: present
+        update_cache: true
+      become: true

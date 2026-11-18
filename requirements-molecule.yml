@@ -4,3 +4,10 @@ collections:
   # renovate: datasource=galaxy-collection depName=community.docker
   - name: community.docker
     version: "5.4.0"
+  # Required by molecule-plugins[docker]'s own create.yml (ansible.posix.synchronize)
+  # when a scenario sets override_command: false (e.g. systemd-capable images) —
+  # not needed by every scenario, but installed for all since it's cheap and this
+  # file is shared across the whole matrix.
+  # renovate: datasource=galaxy-collection depName=ansible.posix
+  - name: ansible.posix
+    version: "2.2.2"

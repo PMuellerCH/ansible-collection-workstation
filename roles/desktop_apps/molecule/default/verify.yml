@@ -1,0 +1,80 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Gather package facts
+      ansible.builtin.package_facts:
+        manager: apt
+
+    - name: Assert onlyoffice-desktopeditors is installed
+      ansible.builtin.assert:
+        that: "'onlyoffice-desktopeditors' in ansible_facts.packages"
+
+    - name: Stat Firefox policies file
+      ansible.builtin.stat:
+        path: /etc/firefox/policies/policies.json
+      register: _desktop_apps_firefox_policies_stat
+
+    - name: Assert Firefox policies file exists with expected ownership/mode
+      ansible.builtin.assert:
+        that:
+          - _desktop_apps_firefox_policies_stat.stat.exists
+          - _desktop_apps_firefox_policies_stat.stat.pw_name == 'root'
+          - _desktop_apps_firefox_policies_stat.stat.gr_name == 'root'
+          - _desktop_apps_firefox_policies_stat.stat.mode == '0644'
+
+    - name: Slurp Firefox policies file
+      ansible.builtin.slurp:
+        path: /etc/firefox/policies/policies.json
+      register: _desktop_apps_firefox_policies_raw
+
+    - name: Parse Firefox policies file
+      ansible.builtin.set_fact:
+        _desktop_apps_firefox_policies: "{{ _desktop_apps_firefox_policies_raw.content | b64decode | from_json }}"
+
+    - name: Assert Firefox policies content is as expected
+      ansible.builtin.assert:
+        that:
+          - _desktop_apps_firefox_policies.policies.PasswordManagerEnabled == false
+          - _desktop_apps_firefox_policies.policies.Preferences['spellchecker.dictionary'].Value == 'de-CH'
+          - "'{446900e4-71c2-419f-a6a7-df9c091e268b}' in _desktop_apps_firefox_policies.policies.ExtensionSettings"
+          - _desktop_apps_firefox_policies.policies.ExtensionSettings['{446900e4-71c2-419f-a6a7-df9c091e268b}'].installation_mode == 'force_installed'
+          - "'de-CH@dictionaries.addons.mozilla.org' in _desktop_apps_firefox_policies.policies.ExtensionSettings"
+
+    - name: Assert brave-browser is installed
+      ansible.builtin.assert:
+        that: "'brave-browser' in ansible_facts.packages"
+
+    - name: Slurp Brave policies file
+      ansible.builtin.slurp:
+        path: /etc/brave/policies/managed/policies.json
+      register: _desktop_apps_brave_policies_raw
+
+    - name: Parse Brave policies file
+      ansible.builtin.set_fact:
+        _desktop_apps_brave_policies: "{{ _desktop_apps_brave_policies_raw.content | b64decode | from_json }}"
+
+    - name: Assert Brave policies content is as expected
+      ansible.builtin.assert:
+        that:
+          - _desktop_apps_brave_policies.BraveWalletDisabled == true
+          - _desktop_apps_brave_policies.BraveRewardsDisabled == true
+          - _desktop_apps_brave_policies.PasswordManagerEnabled == false
+          - "'nngceckbapebfimnlniiiahkandclblb' in _desktop_apps_brave_policies.ExtensionSettings"
+          - _desktop_apps_brave_policies.ExtensionSettings['nngceckbapebfimnlniiiahkandclblb'].installation_mode == 'force_installed'
+
+    - name: Assert librewolf is installed
+      ansible.builtin.assert:
+        that: "'librewolf' in ansible_facts.packages"
+
+    - name: Slurp LibreWolf policies file
+      ansible.builtin.slurp:
+        path: /etc/librewolf/policies/policies.json
+      register: _desktop_apps_librewolf_policies_raw
+
+    - name: Assert LibreWolf policies file is identical to Firefox's
+      ansible.builtin.assert:
+        that: >-
+          (_desktop_apps_librewolf_policies_raw.content | b64decode | from_json)
+          == _desktop_apps_firefox_policies

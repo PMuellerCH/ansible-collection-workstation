@@ -1,0 +1,202 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: true
+  # Load the role's own defaults so pinned-version assertions below track
+  # defaults/main.yml as their single source of truth, rather than a second
+  # hardcoded literal that would silently go stale whenever Renovate bumps it.
+  vars_files:
+    - ../../defaults/main.yml
+  vars:
+    _modern_cli_local_bin: "{{ ansible_facts['env']['HOME'] }}/.local/bin"
+  tasks:
+    - name: Gather package facts
+      ansible.builtin.package_facts:
+        manager: apt
+
+    - name: Assert all tools are installed
+      ansible.builtin.assert:
+        that:
+          - "'bat' in ansible_facts.packages"
+          - "'btop' in ansible_facts.packages"
+          - "'eza' in ansible_facts.packages"
+          - "'fd-find' in ansible_facts.packages"
+          - "'htop' in ansible_facts.packages"
+          - "'ripgrep' in ansible_facts.packages"
+          - "'zoxide' in ansible_facts.packages"
+          - "'sd' in ansible_facts.packages"
+          - "'duf' in ansible_facts.packages"
+          - "'git-delta' in ansible_facts.packages"
+          - "'gping' in ansible_facts.packages"
+          - "'hexyl' in ansible_facts.packages"
+          - "'du-dust' in ansible_facts.packages"
+          - "'yazi' in ansible_facts.packages"
+
+    - name: Stat fd symlink
+      ansible.builtin.stat:
+        path: /usr/local/bin/fd
+      register: _modern_cli_fd_symlink
+
+    - name: Assert fd symlink exists
+      ansible.builtin.assert:
+        that: _modern_cli_fd_symlink.stat.exists
+
+    - name: Stat bat Catppuccin theme
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/bat/themes/Catppuccin Mocha.tmTheme"
+      register: _modern_cli_bat_theme
+
+    - name: Assert bat theme was downloaded
+      ansible.builtin.assert:
+        that: _modern_cli_bat_theme.stat.exists
+
+    - name: Stat btop Catppuccin theme
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/btop/themes/catppuccin_mocha.theme"
+      register: _modern_cli_btop_theme
+
+    - name: Assert btop theme was downloaded
+      ansible.builtin.assert:
+        that: _modern_cli_btop_theme.stat.exists
+
+    - name: Stat zsh alias snippet
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/modern_cli.zsh"
+      register: _modern_cli_zsh_snippet
+
+    - name: Assert zsh alias snippet was deployed
+      ansible.builtin.assert:
+        that: _modern_cli_zsh_snippet.stat.exists
+
+    - name: Check fzf runs
+      ansible.builtin.command: fzf --version
+      register: _modern_cli_fzf_version
+      changed_when: false
+
+    - name: Assert fzf reports the pinned version
+      ansible.builtin.assert:
+        that: "modern_cli_fzf_version in _modern_cli_fzf_version.stdout"
+
+    - name: Check presenterm runs
+      ansible.builtin.command: presenterm --version
+      register: _modern_cli_presenterm_version
+      changed_when: false
+
+    - name: Assert presenterm reports the pinned version
+      ansible.builtin.assert:
+        that: "modern_cli_presenterm_version in _modern_cli_presenterm_version.stdout"
+
+    - name: Check mermaid-cli (mmdc) runs
+      ansible.builtin.command: mmdc --version
+      register: _modern_cli_mmdc_version
+      changed_when: false
+
+    - name: Assert mermaid-cli reports the pinned version
+      ansible.builtin.assert:
+        that: "modern_cli_presenterm_mermaid_cli_version in _modern_cli_mmdc_version.stdout"
+
+    - name: Stat puppeteer config for mermaid-cli
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/mermaid/puppeteer-config.json"
+      register: _modern_cli_puppeteer_config
+
+    - name: Assert puppeteer config was deployed
+      ansible.builtin.assert:
+        that: _modern_cli_puppeteer_config.stat.exists
+
+    - name: Check pipx bootstrap produced pipx >= 1.7.0
+      ansible.builtin.command: "{{ _modern_cli_local_bin }}/pipx --version"
+      register: _modern_cli_pipx_version
+      changed_when: false
+
+    - name: Assert bootstrapped pipx satisfies community.general.pipx's minimum
+      ansible.builtin.assert:
+        that: _modern_cli_pipx_version.stdout is version('1.7.0', '>=')
+
+    - name: Check emoji-fzf is importable via its pipx-installed binary
+      ansible.builtin.command: "{{ _modern_cli_local_bin }}/emoji-fzf --version"
+      register: _modern_cli_emoji_fzf_version
+      changed_when: false
+
+    - name: Assert emoji-fzf reports the pinned version
+      ansible.builtin.assert:
+        that: "modern_cli_emoji_fzf_version in _modern_cli_emoji_fzf_version.stdout"
+
+    - name: Check GitHub-release binaries run and report their pinned version
+      ansible.builtin.command: "{{ item.bin }} --version"
+      register: _modern_cli_gh_release_versions
+      changed_when: false
+      loop:
+        - { bin: procs, version: "{{ modern_cli_procs_version }}" }
+        - { bin: dust, version: "{{ modern_cli_dust_version }}" }
+        - { bin: viddy, version: "{{ modern_cli_viddy_version }}" }
+        - { bin: xcp, version: "{{ modern_cli_xcp_version }}" }
+        - { bin: doggo, version: "{{ modern_cli_doggo_version }}" }
+        - { bin: jaq, version: "{{ modern_cli_jaq_version }}" }
+        - { bin: moor, version: "{{ modern_cli_moor_version }}" }
+      loop_control:
+        label: "{{ item.bin }}"
+
+    - name: Assert GitHub-release binaries report their pinned version
+      ansible.builtin.assert:
+        that: "item.item.version in item.stdout"
+      loop: "{{ _modern_cli_gh_release_versions.results }}"
+      loop_control:
+        label: "{{ item.item.bin }}"
+
+    - name: Check delta's Catppuccin theme gitconfig was deployed
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/git/catppuccin-delta.gitconfig"
+      register: _modern_cli_delta_theme
+
+    - name: Assert delta's Catppuccin theme gitconfig was deployed
+      ansible.builtin.assert:
+        that: _modern_cli_delta_theme.stat.exists
+
+    - name: Check delta git config integration
+      # community.general.git_config requires value: whenever state: present
+      # applies (its default), even for a pure read — so a read-only lookup
+      # has no module alternative here.
+      ansible.builtin.command: "git config --global {{ item }}"
+      register: _modern_cli_delta_git_config
+      changed_when: false
+      loop:
+        - core.pager
+        - delta.features
+        - include.path
+      loop_control:
+        label: "{{ item }}"
+      # noqa: command-instead-of-module - community.general.git_config cannot perform a value-less read; no module alternative exists
+
+    - name: Assert delta is wired into git config
+      ansible.builtin.assert:
+        that:
+          - "'delta' in _modern_cli_delta_git_config.results[0].stdout"
+          - "'catppuccin-mocha' in _modern_cli_delta_git_config.results[1].stdout"
+          - "'catppuccin-delta.gitconfig' in _modern_cli_delta_git_config.results[2].stdout"
+
+    - name: Check yazi and ya run and report the pinned version
+      ansible.builtin.command: "{{ item }} --version"
+      register: _modern_cli_yazi_versions
+      changed_when: false
+      loop:
+        - yazi
+        - ya
+      loop_control:
+        label: "{{ item }}"
+
+    - name: Assert yazi and ya report the pinned version
+      ansible.builtin.assert:
+        that: "modern_cli_yazi_version in item.stdout"
+      loop: "{{ _modern_cli_yazi_versions.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+    - name: Stat yazi Catppuccin theme
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/yazi/theme.toml"
+      register: _modern_cli_yazi_theme
+
+    - name: Assert yazi theme was downloaded
+      ansible.builtin.assert:
+        that: _modern_cli_yazi_theme.stat.exists

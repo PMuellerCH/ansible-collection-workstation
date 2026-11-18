@@ -1,0 +1,56 @@
+---
+argument_specs:
+  main:
+    short_description: >-
+      System maintenance for a workstation set up by this collection: apt
+      update + safe upgrade (never touches version-pinned/held packages),
+      apt autoremove/autoclean, systemd journal vacuum, Docker prune, and
+      Flatpak unused-runtime cleanup — each independently toggleable.
+      Intended for a dedicated maintenance playbook run separately from the
+      main provisioning playbook, not as part of routine `site.yml` runs.
+    options:
+      maintenance_apt_upgrade_enabled:
+        type: bool
+        required: false
+        default: true
+        description: >-
+          Whether to run `apt-get upgrade` (safe upgrade) after updating the
+          apt cache. Every version-pinned package managed by this collection
+          is `apt-mark hold`'d after install, so a safe upgrade never touches
+          them — only unpinned packages move.
+      maintenance_apt_autoremove_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to remove orphaned apt packages (`apt-get autoremove`, no purge).
+      maintenance_apt_autoclean_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to clean the apt package cache (`apt-get autoclean`).
+      maintenance_journal_vacuum_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to vacuum systemd journal logs older than `maintenance_journal_vacuum_time`.
+      maintenance_journal_vacuum_time:
+        type: str
+        required: false
+        default: 2weeks
+        description: Retention window passed to `journalctl --vacuum-time`.
+      maintenance_docker_prune_enabled:
+        type: bool
+        required: false
+        default: true
+        description: >-
+          Whether to run `docker system prune --all --force` (unused
+          images, stopped containers, unused networks, and build cache) when
+          Docker is installed. Deliberately excludes volumes — see role
+          README.
+      maintenance_flatpak_cleanup_enabled:
+        type: bool
+        required: false
+        default: true
+        description: >-
+          Whether to run `flatpak uninstall --unused` when Flatpak is
+          installed.

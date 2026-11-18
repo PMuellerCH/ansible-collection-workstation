@@ -1,0 +1,38 @@
+---
+driver:
+  name: docker
+
+platforms:
+  - name: base-ubuntu2404
+    image: geerlingguy/docker-ubuntu2404-ansible:latest
+    # Matches converge.yml's base_hostname so ansible.builtin.hostname sees no
+    # change needed — actually changing /etc/hostname fails in Docker (EBUSY,
+    # it's a bind mount from the container runtime), even privileged.
+    hostname: molecule-base
+    pre_build_image: true
+    privileged: true
+    cgroupns_mode: host
+    override_command: false
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
+      - /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro
+
+provisioner:
+  name: ansible
+  config_options:
+    defaults:
+      interpreter_python: auto_silent
+
+verifier:
+  name: ansible
+
+scenario:
+  test_sequence:
+    - destroy
+    - syntax
+    - create
+    - prepare
+    - converge
+    - idempotence
+    - verify
+    - destroy

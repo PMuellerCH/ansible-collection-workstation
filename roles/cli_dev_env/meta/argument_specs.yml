@@ -1,0 +1,251 @@
+---
+argument_specs:
+  main:
+    short_description: >-
+      Install CLI developer environment tools: lazygit, neovim/LazyVim, the
+      Claude Code CLI, the Kiro CLI (kiro-cli), and OpenCode — each
+      independently toggleable — plus presenterm.nvim's plugin config
+      (independently toggleable, depends on the presenterm binary installed by
+      the modern_cli role) and a headless lazy.nvim plugin sync on every apply.
+    options:
+      cli_dev_env_lazygit_enabled:
+        type: bool
+        required: false
+        default: true
+        description: Whether to install lazygit.
+      cli_dev_env_neovim_enabled:
+        type: bool
+        required: false
+        default: true
+        description: >-
+          Whether to install neovim and bootstrap the LazyVim configuration.
+          Also gates the presenterm.nvim plugin config below.
+      cli_dev_env_claude_code_enabled:
+        type: bool
+        required: false
+        default: true
+        description: >-
+          Whether to install the Claude Code CLI, its NodeSource-sourced
+          Node.js dependency, and configure its MCP servers.
+      cli_dev_env_kiro_enabled:
+        type: bool
+        required: false
+        default: true
+        description: >-
+          Whether to install the Kiro CLI (kiro-cli), set its default
+          behaviour (v3 agent engine, tool auto-search, autonomous mode), and
+          deploy its shell aliases.
+      cli_dev_env_neovim_presenterm_plugin_enabled:
+        type: bool
+        required: false
+        default: true
+        description: >-
+          Whether to deploy the presenterm.nvim plugin config
+          (~/.config/nvim/lua/plugins/presenterm.lua). The presenterm binary
+          this plugin needs lives in the modern_cli role
+          (modern_cli_presenterm_enabled) — keep the two in sync. Only
+          applies when cli_dev_env_neovim_enabled is true.
+      cli_dev_env_neovim_lazy_sync_enabled:
+        type: bool
+        required: false
+        default: true
+        description: >-
+          Whether to run a headless `lazy.nvim` sync (install + update +
+          clean) on every apply, instead of relying on a human running
+          :Lazy sync manually. Only applies when cli_dev_env_neovim_enabled
+          is true.
+      cli_dev_env_lazygit_version:
+        type: str
+        required: false
+        description: lazygit version (github-releases jesseduffield/lazygit), installed from a checksum-verified archive.
+      cli_dev_env_lazygit_download_base:
+        type: str
+        required: false
+        default: "https://github.com/jesseduffield/lazygit/releases/download/v{{ cli_dev_env_lazygit_version }}"
+        description: Base URL the lazygit archive and its checksums.txt are downloaded from, before the filename.
+      cli_dev_env_neovim_version:
+        type: str
+        required: false
+        description: Neovim version (github-releases neovim/neovim), installed from a checksum-verified archive.
+      cli_dev_env_claude_code_nodejs_major_version:
+        type: str
+        required: false
+        default: "24"
+        description: >-
+          Node.js LTS major version installed from NodeSource for the
+          Claude Code CLI (selects which deb.nodesource.com/node_{major}.x
+          repo to add). nodejs and build-essential themselves are installed
+          unpinned — see the root README.
+      cli_dev_env_claude_code_version:
+        type: str
+        required: false
+        description: "@anthropic-ai/claude-code npm package version (npm datasource)."
+      cli_dev_env_claude_code_aws_profile:
+        type: str
+        required: false
+        default: "default"
+        description: AWS_PROFILE passed to the awslabs.core MCP server.
+      cli_dev_env_claude_code_aws_region:
+        type: str
+        required: false
+        default: "eu-central-1"
+        description: AWS_REGION passed to the awslabs.core MCP server.
+      cli_dev_env_claude_code_github_token:
+        type: str
+        required: false
+        default: ""
+        description: >-
+          GitHub PAT passed as GITHUB_PERSONAL_ACCESS_TOKEN to the github
+          MCP server (from the consumer's own secret store, e.g. Ansible
+          Vault). Empty by default.
+      cli_dev_env_kiro_bin:
+        type: str
+        required: false
+        default: "{{ ansible_facts['env']['HOME'] }}/.local/bin/kiro-cli"
+        description: >-
+          Absolute path to the kiro-cli binary. Used to detect an existing
+          install and to invoke the binary by full path, since ~/.local/bin is
+          not guaranteed to be on $PATH for a non-interactive Ansible run.
+      cli_dev_env_kiro_install_url:
+        type: str
+        required: false
+        default: "https://cli.kiro.dev/install"
+        description: >-
+          URL of the official kiro-cli install script, downloaded and run when
+          the binary is absent. Unpinned by necessity — kiro-cli is a
+          self-updating binary with no versioned release asset to pin; see
+          README.
+      cli_dev_env_kiro_update:
+        type: bool
+        required: false
+        default: true
+        description: >-
+          When the binary is already present, run `kiro-cli update
+          --non-interactive` to converge to the latest release. Set false to
+          leave an existing install untouched.
+      cli_dev_env_kiro_agent_engine:
+        type: str
+        required: false
+        default: v3
+        description: >-
+          Value for the global `chat.agentEngine` setting ("v3 cli"). Applied
+          via `kiro-cli settings`.
+      cli_dev_env_kiro_tool_search_enabled:
+        type: bool
+        required: false
+        default: true
+        description: >-
+          Value for the global `toolSearch.enabled` setting ("autosearch for
+          tools"). Applied via `kiro-cli settings`.
+      cli_dev_env_kiro_disable_trust_all_confirmation:
+        type: bool
+        required: false
+        default: true
+        description: >-
+          Value for the global `chat.disableTrustAllConfirmation` setting. When
+          true, the `ki` alias (which passes `--trust-all-tools`) starts
+          autonomous chat without a per-launch confirmation prompt.
+      cli_dev_env_kiro_deploy_shell_aliases:
+        type: bool
+        required: false
+        default: true
+        description: >-
+          Whether to deploy ~/.config/zsh/conf.d/kiro.zsh with the chat and
+          login aliases.
+      cli_dev_env_kiro_alias_chat:
+        type: str
+        required: false
+        default: ki
+        description: >-
+          Alias name for `kiro-cli chat --trust-all-tools` (autonomous mode).
+      cli_dev_env_kiro_alias_login:
+        type: str
+        required: false
+        default: kil
+        description: Alias name for `kiro-cli login`.
+      cli_dev_env_github_api_token:
+        type: str
+        required: false
+        default: "{{ lookup('ansible.builtin.env', 'GH_TOKEN') or lookup('ansible.builtin.env', 'GITHUB_TOKEN') }}"
+        description: >-
+          Optional GitHub API token used only to raise the rate limit when
+          resolving the neovim and opencode release-asset digests. Defaults to
+          GH_TOKEN/GITHUB_TOKEN from the environment; unauthenticated (empty)
+          still works but is subject to GitHub's 60 requests/hour per-IP limit.
+      cli_dev_env_opencode_enabled:
+        type: bool
+        required: false
+        default: true
+        description: >-
+          Whether to install OpenCode (model-agnostic AI coding agent),
+          deploy its default-model config, and deploy its shell aliases.
+      cli_dev_env_opencode_bin:
+        type: str
+        required: false
+        default: "{{ ansible_facts['env']['HOME'] }}/.local/bin/opencode"
+        description: >-
+          Absolute path to the opencode binary. Used to detect an existing
+          install, read the installed version, and invoke the binary by full
+          path, since ~/.local/bin is not guaranteed to be on $PATH for a
+          non-interactive Ansible run.
+      cli_dev_env_opencode_version:
+        type: str
+        required: false
+        description: >-
+          OpenCode version (github-releases anomalyco/opencode), installed
+          from a release tarball verified against GitHub's per-asset digest.
+      cli_dev_env_opencode_download_base:
+        type: str
+        required: false
+        default: "https://github.com/anomalyco/opencode/releases/download/v{{ cli_dev_env_opencode_version }}"
+        description: Base URL the opencode release asset is downloaded from, before the filename.
+      cli_dev_env_opencode_asset:
+        type: str
+        required: false
+        default: "opencode-linux-x64.tar.gz"
+        description: >-
+          Linux x64 release asset filename. Contains a single flat `opencode`
+          binary and is verified against GitHub's per-asset sha256 digest
+          (OpenCode publishes no checksum file).
+      cli_dev_env_opencode_github_api_token:
+        type: str
+        required: false
+        default: "{{ cli_dev_env_github_api_token }}"
+        description: >-
+          Optional GitHub API token used only to raise the rate limit when
+          resolving the opencode release-asset digest. Defaults to the same
+          GH_TOKEN/GITHUB_TOKEN env lookup as cli_dev_env_github_api_token.
+      cli_dev_env_opencode_model:
+        type: str
+        required: false
+        default: "mistral/devstral-medium-2507"
+        description: >-
+          Default model OpenCode talks to ("provider/model-id"), written into
+          the deployed opencode.json. Defaults to Mistral AI's agentic coding
+          model; mistral/codestral-2508 is a completion-focused alternative.
+          The MISTRAL_API_KEY and `opencode` login are left to the user.
+      cli_dev_env_opencode_deploy_config:
+        type: bool
+        required: false
+        default: true
+        description: >-
+          Whether to deploy ~/.config/opencode/opencode.json. The role owns
+          only the top-level `model` key, rewriting the file only when it
+          differs (user-added keys are preserved).
+      cli_dev_env_opencode_deploy_shell_aliases:
+        type: bool
+        required: false
+        default: true
+        description: >-
+          Whether to deploy ~/.config/zsh/conf.d/opencode.zsh with the TUI and
+          headless-run aliases.
+      cli_dev_env_opencode_alias_tui:
+        type: str
+        required: false
+        default: oc
+        description: Alias name for `opencode` (interactive TUI).
+      cli_dev_env_opencode_alias_run:
+        type: str
+        required: false
+        default: ocr
+        description: Alias name for `opencode run` (headless prompt, no TUI).
