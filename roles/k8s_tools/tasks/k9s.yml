@@ -1,0 +1,52 @@
+---
+
+- name: Get installed k9s version
+  ansible.builtin.command: k9s version --short
+  register: k8s_tools_k9s_installed
+  become: false
+  changed_when: false
+  failed_when: false
+
+- name: Download k9s archive
+  ansible.builtin.get_url:
+    url: "https://github.com/derailed/k9s/releases/download/v{{ k8s_tools_k9s_version }}/k9s_Linux_amd64.tar.gz"
+    dest: "/tmp/k9s_{{ k8s_tools_k9s_version }}_Linux_amd64.tar.gz"
+    # k9s publishes an aggregate checksums.sha256 per release (matched by basename).
+    checksum: "sha256:https://github.com/derailed/k9s/releases/download/v{{ k8s_tools_k9s_version }}/checksums.sha256"
+    mode: "0644"
+  when: >-
+    (k8s_tools_k9s_installed.rc != 0 or k8s_tools_k9s_version not in k8s_tools_k9s_installed.stdout)
+
+- name: Install k9s binary
+  ansible.builtin.unarchive:
+    src: "/tmp/k9s_{{ k8s_tools_k9s_version }}_Linux_amd64.tar.gz"
+    dest: /usr/local/bin/
+    include:
+      - k9s
+    remote_src: true
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and (k8s_tools_k9s_installed.rc != 0 or k8s_tools_k9s_version not in k8s_tools_k9s_installed.stdout)
+
+- name: Create k9s config directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/k9s/skins"
+    state: directory
+    mode: "0755"
+  become: false
+
+- name: Deploy k9s Catppuccin Mocha skin
+  ansible.builtin.copy:
+    src: k9s-catppuccin-mocha.yaml
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/k9s/skins/catppuccin-mocha.yaml"
+    mode: "0644"
+  become: false
+
+- name: Deploy k9s config
+  ansible.builtin.copy:
+    src: k9s-config.yaml
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/k9s/config.yaml"
+    mode: "0644"
+    force: false
+  become: false

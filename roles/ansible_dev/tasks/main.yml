@@ -1,0 +1,26 @@
+---
+# Thin dispatcher: one task file per component, each behind its own switch.
+# Tags use include_tasks' `apply:` so they reach the tasks inside the file.
+- name: Install ansible-core (pipx) and Galaxy collections
+  ansible.builtin.include_tasks:
+    file: ansible.yml
+    apply:
+      tags: [ansible, ansible_dev]
+  when: ansible_dev_ansible_enabled
+  tags: [ansible, ansible_dev]
+
+- name: Install Docker CE
+  ansible.builtin.include_tasks:
+    file: docker.yml
+    apply:
+      tags: [docker, ansible_dev]
+  when: ansible_dev_docker_enabled
+  tags: [docker, ansible_dev]
+
+- name: Install act (run GitHub Actions locally)
+  ansible.builtin.include_tasks:
+    file: act.yml
+    apply:
+      tags: [act, ansible_dev]
+  when: ansible_dev_act_enabled
+  tags: [act, ansible_dev]

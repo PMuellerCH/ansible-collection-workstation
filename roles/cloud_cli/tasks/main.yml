@@ -1,0 +1,26 @@
+---
+# Thin dispatcher: one task file per component, each behind its own switch.
+# Tags use include_tasks' `apply:` so they reach the tasks inside the file.
+- name: Install AWS CLI v2, session-manager-plugin, boto3
+  ansible.builtin.include_tasks:
+    file: aws.yml
+    apply:
+      tags: [aws, cloud_cli]
+  when: cloud_cli_aws_enabled
+  tags: [aws, cloud_cli]
+
+- name: Install Terraform, Vault, tfswitch, tflint, terraform-docs
+  ansible.builtin.include_tasks:
+    file: terraform.yml
+    apply:
+      tags: [terraform, cloud_cli]
+  when: cloud_cli_terraform_enabled
+  tags: [terraform, cloud_cli]
+
+- name: Install floci (local AWS emulator CLI)
+  ansible.builtin.include_tasks:
+    file: floci.yml
+    apply:
+      tags: [floci, cloud_cli]
+  when: cloud_cli_floci_enabled
+  tags: [floci, cloud_cli]

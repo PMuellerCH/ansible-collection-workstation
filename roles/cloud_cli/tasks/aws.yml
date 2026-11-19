@@ -1,0 +1,188 @@
+---
+# AWS CLI v2, session-manager-plugin, boto3 (shared ansible-core venv).
+#
+# Required by the AWS CLI installer's .zip extraction (ansible.builtin.unarchive
+# has no pure-Python fallback for .zip) and by the signature verification of
+# the AWS CLI installer and the session-manager-plugin .deb. A reusable role
+# can't assume computer-setup's base role already installed them; generic
+# utilities, not this role's primary tools, so left unpinned like other bundled
+# utilities elsewhere in this collection.
+
+- name: Install unzip and gnupg
+  ansible.builtin.apt:
+    name:
+      - unzip
+      - gnupg
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+
+- name: Get installed AWS CLI version
+  ansible.builtin.command: aws --version
+  register: cloud_cli_aws_current_version
+  become: false
+  changed_when: false
+  failed_when: false
+
+# AWS only publishes a GPG .sig for the installer (no plain or structured
+# checksum file), so it is verified against the pinned AWS CLI team key — see
+# _verified_download.yml. Download, verification and install all happen in a
+# private temporary directory that is removed afterwards.
+
+- name: Install AWS CLI v2
+  when: >-
+    not ansible_check_mode and
+    (cloud_cli_aws_current_version.rc != 0 or cloud_cli_aws_cli_version not in cloud_cli_aws_current_version.stdout)
+  block:
+    - name: Download and verify the AWS CLI v2 installer
+      ansible.builtin.include_tasks:
+        file: _verified_download.yml
+      vars:
+        cloud_cli_dl_url: "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-{{ cloud_cli_aws_cli_version }}.zip"
+        cloud_cli_dl_sig_url: "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-{{ cloud_cli_aws_cli_version }}.zip.sig"
+        cloud_cli_dl_filename: awscliv2.zip
+        cloud_cli_dl_key_file: aws-cli-team.asc
+        cloud_cli_dl_fingerprint: "{{ cloud_cli_aws_cli_key_fingerprint }}"
+
+    - name: Unzip AWS CLI v2 installer
+      ansible.builtin.unarchive:
+        src: "{{ cloud_cli_dl_tmp.path }}/awscliv2.zip"
+        dest: "{{ cloud_cli_dl_tmp.path }}"
+        remote_src: true
+
+    - name: Install AWS CLI v2
+      ansible.builtin.command:
+        cmd: "{{ cloud_cli_dl_tmp.path }}/aws/install --update"
+      become: true
+      changed_when: true
+  rescue:
+    - name: Report the failed AWS CLI v2 install
+      ansible.builtin.fail:
+        msg: "Installing AWS CLI v2 failed (download, signature check or installer); see the preceding error."
+  always:
+    - name: Remove the AWS CLI v2 working directory
+      ansible.builtin.file:
+        path: "{{ cloud_cli_dl_tmp.path }}"
+        state: absent
+      become: false
+      when: cloud_cli_dl_tmp.path is defined
+
+- name: Ensure ~/.config/zsh/conf.d directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d"
+    state: directory
+    mode: "0755"
+  become: false
+
+- name: Deploy aws zsh config
+  ansible.builtin.copy:
+    src: aws.zsh
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/aws.zsh"
+    mode: "0644"
+  become: false
+
+- name: Ensure ~/.aws directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.aws"
+    state: directory
+    mode: "0700"
+  become: false
+
+- name: Deploy AWS config
+  ansible.builtin.template:
+    src: aws-config.j2
+    dest: "{{ ansible_facts['env']['HOME'] }}/.aws/config"
+    mode: "0600"
+    force: false
+  become: false
+  when: cloud_cli_aws_profiles | length > 0
+
+# boto3 goes into the ansible-core pipx venv owned by the ansible_dev role. If
+# that venv doesn't exist (ansible_dev not run yet, or its ansible component
+# disabled) the inject is skipped rather than failing — `pipx inject` requires
+# the target app to already exist. Run ansible_dev first, then re-run this role.
+
+- name: Check whether the ansible-core pipx venv exists
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.local/bin/ansible"
+  register: cloud_cli_ansible_core_stat
+  become: false
+
+- name: Get boto3 version in ansible-core venv
+  # `python3 -m pipx`, not the "pipx" binary — same PATH-independence
+  # rationale as the ansible-galaxy call in the ansible_dev role (and matches
+  # how community.general.pipx itself resolves pipx, per its own docs).
+  ansible.builtin.command:
+    cmd: python3 -m pipx runpip ansible-core show boto3
+  register: cloud_cli_aws_boto3_current
+  become: false
+  changed_when: false
+  failed_when: false
+  when: not ansible_check_mode and cloud_cli_ansible_core_stat.stat.exists
+
+- name: Inject boto3 into ansible-core pipx venv
+  community.general.pipx:
+    name: ansible-core
+    state: inject
+    inject_packages:
+      - "boto3=={{ cloud_cli_aws_boto3_version }}"
+    force: true
+  become: false
+  when: >-
+    not ansible_check_mode and cloud_cli_ansible_core_stat.stat.exists and
+    (cloud_cli_aws_boto3_current.rc != 0 or cloud_cli_aws_boto3_version not in cloud_cli_aws_boto3_current.stdout)
+
+- name: Get installed session-manager-plugin version
+  ansible.builtin.command:
+    cmd: session-manager-plugin --version
+  register: cloud_cli_aws_smp_current
+  become: false
+  changed_when: false
+  failed_when: false
+
+# Same GPG-.sig-only situation as the AWS CLI installer; verified against the
+# pinned Session Manager plugin signer key before the .deb is installed as root.
+
+- name: Install session-manager-plugin
+  when: >-
+    not ansible_check_mode and
+    (cloud_cli_aws_smp_current.rc != 0 or cloud_cli_aws_session_manager_plugin_version not in cloud_cli_aws_smp_current.stdout)
+  block:
+    - name: Download and verify the session-manager-plugin .deb
+      ansible.builtin.include_tasks:
+        file: _verified_download.yml
+      vars:
+        cloud_cli_smp_base: >-
+          https://s3.amazonaws.com/session-manager-downloads/plugin/{{ cloud_cli_aws_session_manager_plugin_version }}/ubuntu_64bit
+        cloud_cli_dl_url: "{{ cloud_cli_smp_base }}/session-manager-plugin.deb"
+        cloud_cli_dl_sig_url: "{{ cloud_cli_smp_base }}/session-manager-plugin.deb.sig"
+        cloud_cli_dl_filename: session-manager-plugin.deb
+        cloud_cli_dl_key_file: session-manager-plugin-signer.asc
+        cloud_cli_dl_fingerprint: "{{ cloud_cli_aws_session_manager_plugin_key_fingerprint }}"
+
+    - name: Install session-manager-plugin
+      ansible.builtin.apt:
+        deb: "{{ cloud_cli_dl_tmp.path }}/session-manager-plugin.deb"
+      become: true
+  rescue:
+    - name: Report the failed session-manager-plugin install
+      ansible.builtin.fail:
+        msg: "Installing session-manager-plugin failed (download, signature check or apt); see the preceding error."
+  always:
+    - name: Remove the session-manager-plugin working directory
+      ansible.builtin.file:
+        path: "{{ cloud_cli_dl_tmp.path }}"
+        state: absent
+      become: false
+      when: cloud_cli_dl_tmp.path is defined
+
+- name: Deploy aws proxy environment snippet
+  ansible.builtin.copy:
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/aws-proxy.zsh"
+    mode: "0644"
+    content: |
+      export AWS_CA_BUNDLE="/etc/ssl/certs/ca-certificates.crt"
+      export AWS_REQUEST_CHECKSUM_CALCULATION="when_required"
+  become: false
+  when: cloud_cli_http_proxy != ''

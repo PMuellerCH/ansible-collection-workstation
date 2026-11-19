@@ -126,7 +126,7 @@
   tags: [base]
 
 - name: Deploy Vault ZSH snippet
-  # Named base-vault.zsh (not vault.zsh) to avoid colliding with iac_tools'
+  # Named base-vault.zsh (not vault.zsh) to avoid colliding with cloud_cli's
   # own "Deploy vault shell integration snippet" task, which writes a richer
   # vault.zsh (VAULT_ADDR + VAULT_NAMESPACE + a vault-login() function) to
   # the same conf.d directory when terraform/vault are enabled. Both roles
@@ -159,13 +159,13 @@
 
 - name: Remove legacy vault.zsh written by older base role versions
   # Prior to the base-vault.zsh rename above (#124), this role wrote
-  # directly to vault.zsh, colliding with iac_tools' own richer template of
+  # directly to vault.zsh, colliding with cloud_cli's own richer template of
   # the same name. Since ~/.config/zsh/conf.d/*.zsh files are all
   # auto-sourced, a leftover legacy vault.zsh from an older base run would
   # still be sourced and could override VAULT_ADDR with a stale value even
   # after upgrading to this fix. Only remove it when its content is exactly
   # the old base-only one-liner (no VAULT_NAMESPACE or vault-login
-  # function), so an iac_tools-managed vault.zsh is never touched.
+  # function), so a cloud_cli-managed vault.zsh is never touched.
   ansible.builtin.file:
     path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/vault.zsh"
     state: absent

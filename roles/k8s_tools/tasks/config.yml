@@ -1,0 +1,47 @@
+---
+
+- name: Ensure ~/.kube directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.kube"
+    state: directory
+    mode: "0700"
+  become: false
+
+- name: Deploy kubeconfig
+  ansible.builtin.template:
+    src: kube-config.j2
+    dest: "{{ ansible_facts['env']['HOME'] }}/.kube/config"
+    mode: "0600"
+    force: false
+  become: false
+  when: k8s_tools_clusters | length > 0
+
+- name: Create zsh conf.d directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d"
+    state: directory
+    mode: "0755"
+  become: false
+
+- name: Deploy kubernetes shell integration snippet
+  ansible.builtin.copy:
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/k8s_tools.zsh"
+    mode: "0644"
+    content: |
+      # krew PATH
+      export PATH="${KREW_ROOT:-$HOME/.krew}/bin:$PATH"
+
+      # Helm shell completion
+      command -v helm &>/dev/null && source <(helm completion zsh)
+
+      # Stern shell completion
+      command -v stern &>/dev/null && source <(stern --completion=zsh)
+  become: false
+
+- name: Remove legacy kubernetes_tools shell integration snippet
+  # Renamed to k8s_tools.zsh with the iac_tools split; without this both files
+  # would be sourced, duplicating the PATH entry and completions.
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/kubernetes_tools.zsh"
+    state: absent
+  become: false

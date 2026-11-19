@@ -240,8 +240,8 @@ together — that wiring is out of scope for this role.
 ### `lang.terraform` / `lang.ansible` coupling — not gated
 
 `lazyvim.json`'s `lang.terraform` and `lang.ansible` extras have a
-similar-shaped coupling with the `iac_tools` role (which installs the actual
-`terraform`/`ansible` CLIs), but it is a **much softer** coupling than
+similar-shaped coupling with the `cloud_cli` and `ansible_dev` roles (which install the
+actual `terraform`/`ansible` CLIs), but it is a **much softer** coupling than
 `presenterm.nvim`'s, and is deliberately left ungated:
 
 - LazyVim's `lang.*` extras are editor-only LSP/syntax/formatter
@@ -251,15 +251,15 @@ similar-shaped coupling with the `iac_tools` role (which installs the actual
 - Unlike `presenterm.nvim` — which shells out to the *system* `presenterm`
   binary to actually render a presentation, and does nothing useful at all
   without it — the `lang.terraform`/`lang.ansible` extras degrade
-  gracefully on their own: worst case without `iac_tools` installed, you get
+  gracefully on their own: worst case without `cloud_cli`/`ansible_dev` installed, you get
   LSP/syntax highlighting for `.tf`/`.yml` files with no working editor
   integration to lose, not a broken plugin spec.
 - There's also no real analogue to `modern_cli_presenterm_enabled` to sync
-  against: `iac_tools` doesn't have (and has no reason to have) a Neovim
+  against: `cloud_cli`/`ansible_dev` don't have (and has no reason to have) a Neovim
   plugin-config toggle for `cli_dev_env` to coordinate with.
 
 If Mason's own toolchain ever turns out to meaningfully conflict with a
-system-installed `terraform`/`ansible` from `iac_tools` (e.g. version
+system-installed `terraform`/`ansible` from `cloud_cli`/`ansible_dev` (e.g. version
 skew causing confusing LSP behaviour), revisit this — but as shipped, no
 toggle is added.
 
@@ -286,7 +286,7 @@ calls. **Not** a `prefix=` line in `~/.npmrc`: `base`'s own npm proxy-config
 task fully overwrites that file on every run (when `base_http_proxy` is
 set), so anything else writing into the same file fights it forever — found
 live as a perpetual non-idempotency loop, same class of bug as `base`
-colliding with `iac_tools` over `vault.zsh`. The `claude` binary ends up in
+colliding with `cloud_cli` over `vault.zsh`. The `claude` binary ends up in
 `~/.local/bin`, which `terminal_env`'s `.zshrc` already puts ahead of
 `/usr/bin` on `PATH`. This means Claude Code can self-update (`claude
 update` / auto-update) without root, and a re-run of this role doesn't need

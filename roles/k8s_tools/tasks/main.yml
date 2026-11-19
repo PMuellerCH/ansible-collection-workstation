@@ -1,0 +1,45 @@
+---
+# Thin dispatcher: one task file per component group. Every task carries the
+# k8s_tools tag via include_tasks' `apply:`; there are no per-component
+# switches — the role as a whole is the unit (don't include it to skip it).
+- name: Install kubectl
+  ansible.builtin.include_tasks:
+    file: kubectl.yml
+    apply:
+      tags: [kubectl, k8s_tools]
+  tags: [kubectl, k8s_tools]
+
+- name: Install k9s (with Catppuccin skin)
+  ansible.builtin.include_tasks:
+    file: k9s.yml
+    apply:
+      tags: [k9s, k8s_tools]
+  tags: [k9s, k8s_tools]
+
+- name: Install helm and helm-diff
+  ansible.builtin.include_tasks:
+    file: helm.yml
+    apply:
+      tags: [helm, k8s_tools]
+  tags: [helm, k8s_tools]
+
+- name: Install kubectx/kubens, stern, krew, kubeconform, kube-linter
+  ansible.builtin.include_tasks:
+    file: kube_utils.yml
+    apply:
+      tags: [kube_utils, k8s_tools]
+  tags: [kube_utils, k8s_tools]
+
+- name: Install Python Kubernetes libraries
+  ansible.builtin.include_tasks:
+    file: python_libs.yml
+    apply:
+      tags: [python_libs, k8s_tools]
+  tags: [python_libs, k8s_tools]
+
+- name: Configure kubeconfig and shell integration
+  ansible.builtin.include_tasks:
+    file: config.yml
+    apply:
+      tags: [config, k8s_tools]
+  tags: [config, k8s_tools]
