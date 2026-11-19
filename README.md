@@ -255,8 +255,7 @@ bumps.
 
 ## Continuous Integration
 
-Lint (`ci.yml`) and Molecule (`molecule.yml`) run as thin wrappers around reusable
-workflows in
+Lint (`ci.yml`) and Molecule (`molecule.yml`) are built on reusable workflows in
 [PMuellerCH/shared-actions](https://github.com/PMuellerCH/shared-actions), pinned to
 `@v1` (`ansible_lint.yml` and `ansible_molecule.yml`), both called with
 `python-version: 3.14` and `install-self-collection: true`. Release
@@ -265,15 +264,30 @@ workflows in
 directly — no shared workflow and no GitHub App secrets — with `contents: write` and
 `pull-requests: write` permissions.
 
-`ci.yml` runs the lint job on every `pull_request` to `main` (it no longer runs on push)
-with read-only `contents` permission.
+CI only tests what a PR changed; the full suite runs once, on the release PR:
 
-Molecule auto-discovers every role with a `roles/<name>/molecule/default/` scenario and
-runs it as a matrix job, but only on the release-please PR, a Renovate PR, or manual
-`workflow_dispatch` — not on every ordinary feature PR, since a full matrix run is too
-slow to gate routine iteration (those get fast lint-only feedback from `ci.yml` instead).
-A Renovate PR tests only the role(s) whose own files changed; a change to a shared file
-(`requirements.yml`, `requirements-molecule.yml`, `galaxy.yml`) runs the full matrix.
+| Event | Lint (`ci.yml`) | Molecule (`molecule.yml`) |
+| --- | --- | --- |
+| Any PR to `main` (feature, fix, Renovate) | `lint-changed`: pre-commit on files changed vs. `origin/main` | Only roles whose own files changed |
+| release-please PR | `lint-full`: complete shared lint suite | Full matrix of every role with a scenario |
+| `workflow_dispatch` | `lint-full` | Full matrix |
+
+Details and limits:
+
+- `lint-changed` runs `pre-commit run --from-ref origin/<base> --to-ref HEAD`. Checkov
+  cannot take a file list, so it still scans the whole repo on every run. Ansible-lint
+  only sees changed files under `roles/`, `meta/` and the root `galaxy.yml` /
+  `requirements*.yml`, so a cross-role problem is only caught by `lint-full` on the
+  release PR.
+- Molecule auto-discovers every role with a `roles/<name>/molecule/default/` scenario.
+  README.md and `meta/` changes inside a role do not count as a role change. A change to
+  a shared file (`requirements.yml`, `requirements-molecule.yml`, `galaxy.yml`, the
+  molecule-relevant pins in `.github/requirements.txt` or `molecule.yml` itself) runs the
+  full matrix.
+- A PR that changes no role skips the Molecule job (a skipped check counts as passing).
+- Troubleshooting: if `lint-changed` fails but a local run passes, run
+  `pre-commit run --from-ref origin/main --to-ref HEAD` after `git fetch origin main`
+  to reproduce exactly what CI sees.
 
 Renovate is self-contained in this repo's `renovate.json` — it no longer extends a shared
 preset. It extends `config:recommended` and `:enablePreCommit`, defines its own

@@ -2,21 +2,18 @@
 name: Molecule
 
 # Auto-discovers any role under roles/ with a molecule/default/ scenario and runs
-# `molecule test` for it as a matrix. Fires on the release-please PR and on
-# Renovate PRs (so a release is never cut without molecule passing, and so
-# Renovate automerge's "tests pass" gate is real rather than vacuous) or manual
-# dispatch — not on every ordinary feature PR, since a full molecule run is too
-# slow/expensive to gate routine iteration. Those get fast lint-only feedback
-# from ci.yml instead.
+# `molecule test` for it as a matrix. Fires on every PR to main (path-filtered, see
+# below), on the release-please PR (full matrix) and on manual dispatch (full
+# matrix).
 #
-# For Renovate PRs specifically, only test the role(s) whose own files actually
-# changed (not the full matrix) — a Renovate PR only ever touches one role's
-# defaults/main.yml (or occasionally a shared file). README.md and meta/
+# On every ordinary PR (feature, fix, Renovate alike), only test the role(s)
+# whose own files actually changed (not the full matrix). README.md and meta/
 # changes within a role don't count either: every role here has an empty
 # dependencies: [] (galaxy_info is purely descriptive), so neither affects
 # runtime behavior molecule would catch. A change to a shared file
 # (requirements.yml, requirements-molecule.yml, galaxy.yml) still runs the full
-# matrix, since those affect every role's test environment.
+# matrix, since those affect every role's test environment, as does a change
+# to this workflow itself.
 #
 # .github/requirements.txt gets its own content-aware check rather than a
 # blanket path match: it bundles both molecule's own dependencies
@@ -41,7 +38,7 @@ permissions:
 jobs:
   changes:
     name: Detect changed roles
-    if: startsWith(github.head_ref, 'renovate/')
+    if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please--')
     runs-on: ubuntu-latest
     outputs:
       roles: ${{ steps.resolve.outputs.roles }}
@@ -74,6 +71,7 @@ jobs:
             echo "  - 'requirements.yml'"
             echo "  - 'requirements-molecule.yml'"
             echo "  - 'galaxy.yml'"
+            echo "  - '.github/workflows/molecule.yml'"
             for d in roles/*/; do
               role=$(basename "$d")
               echo "$role:"
@@ -126,7 +124,7 @@ jobs:
 
   molecule:
     needs: [changes]
-    # always() is required here: `changes` only runs for renovate/*-branch PRs
+    # always() is required here: `changes` only runs for ordinary PRs
     # (see its own if:), so it's skipped for release-please/workflow_dispatch —
     # and a downstream job's default success() gate treats a skipped need as
     # not-satisfied, skipping this job too, unless always() forces evaluation
@@ -135,10 +133,10 @@ jobs:
       always() && (
         startsWith(github.head_ref, 'release-please--') ||
         github.event_name == 'workflow_dispatch' ||
-        (startsWith(github.head_ref, 'renovate/') && needs.changes.outputs.roles != '[]')
+        (needs.changes.result == 'success' && needs.changes.outputs.roles != '[]')
       )
     uses: PMuellerCH/shared-actions/.github/workflows/ansible_molecule.yml@v1
     with:
       python-version: "3.14"
       install-self-collection: "true"
-      roles: ${{ startsWith(github.head_ref, 'renovate/') && needs.changes.outputs.roles || '' }}
+      roles: ${{ needs.changes.outputs.roles || '' }}

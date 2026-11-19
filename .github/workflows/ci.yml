@@ -1,15 +1,66 @@
 ---
 name: CI
 
+# Two lint paths, so ordinary PRs get fast feedback while the release gate stays
+# exhaustive:
+#
+# - lint-changed: every PR except release-please's. Runs the pre-commit hooks only
+#   against files changed relative to the base branch (--from-ref/--to-ref), so
+#   a PR touching one role is not slowed down by the rest of the collection.
+#   Checkov is the exception: it cannot take a file list, so it still scans the
+#   whole repo (seconds, not minutes).
+# - lint-full: the release-please PR and manual dispatch. Runs the complete lint
+#   suite via the shared reusable workflow, the last gate before a release is cut.
+
 "on":
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  lint:
+  lint-changed:
+    name: Lint (changed files)
+    if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'release-please--')
+    runs-on: ubuntu-latest
+    steps:
+      # Full history so pre-commit can diff against origin/<base>.
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: PMuellerCH/shared-actions/.github/actions/ansible-setup@v1
+        with:
+          python-version: "3.14"
+
+      # ansible-lint resolves non-builtin modules from this repo's own galaxy.yml
+      # `dependencies:`, so the collection must be installed before linting.
+      - name: Install self (collection)
+        shell: bash
+        run: ansible-galaxy collection install . --force
+
+      - name: Cache pre-commit environments
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Run pre-commit on changed files
+        shell: bash
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: |
+          set -o pipefail
+          pre-commit run --show-diff-on-failure --color always \
+            --from-ref "origin/$BASE_REF" --to-ref HEAD
+
+  lint-full:
+    name: Lint (full)
+    if: github.event_name == 'workflow_dispatch' || startsWith(github.head_ref, 'release-please--')
     uses: PMuellerCH/shared-actions/.github/workflows/ansible_lint.yml@v1
     with:
       python-version: "3.14"
