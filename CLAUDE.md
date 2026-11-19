@@ -57,16 +57,19 @@ roles/<name>/
 
 ## Testing
 
-Lint and Molecule run as thin wrappers around `PMuellerCH/shared-actions` reusable workflows.
+Molecule and the full lint run as thin wrappers around `PMuellerCH/shared-actions` reusable workflows;
+the changed-files lint runs pre-commit inline.
 
-- **Lint** (`ci.yml`) runs yamllint, ansible-lint, markdownlint, checkov on every push
-  and PR to `main`. Fast, always on.
+- **Lint** (`ci.yml`): on ordinary PRs `lint-changed` runs pre-commit only on files changed
+  vs. `origin/main` (checkov still scans everything); on the release-please PR and
+  `workflow_dispatch` `lint-full` runs the complete yamllint, ansible-lint, markdownlint,
+  checkov suite.
 - **Molecule** (`molecule.yml`) auto-discovers any role with a `roles/<name>/molecule/default/`
-  scenario and runs `molecule test` for it as a matrix job. It fires on the
-  release-please PR (`head_ref` starting with `release-please--`), on `renovate/*` PRs (only the roles whose
-  files changed) or manual `workflow_dispatch` — not on every feature PR, since a full molecule run is too slow
-  to gate ordinary iteration. This means **a release is never cut without molecule
-  passing** on the release-please PR — merge it only once that check is green.
+  scenario and runs `molecule test` as a matrix job. On every PR it tests only the roles whose
+  files changed (shared files like `requirements*.yml`, `galaxy.yml` or the workflow itself
+  trigger the full matrix); on the release-please PR and `workflow_dispatch` it runs the full
+  matrix. This means **a release is never cut without molecule passing** on the release-please
+  PR — merge it only once that check is green.
 - A role only gets tested once it has a `molecule/default/` scenario; adding one is
   opt-in per role, not mandatory. Not every workstation role is a good fit for Docker
   (e.g. anything depending on the COSMIC desktop, X11, or a systemd user session) —
