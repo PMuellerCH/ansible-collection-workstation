@@ -36,7 +36,7 @@
         "/^roles/.+/defaults/main\\.yml$/"
       ],
       "matchStrings": [
-        "# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>[^\\s]+)( registryUrl=(?<registryUrl>[^\\s]+))?( extractVersion=(?<extractVersion>[^\\s]+))?\\n[a-z_]+: \"(?<currentValue>[^\"]+)\""
+        "# renovate: datasource=(?<datasource>[a-z-]+) depName=(?<depName>[^\\s]+)( registryUrl=(?<registryUrl>[^\\s]+))?( extractVersion=(?<extractVersion>[^\\s]+))?\\n[a-z0-9_]+: \"(?<currentValue>[^\"]+)\""
       ]
     },
     {

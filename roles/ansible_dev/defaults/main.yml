@@ -27,9 +27,9 @@ ansible_dev_ansible_core_version: "2.21.6"
 ansible_dev_molecule_version: "26.10.0"
 # renovate: datasource=pypi depName=molecule-plugins
 ansible_dev_molecule_plugins_version: "26.11.0"
-# renovate: datasource=pypi depName=hvac
 # Also the only hvac this collection injects into the shared ansible-core venv:
 # k8s_tools relies on this one rather than pinning its own copy.
+# renovate: datasource=pypi depName=hvac
 ansible_dev_hvac_version: "2.4.0"
 
 # ── act ──────────────────────────────────────────────────────────────────

@@ -149,6 +149,30 @@ Notes:
   Code), `kil` / `kiro-cli login` (Kiro CLI), and the `opencode` login plus a
   `MISTRAL_API_KEY` in your environment (OpenCode).
 
+## Migrating from `iac_tools`
+
+The `iac_tools` role was split into `ansible_dev`, `cloud_cli` and `k8s_tools` (a breaking change; variables were
+renamed with no aliases). Replace the role in your play with the three new ones, in this order — `ansible_dev` creates
+the `ansible-core` pipx venv that `cloud_cli` (boto3) and `k8s_tools` (Python Kubernetes libraries, non-Ubuntu) inject
+into, and they skip that inject if the venv isn't there yet.
+
+| Old | New |
+| --- | --- |
+| `iac_tools_ansible_enabled`, `_docker_enabled`, `_act_enabled` | `ansible_dev_ansible_enabled`, `_docker_enabled`, `_act_enabled` |
+| `iac_tools_aws_enabled`, `_terraform_enabled`, `_floci_enabled` | `cloud_cli_aws_enabled`, `_terraform_enabled`, `_floci_enabled` |
+| `iac_tools_kubernetes_tools_enabled` | removed — include `k8s_tools` or don't |
+| `iac_tools_http_proxy`, `_https_proxy`, `_no_proxy` | `ansible_dev_*` (Docker daemon/client) and `cloud_cli_http_proxy` (AWS/Terraform snippets) |
+| `iac_tools_vault_addr`, `iac_tools_terraform_*`, `iac_tools_aws_*`, `_tflint_*`, `_tfswitch_*`, `_floci_*` | same name with the `cloud_cli_` prefix |
+| `iac_tools_pipx_min_version`, `_ansible_core_version`, `_hvac_version`, `_act_*` | same name with the `ansible_dev_` prefix |
+| `iac_tools_ansible_molecule_version`, `_ansible_molecule_plugins_version` | `ansible_dev_molecule_version`, `ansible_dev_molecule_plugins_version` |
+| `iac_tools_kubernetes_clusters`, `_kubernetes_current_context` | `k8s_tools_clusters`, `k8s_tools_current_context` |
+| `iac_tools_kubernetes_pip_*` | `k8s_tools_pip_*` |
+| `iac_tools_kubectl_*`, `_k9s_*`, `_helm_*`, `_kubectx_*`, `_kubens_*`, `_stern_*`, `_krew_*`, `_kubeconform_*`, `_kube_linter_*` | same name with the `k8s_tools_` prefix |
+
+Tags: `kubernetes_tools` is replaced by `kubectl`, `k9s`, `helm`, `kube_utils`, `python_libs`, `config`, and the umbrella
+tags are `ansible_dev`, `cloud_cli` and `k8s_tools` instead of `iac_tools`. The AWS CLI and session-manager-plugin are now
+GPG-verified (see the `cloud_cli` README).
+
 ## Shell aliases
 
 Several roles deploy zsh snippets to `~/.config/zsh/conf.d/*.zsh`. They take

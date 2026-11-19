@@ -7,34 +7,59 @@
   changed_when: false
   failed_when: false
 
-- name: Download helm archive
-  ansible.builtin.get_url:
-    url: "https://get.helm.sh/helm-v{{ k8s_tools_helm_version }}-linux-amd64.tar.gz"
-    dest: "/tmp/helm-{{ k8s_tools_helm_version }}-linux-amd64.tar.gz"
-    # helm publishes a per-archive .sha256sum next to each release artifact.
-    checksum: "sha256:https://get.helm.sh/helm-v{{ k8s_tools_helm_version }}-linux-amd64.tar.gz.sha256sum"
-    mode: "0644"
+# Download, extraction and install happen in a private temporary directory
+# (mode 0700, unpredictable name) removed afterwards — never a predictable /tmp
+# path that another local user could pre-create or swap before the root-level
+# install. Staging tasks report unchanged so idempotence isn't affected.
+- name: Install helm binary
   when: >-
     not ansible_check_mode and (k8s_tools_helm_installed.rc != 0 or k8s_tools_helm_version not in k8s_tools_helm_installed.stdout)
+  block:
+    - name: Create private temporary directory for the helm download
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: k8s_tools_helm_
+      register: k8s_tools_helm_tmp
+      become: false
+      changed_when: false
 
-- name: Extract helm binary from archive
-  ansible.builtin.unarchive:
-    src: "/tmp/helm-{{ k8s_tools_helm_version }}-linux-amd64.tar.gz"
-    dest: /tmp/
-    include:
-      - linux-amd64/helm
-    remote_src: true
-  when: >-
-    not ansible_check_mode and (k8s_tools_helm_installed.rc != 0 or k8s_tools_helm_version not in k8s_tools_helm_installed.stdout)
+    - name: Download helm archive
+      ansible.builtin.get_url:
+        url: "https://get.helm.sh/helm-v{{ k8s_tools_helm_version }}-linux-amd64.tar.gz"
+        dest: "{{ k8s_tools_helm_tmp.path }}/helm.tar.gz"
+        # helm publishes a per-archive .sha256sum next to each release artifact;
+        # get_url matches its entry by the source URL's basename.
+        checksum: "sha256:https://get.helm.sh/helm-v{{ k8s_tools_helm_version }}-linux-amd64.tar.gz.sha256sum"
+        mode: "0600"
+      become: false
 
-- name: Install helm binary to /usr/local/bin
-  ansible.builtin.command:
-    cmd: install -m 0755 /tmp/linux-amd64/helm /usr/local/bin/helm
-  become: true
-  when: >-
-    not ansible_check_mode and (k8s_tools_helm_installed.rc != 0 or k8s_tools_helm_version not in k8s_tools_helm_installed.stdout)
-  changed_when: true
-  # noqa: command-instead-of-module - copy remote_src=true triggers ansible-core _ansible_inject_invocation bug
+    - name: Extract helm binary from archive
+      ansible.builtin.unarchive:
+        src: "{{ k8s_tools_helm_tmp.path }}/helm.tar.gz"
+        dest: "{{ k8s_tools_helm_tmp.path }}"
+        include:
+          - linux-amd64/helm
+        remote_src: true
+      become: false
+
+    - name: Install helm binary to /usr/local/bin
+      ansible.builtin.command:
+        cmd: "install -m 0755 {{ k8s_tools_helm_tmp.path }}/linux-amd64/helm /usr/local/bin/helm"
+      become: true
+      changed_when: true
+      # noqa: command-instead-of-module - copy remote_src=true triggers ansible-core _ansible_inject_invocation bug
+  rescue:
+    - name: Report the failed helm install
+      ansible.builtin.fail:
+        msg: "Installing helm failed (download, checksum or install); see the preceding error."
+  always:
+    - name: Remove the helm working directory
+      ansible.builtin.file:
+        path: "{{ k8s_tools_helm_tmp.path }}"
+        state: absent
+      become: false
+      changed_when: false
+      when: k8s_tools_helm_tmp.path is defined
 
 - name: Check if helm-diff plugin is installed
   ansible.builtin.stat:

@@ -21,10 +21,15 @@
 
 - name: Check whether the ansible-core pipx venv exists
   ansible.builtin.stat:
-    path: "{{ ansible_facts['env']['HOME'] }}/.local/bin/ansible"
+    path: "{{ ansible_facts['env']['HOME'] }}/.local/share/pipx/venvs/ansible-core"
   register: k8s_tools_ansible_core_stat
   become: false
   when: ansible_facts['distribution'] != 'Ubuntu'
+
+- name: Warn that the Python library inject is skipped without the ansible-core venv
+  ansible.builtin.debug:
+    msg: "ansible-core pipx venv not found - skipping the Python Kubernetes library inject. Run the ansible_dev role first, then re-run k8s_tools."
+  when: ansible_facts['distribution'] != 'Ubuntu' and not k8s_tools_ansible_core_stat.stat.exists
 
 - name: Inject Python Kubernetes libraries into ansible-core pipx venv (non-Ubuntu)
   community.general.pipx:

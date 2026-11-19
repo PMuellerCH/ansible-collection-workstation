@@ -105,9 +105,14 @@
 
 - name: Check whether the ansible-core pipx venv exists
   ansible.builtin.stat:
-    path: "{{ ansible_facts['env']['HOME'] }}/.local/bin/ansible"
+    path: "{{ ansible_facts['env']['HOME'] }}/.local/share/pipx/venvs/ansible-core"
   register: cloud_cli_ansible_core_stat
   become: false
+
+- name: Warn that the boto3 inject is skipped without the ansible-core venv
+  ansible.builtin.debug:
+    msg: "ansible-core pipx venv not found - skipping the boto3 inject. Run the ansible_dev role first, then re-run cloud_cli."
+  when: not cloud_cli_ansible_core_stat.stat.exists
 
 - name: Get boto3 version in ansible-core venv
   # `python3 -m pipx`, not the "pipx" binary — same PATH-independence

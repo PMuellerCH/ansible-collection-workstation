@@ -83,33 +83,56 @@
     path: "{{ ansible_facts['env']['HOME'] }}/.krew/bin/kubectl-krew"
   register: k8s_tools_krew_stat
 
-- name: Download krew archive
-  ansible.builtin.get_url:
-    url: "https://github.com/kubernetes-sigs/krew/releases/download/v{{ k8s_tools_krew_version }}/krew-linux_amd64.tar.gz"
-    dest: "/tmp/krew-{{ k8s_tools_krew_version }}-linux_amd64.tar.gz"
-    # krew's .sha256 file holds just the hash (no filename), which get_url accepts.
-    checksum: "sha256:https://github.com/kubernetes-sigs/krew/releases/download/v{{ k8s_tools_krew_version }}/krew-linux_amd64.tar.gz.sha256"
-    mode: "0644"
-  when: not k8s_tools_krew_stat.stat.exists
-
-- name: Extract krew installer binary
-  ansible.builtin.unarchive:
-    src: "/tmp/krew-{{ k8s_tools_krew_version }}-linux_amd64.tar.gz"
-    dest: /tmp/
-    include:
-      - ./krew-linux_amd64
-    remote_src: true
-  when: >-
-    not ansible_check_mode and not k8s_tools_krew_stat.stat.exists
-
+# Same private-tempdir pattern as helm: the krew bootstrap binary is executed, so
+# it must not live at a predictable /tmp path.
 - name: Install krew
-  ansible.builtin.command:
-    cmd: /tmp/krew-linux_amd64 install krew
-  become: false
   when: >-
     not ansible_check_mode and not k8s_tools_krew_stat.stat.exists
-  changed_when: true
-  # noqa: command-instead-of-module - krew bootstrap requires running the extracted binary; no Ansible module available
+  block:
+    - name: Create private temporary directory for the krew download
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: k8s_tools_krew_
+      register: k8s_tools_krew_tmp
+      become: false
+      changed_when: false
+
+    - name: Download krew archive
+      ansible.builtin.get_url:
+        url: "https://github.com/kubernetes-sigs/krew/releases/download/v{{ k8s_tools_krew_version }}/krew-linux_amd64.tar.gz"
+        dest: "{{ k8s_tools_krew_tmp.path }}/krew.tar.gz"
+        # krew's .sha256 file holds just the hash (no filename), which get_url accepts.
+        checksum: "sha256:https://github.com/kubernetes-sigs/krew/releases/download/v{{ k8s_tools_krew_version }}/krew-linux_amd64.tar.gz.sha256"
+        mode: "0600"
+      become: false
+
+    - name: Extract krew installer binary
+      ansible.builtin.unarchive:
+        src: "{{ k8s_tools_krew_tmp.path }}/krew.tar.gz"
+        dest: "{{ k8s_tools_krew_tmp.path }}"
+        include:
+          - ./krew-linux_amd64
+        remote_src: true
+      become: false
+
+    - name: Run the krew bootstrap
+      ansible.builtin.command:
+        cmd: "{{ k8s_tools_krew_tmp.path }}/krew-linux_amd64 install krew"
+      become: false
+      changed_when: true
+      # noqa: command-instead-of-module - krew bootstrap requires running the extracted binary; no Ansible module available
+  rescue:
+    - name: Report the failed krew install
+      ansible.builtin.fail:
+        msg: "Installing krew failed (download, checksum or bootstrap); see the preceding error."
+  always:
+    - name: Remove the krew working directory
+      ansible.builtin.file:
+        path: "{{ k8s_tools_krew_tmp.path }}"
+        state: absent
+      become: false
+      changed_when: false
+      when: k8s_tools_krew_tmp.path is defined
 
 - name: Get installed kubeconform version
   ansible.builtin.command: kubeconform -v
@@ -158,6 +181,21 @@
     return_content: true
   register: k8s_tools_kube_linter_release
   become: false
+  when: >-
+    not ansible_check_mode and
+    (k8s_tools_kube_linter_installed.rc != 0 or k8s_tools_kube_linter_version not in k8s_tools_kube_linter_installed.stdout)
+
+- name: Assert the kube-linter release asset has a sha256 digest
+  # GitHub's `digest` is null on some older release assets; get_url would then
+  # download without any verification. Fail closed instead.
+  ansible.builtin.assert:
+    that:
+      - >-
+        (k8s_tools_kube_linter_release.json.assets
+         | selectattr('name', 'equalto', 'kube-linter-linux.tar.gz')
+         | map(attribute='digest') | first | default('', true))
+        is match('^sha256:[0-9a-f]{64}$')
+    fail_msg: "GitHub reports no sha256 digest for kube-linter v{{ k8s_tools_kube_linter_version }}; refusing an unverified download."
   when: >-
     not ansible_check_mode and
     (k8s_tools_kube_linter_installed.rc != 0 or k8s_tools_kube_linter_version not in k8s_tools_kube_linter_installed.stdout)

@@ -255,7 +255,7 @@ actual `terraform`/`ansible` CLIs), but it is a **much softer** coupling than
   LSP/syntax highlighting for `.tf`/`.yml` files with no working editor
   integration to lose, not a broken plugin spec.
 - There's also no real analogue to `modern_cli_presenterm_enabled` to sync
-  against: `cloud_cli`/`ansible_dev` don't have (and has no reason to have) a Neovim
+  against: `cloud_cli`/`ansible_dev` have no reason to have a Neovim
   plugin-config toggle for `cli_dev_env` to coordinate with.
 
 If Mason's own toolchain ever turns out to meaningfully conflict with a

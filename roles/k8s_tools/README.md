@@ -7,8 +7,8 @@ cluster list. Split out of the former `iac_tools` role.
 ## What it does
 
 1. Installs `kubectl` (checksum-verified against `dl.k8s.io`), `k9s` (with the Catppuccin Mocha skin), `helm` and the
-   `helm-diff` plugin, `kubectx`/`kubens`, `stern`, `krew`, `kubeconform` and `kube-linter` — all from pinned,
-   checksum-verified release downloads.
+   `helm-diff` plugin, `kubectx`/`kubens`, `stern`, `krew`, `kubeconform` and `kube-linter` — all binaries from pinned,
+   checksum-verified release downloads (`helm-diff` is the exception, see Notes).
 2. Installs the Python Kubernetes libraries: via apt on Ubuntu (`python3-kubernetes`, `-jsonpatch`, `-hvac`, `-pyhcl`),
    or injected into the `ansible-core` pipx venv on other distributions.
 3. Renders `~/.kube/config` from `k8s_tools_clusters` and deploys a zsh snippet (`~/.config/zsh/conf.d/k8s_tools.zsh`)
@@ -61,8 +61,16 @@ Each entry reconstructs one EKS cluster, its matching context and the `aws eks g
 rather than stored separately, so it can't drift. **When the list is empty, `~/.kube/config` is not deployed at all.**
 The exec-auth entries call `aws`, so pair this role with `cloud_cli` for the AWS CLI.
 
-Tags: `kubectl`, `k9s`, `helm`, `kube_utils` (kubectx/kubens, stern, krew, kubeconform, kube-linter), `python_libs`,
-`config`; every task also carries the umbrella tag `k8s_tools`. **Do not** put an outer `tags:` on the role
+| Component | Tags |
+| --- | --- |
+| kubectl | `kubectl`, `k8s_tools` |
+| k9s and its skin/config | `k9s`, `k8s_tools` |
+| helm, helm-diff | `helm`, `k8s_tools` |
+| kubectx/kubens, stern, krew, kubeconform, kube-linter | `kube_utils`, `k8s_tools` |
+| Python Kubernetes libraries | `python_libs`, `k8s_tools` |
+| kubeconfig, shell snippet | `config`, `k8s_tools` |
+
+**Do not** put an outer `tags:` on the role
 invocation in your play — it cascades to every task and defeats the per-component filtering. There are no
 per-component enable switches: the role as a whole is the unit.
 
@@ -73,7 +81,9 @@ per-component enable switches: the role as a whole is the unit.
   kube-linter publishes none (only sigstore bundles), so its sha256 is read from the GitHub releases API
   (`assets[].digest`) — this needs unauthenticated `api.github.com` access and is only called when an install or upgrade
   is actually needed (a rate-limited shared proxy IP would surface as a clear failure, never as skipped verification).
-  Downloads land in a fixed `/tmp` path; content is verified at download time.
+  helm and krew (whose binaries are executed or installed as root) are downloaded, extracted and installed in a
+  private temporary directory that is removed afterwards; the remaining archives still land in a fixed `/tmp` path
+  and are verified at download time.
 - **Python libraries on non-Ubuntu**: injected into the `ansible-core` pipx venv created by the `ansible_dev` role,
   and skipped (not failed) if that venv doesn't exist yet — run `ansible_dev` first and re-run this role. `hvac` is
   injected by `ansible_dev` only.

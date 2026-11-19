@@ -44,7 +44,12 @@ collections, Docker CE, and `act` (run GitHub Actions workflows locally). Split 
         ansible_dev_no_proxy: "localhost,127.0.0.1"
 ```
 
-Tags: `ansible`, `docker`, `act` select a component; every task also carries the umbrella tag `ansible_dev`.
+| Component | Tags |
+| --- | --- |
+| pipx bootstrap, ansible-core, molecule, Galaxy collections | `ansible`, `ansible_dev` |
+| Docker CE | `docker`, `ansible_dev` |
+| act | `act`, `ansible_dev` |
+
 **Do not** put an outer `tags:` on the role invocation in your play — it cascades to every task and defeats the
 per-component filtering.
 
@@ -86,11 +91,11 @@ pipx-based task downstream of it (the `ansible-core` install and every inject) i
 - `act` is checksum-verified against upstream's own aggregate `checksums.txt` and extracted straight to
   `/usr/local/bin/act`. Downloads land in a fixed `/tmp` path; the content is verified at download time (a small
   window remains between that and the root-level extraction — acceptable for a single-user workstation).
-- Docker's apt signing key is fetched over TLS from `download.docker.com` (trust on first use) and apt then verifies
+- Docker's apt signing key is fetched over TLS from `download.docker.com` (re-fetched on every run, so rotations are picked up) and apt then verifies
   every package against the signed repository metadata.
 - Docker client proxy config is deployed with `force: false`, so `docker login` credentials and manual edits survive
   re-runs.
-- The Docker packages, group membership and daemon config are skipped under `--check` (the `docker` group is created
+- The Docker apt repository, packages and group membership are skipped under `--check` (the `docker` group is created
   by docker-ce's postinst, which never ran).
 
 ## Testing

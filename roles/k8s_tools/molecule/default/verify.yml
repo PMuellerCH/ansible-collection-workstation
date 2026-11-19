@@ -15,7 +15,7 @@
       ansible.builtin.package_facts:
         manager: apt
 
-    # ── kubernetes_tools ─────────────────────────────────────────────────
+    # ── k8s_tools ───────────────────────────────────────────────────────
     - name: Check kubectl reports the pinned version
       ansible.builtin.command: kubectl version --client
       register: _k8s_tools_kubectl_check

@@ -58,8 +58,13 @@ and Vault with `tfswitch`/`tflint`/`terraform-docs`, and `floci` (a local AWS em
             output: json
 ```
 
-Tags: `aws`, `terraform`, `floci` select a component; every task also carries the umbrella tag `cloud_cli`. **Do not**
-put an outer `tags:` on the role invocation in your play — it cascades to every task and defeats the per-component
+| Component | Tags |
+| --- | --- |
+| AWS CLI, session-manager-plugin, boto3 inject, AWS config | `aws`, `cloud_cli` |
+| Terraform, Vault, tfswitch, tflint, terraform-docs | `terraform`, `cloud_cli` |
+| floci | `floci`, `cloud_cli` |
+
+**Do not** put an outer `tags:` on the role invocation in your play — it cascades to every task and defeats the per-component
 filtering.
 
 ### `cloud_cli_aws_profiles` → `~/.aws/config`
@@ -118,7 +123,7 @@ flowchart LR
 ### Other notes
 
 - **Terraform and Vault** come from the HashiCorp apt repository (`signed_by` a keyring fetched over TLS from
-  `apt.releases.hashicorp.com`, trust on first use); apt validates package integrity against the signed `Release`
+  `apt.releases.hashicorp.com`, re-fetched on every run), no key-fingerprint pin yet; apt validates package integrity against the signed `Release`
   metadata, so no per-package checksum is needed.
 - `tflint`, `terraform-docs` and `tfswitch` are downloaded from pinned GitHub releases and checksum-verified against
   upstream's own per-release checksum files (`get_url` matches the entry by file name, so there's no static hash to
