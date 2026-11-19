@@ -57,7 +57,8 @@ roles/<name>/
 
 ## Testing
 
-Lint and Molecule run as thin wrappers around `PMuellerCH/shared-actions` reusable workflows.
+Molecule and the full lint run as thin wrappers around `PMuellerCH/shared-actions` reusable workflows;
+the changed-files lint runs pre-commit inline.
 
 - **Lint** (`ci.yml`): on ordinary PRs `lint-changed` runs pre-commit only on files changed
   vs. `origin/main` (checkov still scans everything); on the release-please PR and

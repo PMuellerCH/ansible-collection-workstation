@@ -255,16 +255,18 @@ bumps.
 
 ## Continuous Integration
 
-Lint (`ci.yml`) and Molecule (`molecule.yml`) are built on reusable workflows in
+`lint-full` (in `ci.yml`) and Molecule (`molecule.yml`) call reusable workflows in
 [PMuellerCH/shared-actions](https://github.com/PMuellerCH/shared-actions), pinned to
-`@v1` (`ansible_lint.yml` and `ansible_molecule.yml`), both called with
-`python-version: 3.14` and `install-self-collection: true`. Release
+`@v1` (`ansible_lint.yml` and `ansible_molecule.yml`), both with
+`python-version: 3.14` and `install-self-collection: true`. `lint-changed` runs
+pre-commit directly, after setting up the environment via the shared `ansible-setup`
+action. Release
 (`release-please.yml`) runs
 [googleapis/release-please-action](https://github.com/googleapis/release-please-action)
 directly — no shared workflow and no GitHub App secrets — with `contents: write` and
 `pull-requests: write` permissions.
 
-CI only tests what a PR changed; the full suite runs once, on the release PR:
+CI only tests what a PR changed; the full suite runs on the release PR (or manual dispatch):
 
 | Event | Lint (`ci.yml`) | Molecule (`molecule.yml`) |
 | --- | --- | --- |
@@ -279,6 +281,10 @@ Details and limits:
   only sees changed files under `roles/`, `meta/` and the root `galaxy.yml` /
   `requirements*.yml`, so a cross-role problem is only caught by `lint-full` on the
   release PR.
+- `lint-changed` also runs the generic and secret-scanning pre-commit hooks
+  (detect-secrets, whitespace, end-of-file, check-yaml, private-key, large-file), which
+  `lint-full` does not; `lint-full` is the four shared linters (yamllint, ansible-lint,
+  markdownlint, checkov).
 - Molecule auto-discovers every role with a `roles/<name>/molecule/default/` scenario.
   README.md and `meta/` changes inside a role do not count as a role change. A change to
   a shared file (`requirements.yml`, `requirements-molecule.yml`, `galaxy.yml`, the

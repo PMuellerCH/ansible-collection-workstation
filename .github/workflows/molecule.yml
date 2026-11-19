@@ -18,7 +18,7 @@ name: Molecule
 # .github/requirements.txt gets its own content-aware check rather than a
 # blanket path match: it bundles both molecule's own dependencies
 # (ansible-core, molecule, molecule-plugins) and lint-only ones (ansible-lint,
-# yamllint, checkov) that molecule never touches. A path-only filter can't tell
+# yamllint, checkov, pre-commit) that molecule never touches. A path-only filter can't tell
 # those apart, so a checkov-only bump would otherwise trigger a pointless
 # full-matrix run.
 #
