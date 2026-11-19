@@ -1,0 +1,145 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: true
+  # Load the role's own defaults so the pinned-version assertions below track
+  # the pinned versions as their single source of truth, rather than
+  # hardcoded literals that would silently go stale whenever Renovate bumps
+  # defaults/main.yml.
+  vars_files:
+    - ../../defaults/main.yml
+  vars:
+    _k8s_tools_local_bin: "{{ ansible_facts['env']['HOME'] }}/.local/bin"
+  tasks:
+    - name: Gather package facts
+      ansible.builtin.package_facts:
+        manager: apt
+
+    # ── k8s_tools ───────────────────────────────────────────────────────
+    - name: Check kubectl reports the pinned version
+      ansible.builtin.command: kubectl version --client
+      register: _k8s_tools_kubectl_check
+      changed_when: false
+
+    - name: Assert kubectl reports the pinned version
+      ansible.builtin.assert:
+        that: "k8s_tools_kubectl_version in _k8s_tools_kubectl_check.stdout"
+
+    - name: Check k9s reports the pinned version
+      ansible.builtin.command: k9s version --short
+      register: _k8s_tools_k9s_check
+      changed_when: false
+
+    - name: Assert k9s reports the pinned version
+      ansible.builtin.assert:
+        that: "k8s_tools_k9s_version in _k8s_tools_k9s_check.stdout"
+
+    - name: Check helm reports the pinned version
+      ansible.builtin.command: helm version --short
+      register: _k8s_tools_helm_check
+      changed_when: false
+
+    - name: Assert helm reports the pinned version
+      ansible.builtin.assert:
+        that: "k8s_tools_helm_version in _k8s_tools_helm_check.stdout"
+
+    - name: Check kubectx reports the pinned version
+      ansible.builtin.command: kubectx --version
+      register: _k8s_tools_kubectx_check
+      changed_when: false
+
+    - name: Assert kubectx reports the pinned version
+      ansible.builtin.assert:
+        that: "k8s_tools_kubectx_version in _k8s_tools_kubectx_check.stdout"
+
+    - name: Check kubens is installed
+      ansible.builtin.stat:
+        path: /usr/local/bin/kubens
+      register: _k8s_tools_kubens_check
+
+    - name: Assert kubens is installed
+      ansible.builtin.assert:
+        that: _k8s_tools_kubens_check.stat.exists
+
+    - name: Check stern reports the pinned version
+      ansible.builtin.command: stern --version
+      register: _k8s_tools_stern_check
+      changed_when: false
+
+    - name: Assert stern reports the pinned version
+      ansible.builtin.assert:
+        that: "k8s_tools_stern_version in _k8s_tools_stern_check.stdout"
+
+    - name: Check krew is installed
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.krew/bin/kubectl-krew"
+      register: _k8s_tools_krew_check
+
+    - name: Assert krew is installed
+      ansible.builtin.assert:
+        that: _k8s_tools_krew_check.stat.exists
+
+    - name: Check kubeconform reports the pinned version
+      ansible.builtin.command: kubeconform -v
+      register: _k8s_tools_kubeconform_check
+      changed_when: false
+
+    - name: Assert kubeconform reports the pinned version
+      ansible.builtin.assert:
+        that: "k8s_tools_kubeconform_version in _k8s_tools_kubeconform_check.stdout"
+
+    - name: Check kube-linter reports the pinned version
+      ansible.builtin.command: kube-linter version
+      register: _k8s_tools_kube_linter_check
+      changed_when: false
+
+    - name: Assert kube-linter reports the pinned version
+      ansible.builtin.assert:
+        that: "k8s_tools_kube_linter_version in _k8s_tools_kube_linter_check.stdout"
+
+    - name: Check helm-diff plugin is installed
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.local/share/helm/plugins/helm-diff"
+      register: _k8s_tools_helm_diff_check
+
+    - name: Assert helm-diff plugin is installed
+      ansible.builtin.assert:
+        that: _k8s_tools_helm_diff_check.stat.exists
+
+    - name: Assert python3-kubernetes libraries are present (Ubuntu)
+      ansible.builtin.assert:
+        that:
+          - "'python3-kubernetes' in ansible_facts.packages"
+          - "'python3-hvac' in ansible_facts.packages"
+          - "'python3-jsonpatch' in ansible_facts.packages"
+          - "'python3-pyhcl' in ansible_facts.packages"
+      when: ansible_facts['distribution'] == 'Ubuntu'
+
+    - name: Slurp deployed kubeconfig
+      ansible.builtin.slurp:
+        src: "{{ ansible_facts['env']['HOME'] }}/.kube/config"
+      register: _k8s_tools_kube_config_slurp
+
+    - name: Assert kubeconfig contains the test cluster/context
+      ansible.builtin.assert:
+        that:
+          - "'molecule-test-dev' in (_k8s_tools_kube_config_slurp.content | b64decode)"
+          - "'arn:aws:eks:eu-central-1:123456789012:cluster/dev' in (_k8s_tools_kube_config_slurp.content | b64decode)"
+          - "'current-context: molecule-test-dev' in (_k8s_tools_kube_config_slurp.content | b64decode)"
+
+    # ── empty-list skip behavior (templates only render content when the
+    # driving list is non-empty; combined with the tasks' `length > 0`
+    # when: guard this is what actually skips deploying the file) ────────
+    - name: Render kubeconfig template with an empty clusters list
+      ansible.builtin.set_fact:
+        _k8s_tools_empty_kube_render: "{{ lookup('template', playbook_dir ~ '/../../templates/kube-config.j2') }}"
+      vars:
+        k8s_tools_clusters: []
+        k8s_tools_current_context: ""
+
+    - name: Assert the kubeconfig template renders no cluster/context/user entries for an empty clusters list
+      ansible.builtin.assert:
+        that:
+          - "'cluster/' not in _k8s_tools_empty_kube_render"
+          - "'current-context:' in _k8s_tools_empty_kube_render"
+          - "'current-context: molecule' not in _k8s_tools_empty_kube_render"

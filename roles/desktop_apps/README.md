@@ -86,8 +86,8 @@ tag cascades to every task in the role and defeats this per-app filtering.
 
 - `python3-debian` is installed first — required by `deb822_repository`,
   which can normally auto-install this dependency itself on a real run but
-  not under `--check` (matches this collection's `iac_tools` role pattern
-  for its Docker/Terraform apt repositories).
+  not under `--check` (matches this collection's `ansible_dev`/`cloud_cli` role
+  pattern for their Docker/Terraform apt repositories).
 - GPG key downloaded to `/usr/share/keyrings/onlyoffice.asc` (`force: false`
   — not re-downloaded if already present).
 - Repository added as `/etc/apt/sources.list.d/onlyoffice.sources` (deb822

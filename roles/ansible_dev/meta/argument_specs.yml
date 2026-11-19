@@ -1,0 +1,73 @@
+---
+argument_specs:
+  main:
+    short_description: "Install Ansible development tooling: ansible-core (pipx) with molecule and Galaxy collections,\
+      \ Docker CE, and act \u2014 each component independently toggleable."
+    options:
+      ansible_dev_ansible_enabled:
+        default: true
+        description: Whether to install ansible-core (pipx) and Galaxy collections.
+        required: false
+        type: bool
+      ansible_dev_docker_enabled:
+        default: true
+        description: Whether to install Docker CE.
+        required: false
+        type: bool
+      ansible_dev_act_enabled:
+        default: true
+        description: >-
+          Whether to install act (runs GitHub Actions workflows locally via Docker). Installing the binary doesn't
+          itself require ansible_dev_docker_enabled, but act needs a working Docker daemon to run anything.
+        required: false
+        type: bool
+      ansible_dev_http_proxy:
+        default: ''
+        description: Corporate HTTP proxy URL. Leave empty on machines without a proxy.
+        required: false
+        type: str
+      ansible_dev_https_proxy:
+        default: '{{ ansible_dev_http_proxy }}'
+        description: >-
+          Corporate HTTPS proxy URL. Defaults to ansible_dev_http_proxy (see defaults/main.yml) so a single proxy
+          URL covers both protocols; set explicitly only if HTTP and HTTPS use different proxies.
+        required: false
+        type: str
+      ansible_dev_no_proxy:
+        default: ''
+        description: Comma-separated list of hosts/CIDRs that bypass the proxy.
+        required: false
+        type: str
+      ansible_dev_pipx_min_version:
+        description: >-
+          pipx version (pypi) bootstrapped via `pip install --user` to satisfy community.general.pipx's >= 1.7.0
+          requirement, since Ubuntu 24.04's apt-provided pipx is only 1.4.3.
+        required: false
+        type: str
+      ansible_dev_ansible_core_version:
+        description: ansible-core version (pypi), installed via pipx.
+        required: false
+        type: str
+      ansible_dev_molecule_version:
+        description: molecule version (pypi), injected into the ansible-core pipx venv.
+        required: false
+        type: str
+      ansible_dev_molecule_plugins_version:
+        description: molecule-plugins[docker] version (pypi), injected into the ansible-core pipx venv.
+        required: false
+        type: str
+      ansible_dev_hvac_version:
+        description: >-
+          hvac version (pypi), injected into the ansible-core pipx venv (also relied on by k8s_tools, which does
+          not inject its own copy).
+        required: false
+        type: str
+      ansible_dev_act_version:
+        description: act version (github-releases nektos/act), installed from a checksum-verified tar.gz.
+        required: false
+        type: str
+      ansible_dev_act_download_base:
+        default: https://github.com/nektos/act/releases/download/v{{ ansible_dev_act_version }}
+        description: Base URL the act archive and its checksums.txt are downloaded from, before the filename.
+        required: false
+        type: str

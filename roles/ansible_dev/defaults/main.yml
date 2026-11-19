@@ -1,0 +1,38 @@
+---
+# Per-component enable flags.
+ansible_dev_ansible_enabled: true
+ansible_dev_docker_enabled: true
+ansible_dev_act_enabled: true
+
+# Corporate proxy — role-scoped (a reusable role can't assume a consumer's
+# global base_* vars). Used for the Docker daemon/client proxy config. Leave
+# empty on machines without a proxy.
+ansible_dev_http_proxy: ""
+ansible_dev_https_proxy: "{{ ansible_dev_http_proxy }}"
+ansible_dev_no_proxy: ""
+
+# pipx bootstrap — community.general.pipx requires pipx >= 1.7.0, but Ubuntu
+# 24.04's apt-provided pipx is only 1.4.3. See README "pipx bootstrap"
+# section (same pattern as the code_quality_tools role).
+# renovate: datasource=pypi depName=pipx
+ansible_dev_pipx_min_version: "1.18.13"
+
+# ── ansible ──────────────────────────────────────────────────────────────
+# Held on the 2.21.x line: ansible-core 2.22+ requires Python >= 3.13, but the
+# target Ubuntu 24.04 ships Python 3.12, which this pipx venv runs on.
+# renovate.json constrains ansible-core to <2.22.0 accordingly.
+# renovate: datasource=pypi depName=ansible-core
+ansible_dev_ansible_core_version: "2.21.6"
+# renovate: datasource=pypi depName=molecule
+ansible_dev_molecule_version: "26.10.0"
+# renovate: datasource=pypi depName=molecule-plugins
+ansible_dev_molecule_plugins_version: "26.11.0"
+# Also the only hvac this collection injects into the shared ansible-core venv:
+# k8s_tools relies on this one rather than pinning its own copy.
+# renovate: datasource=pypi depName=hvac
+ansible_dev_hvac_version: "2.4.0"
+
+# ── act ──────────────────────────────────────────────────────────────────
+# renovate: datasource=github-releases depName=nektos/act extractVersion=^v(?<version>.*)$
+ansible_dev_act_version: "0.2.96"
+ansible_dev_act_download_base: "https://github.com/nektos/act/releases/download/v{{ ansible_dev_act_version }}"

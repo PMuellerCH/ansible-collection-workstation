@@ -1,0 +1,85 @@
+---
+argument_specs:
+  main:
+    short_description: >-
+      Install the Kubernetes toolchain: kubectl, k9s, helm (with helm-diff), kubectx/kubens, stern, krew, kubeconform,
+      kube-linter and the Python Kubernetes libraries; renders ~/.kube/config.
+    options:
+      k8s_tools_kubectl_version:
+        description: kubectl version (github-releases kubernetes/kubernetes), checksum-verified against dl.k8s.io.
+        required: false
+        type: str
+      k8s_tools_kubectl_url:
+        default: https://dl.k8s.io/release/v{{ k8s_tools_kubectl_version }}/bin/linux/amd64/kubectl
+        description: Download URL for the kubectl binary.
+        required: false
+        type: str
+      k8s_tools_kubectl_checksum_url:
+        default: https://dl.k8s.io/release/v{{ k8s_tools_kubectl_version }}/bin/linux/amd64/kubectl.sha256
+        description: URL of kubectl's published sha256 checksum.
+        required: false
+        type: str
+      k8s_tools_k9s_version:
+        description: k9s version (github-releases derailed/k9s).
+        required: false
+        type: str
+      k8s_tools_helm_version:
+        description: helm version (github-releases helm/helm).
+        required: false
+        type: str
+      k8s_tools_kubectx_version:
+        description: kubectx/kubens version (github-releases ahmetb/kubectx).
+        required: false
+        type: str
+      k8s_tools_kubectx_archive:
+        default: kubectx_v{{ k8s_tools_kubectx_version }}_linux_x86_64.tar.gz
+        description: Archive filename kubectx is downloaded as.
+        required: false
+        type: str
+      k8s_tools_kubens_archive:
+        default: kubens_v{{ k8s_tools_kubectx_version }}_linux_x86_64.tar.gz
+        description: Archive filename kubens is downloaded as.
+        required: false
+        type: str
+      k8s_tools_stern_version:
+        description: stern version (github-releases stern/stern).
+        required: false
+        type: str
+      k8s_tools_krew_version:
+        description: krew version (github-releases kubernetes-sigs/krew).
+        required: false
+        type: str
+      k8s_tools_kubeconform_version:
+        description: kubeconform version (github-releases yannh/kubeconform).
+        required: false
+        type: str
+      k8s_tools_kube_linter_version:
+        description: kube-linter version (github-releases stackrox/kube-linter).
+        required: false
+        type: str
+      k8s_tools_pip_kubernetes_version:
+        description: Python `kubernetes` library version (pypi), for non-Ubuntu targets only.
+        required: false
+        type: str
+      k8s_tools_pip_jsonpatch_version:
+        description: Python `jsonpatch` library version (pypi), for non-Ubuntu targets only.
+        required: false
+        type: str
+      k8s_tools_pip_pyhcl_version:
+        description: Python `pyhcl` library version (pypi), for non-Ubuntu targets only.
+        required: false
+        type: str
+      k8s_tools_clusters:
+        default: []
+        description: "EKS clusters rendered into ~/.kube/config. Empty by default \u2014 no file is deployed until\
+          \ a consumer supplies real cluster data. See README for the exact dict shape."
+        elements: dict
+        required: false
+        type: list
+      k8s_tools_current_context:
+        default: ''
+        description: >-
+          kubeconfig current-context. Defaults to the first entry in k8s_tools_clusters when left empty and the
+          list is non-empty.
+        required: false
+        type: str

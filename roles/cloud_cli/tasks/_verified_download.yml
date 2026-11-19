@@ -1,0 +1,123 @@
+---
+# Download a file plus its detached GPG signature into a private temporary
+# directory and verify the signature against a pinned signing key. Used for
+# upstream artifacts that only publish a .sig (no plain or structured checksum
+# file), i.e. the AWS CLI v2 installer and the session-manager-plugin .deb.
+#
+# Inputs (set via `vars:` on include_tasks):
+#   cloud_cli_dl_url          URL of the file to download
+#   cloud_cli_dl_sig_url      URL of its detached signature
+#   cloud_cli_dl_filename     file name inside the working directory
+#   cloud_cli_dl_key_file     public key shipped in this role's files/
+#   cloud_cli_dl_fingerprint  expected primary-key fingerprint (spaces ignored)
+#
+# Output: cloud_cli_dl_tmp.path — the private working directory (mode 0700)
+# holding the verified file. The caller must remove it (use a block/always).
+#
+# Callers run this only outside --check: ansible.builtin.tempfile doesn't run
+# in check mode, and nothing downstream could use the result there anyway.
+#
+# Why a private tempdir and a throwaway keyring: a fixed /tmp path lets another
+# local user pre-create or swap the file between download and a root-level
+# install, and importing into the user's own keyring would leave the vendor key
+# trusted for unrelated verifications.
+
+- name: Create private working directory for the verified download
+  ansible.builtin.tempfile:
+    state: directory
+    prefix: cloud_cli_dl_
+  register: cloud_cli_dl_tmp
+  become: false
+
+- name: Create throwaway GnuPG home
+  ansible.builtin.file:
+    path: "{{ cloud_cli_dl_tmp.path }}/gnupg"
+    state: directory
+    mode: "0700"
+  become: false
+
+- name: Stage the pinned signing key
+  ansible.builtin.copy:
+    src: "{{ cloud_cli_dl_key_file }}"
+    dest: "{{ cloud_cli_dl_tmp.path }}/signing-key.asc"
+    mode: "0600"
+  become: false
+
+- name: Import the signing key into the throwaway keyring
+  ansible.builtin.command:
+    argv:
+      - gpg
+      - --batch
+      - --homedir
+      - "{{ cloud_cli_dl_tmp.path }}/gnupg"
+      - --import
+      - "{{ cloud_cli_dl_tmp.path }}/signing-key.asc"
+  become: false
+  changed_when: false
+
+- name: Read the imported key's fingerprint
+  ansible.builtin.command:
+    argv:
+      - gpg
+      - --batch
+      - --homedir
+      - "{{ cloud_cli_dl_tmp.path }}/gnupg"
+      - --with-colons
+      - --fingerprint
+  register: cloud_cli_dl_fpr
+  become: false
+  changed_when: false
+
+- name: Assert the shipped key is the pinned vendor key
+  # The first fpr: record is the primary key's. Pinning the fingerprint means a
+  # tampered or swapped key file in this role fails here rather than silently
+  # becoming the trust anchor.
+  ansible.builtin.assert:
+    that:
+      - (cloud_cli_dl_fpr.stdout_lines | select('match', '^fpr:') | first).split(':')[9] == (cloud_cli_dl_fingerprint | replace(' ', ''))
+    fail_msg: "Signing key {{ cloud_cli_dl_key_file }} does not match the pinned fingerprint {{ cloud_cli_dl_fingerprint }}"
+
+- name: Download the file
+  ansible.builtin.get_url:
+    url: "{{ cloud_cli_dl_url }}"
+    dest: "{{ cloud_cli_dl_tmp.path }}/{{ cloud_cli_dl_filename }}"
+    mode: "0600"
+  become: false
+
+- name: Download the detached signature
+  ansible.builtin.get_url:
+    url: "{{ cloud_cli_dl_sig_url }}"
+    dest: "{{ cloud_cli_dl_tmp.path }}/{{ cloud_cli_dl_filename }}.sig"
+    mode: "0600"
+  become: false
+
+- name: Verify the signature
+  ansible.builtin.command:
+    argv:
+      - gpg
+      - --batch
+      - --homedir
+      - "{{ cloud_cli_dl_tmp.path }}/gnupg"
+      - --status-fd
+      - "1"
+      - --verify
+      - "{{ cloud_cli_dl_tmp.path }}/{{ cloud_cli_dl_filename }}.sig"
+      - "{{ cloud_cli_dl_tmp.path }}/{{ cloud_cli_dl_filename }}"
+  register: cloud_cli_dl_verify
+  become: false
+  changed_when: false
+
+- name: Assert the signature is valid and made by the pinned key
+  # VALIDSIG's last field is the primary-key fingerprint. gpg exits 0 for a
+  # good signature even from an untrusted key, so the status lines (not the
+  # exit code alone) are what bind the signature to the pinned fingerprint.
+  ansible.builtin.assert:
+    that:
+      - >-
+        cloud_cli_dl_verify.stdout_lines
+        | select('match', '^\[GNUPG:\] VALIDSIG ')
+        | select('search', ' ' ~ (cloud_cli_dl_fingerprint | replace(' ', '')) ~ '$')
+        | list | length == 1
+      - "'[GNUPG:] EXPKEYSIG' not in cloud_cli_dl_verify.stdout"
+      - "'[GNUPG:] REVKEYSIG' not in cloud_cli_dl_verify.stdout"
+    fail_msg: "Signature verification of {{ cloud_cli_dl_url }} failed"

@@ -1,0 +1,125 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: true
+  # Load the role's own defaults so the pinned-version assertions below track
+  # the pinned versions as their single source of truth, rather than
+  # hardcoded literals that would silently go stale whenever Renovate bumps
+  # defaults/main.yml.
+  vars_files:
+    - ../../defaults/main.yml
+  vars:
+    _cloud_cli_local_bin: "{{ ansible_facts['env']['HOME'] }}/.local/bin"
+  tasks:
+    - name: Inspect boto3 injected into the ansible-core pipx venv
+      ansible.builtin.command: "{{ _cloud_cli_local_bin }}/pipx runpip ansible-core show boto3"
+      register: _cloud_cli_boto3_check
+      changed_when: false
+
+    - name: Assert the injected boto3 is the expected version
+      ansible.builtin.assert:
+        that: "'Version: ' + cloud_cli_aws_boto3_version in _cloud_cli_boto3_check.stdout"
+
+    # ── aws ──────────────────────────────────────────────────────────────
+    - name: Check AWS CLI reports the pinned version
+      ansible.builtin.command: aws --version
+      register: _cloud_cli_aws_cli_check
+      changed_when: false
+
+    - name: Assert AWS CLI reports the pinned version
+      ansible.builtin.assert:
+        that: "cloud_cli_aws_cli_version in _cloud_cli_aws_cli_check.stdout"
+
+    - name: Check session-manager-plugin reports the pinned version
+      ansible.builtin.command: session-manager-plugin --version
+      register: _cloud_cli_smp_check
+      changed_when: false
+
+    - name: Assert session-manager-plugin reports the pinned version
+      ansible.builtin.assert:
+        that: "cloud_cli_aws_session_manager_plugin_version in _cloud_cli_smp_check.stdout"
+
+    - name: Slurp deployed AWS config
+      ansible.builtin.slurp:
+        src: "{{ ansible_facts['env']['HOME'] }}/.aws/config"
+      register: _cloud_cli_aws_config_slurp
+
+    - name: Assert AWS config contains the test profile
+      ansible.builtin.assert:
+        that:
+          - "'[profile molecule-test]' in (_cloud_cli_aws_config_slurp.content | b64decode)"
+          - "'sso_account_id = 123456789012' in (_cloud_cli_aws_config_slurp.content | b64decode)"
+
+    # ── terraform ────────────────────────────────────────────────────────
+    - name: Check terraform runs
+      ansible.builtin.command: terraform version
+      register: _cloud_cli_terraform_check
+      changed_when: false
+
+    - name: Assert terraform reports a version
+      ansible.builtin.assert:
+        that: "'Terraform v' in _cloud_cli_terraform_check.stdout"
+
+    - name: Check tflint reports the pinned version
+      ansible.builtin.command: tflint --version
+      register: _cloud_cli_tflint_check
+      changed_when: false
+
+    - name: Assert tflint reports the pinned version
+      ansible.builtin.assert:
+        that: "cloud_cli_tflint_version in _cloud_cli_tflint_check.stdout"
+
+    - name: Check terraform-docs reports the pinned version
+      ansible.builtin.command: terraform-docs --version
+      register: _cloud_cli_terraform_docs_check
+      changed_when: false
+
+    - name: Assert terraform-docs reports the pinned version
+      ansible.builtin.assert:
+        that: "cloud_cli_terraform_docs_version in _cloud_cli_terraform_docs_check.stdout"
+
+    - name: Check tfswitch reports the pinned version
+      ansible.builtin.command: tfswitch --version
+      register: _cloud_cli_tfswitch_check
+      changed_when: false
+
+    - name: Assert tfswitch reports the pinned version
+      ansible.builtin.assert:
+        that: "cloud_cli_tfswitch_version in _cloud_cli_tfswitch_check.stdout"
+
+    - name: Check floci reports the pinned version
+      ansible.builtin.command: floci --version
+      register: _cloud_cli_floci_check
+      changed_when: false
+
+    - name: Assert floci reports the pinned version
+      ansible.builtin.assert:
+        that: "cloud_cli_floci_version in _cloud_cli_floci_check.stdout"
+
+    - name: Slurp deployed terraformrc
+      ansible.builtin.slurp:
+        src: "{{ ansible_facts['env']['HOME'] }}/.config/terraform/terraformrc"
+      register: _cloud_cli_terraformrc_slurp
+      no_log: true
+
+    - name: Assert terraformrc sets the plugin cache dir
+      ansible.builtin.assert:
+        that: "'plugin_cache_dir' in (_cloud_cli_terraformrc_slurp.content | b64decode)"
+
+    # ── empty-list skip behavior (templates only render content when the
+    # driving list is non-empty; combined with the tasks' `length > 0`
+    # when: guard this is what actually skips deploying the file) ────────
+    - name: Render AWS config template with an empty profiles list
+      ansible.builtin.set_fact:
+        _cloud_cli_empty_aws_render: "{{ lookup('template', playbook_dir ~ '/../../templates/aws-config.j2') }}"
+      vars:
+        cloud_cli_aws_profiles: []
+
+    - name: Assert the AWS config template renders empty for an empty profiles list
+      # lookup('template', ...) on a template that renders to an empty
+      # string returns Python None (not "") under a real remote connection
+      # with gathered facts — an ansible-core quirk, not template behavior.
+      # default('', true) normalizes both None and Undefined to '' before
+      # comparing.
+      ansible.builtin.assert:
+        that: _cloud_cli_empty_aws_render | default('', true) | trim == ""

@@ -53,7 +53,7 @@ cli_dev_env_claude_code_github_token: ""
 # Absolute path to the kiro-cli binary. kiro-cli installs into the user's
 # ~/.local/bin, which is not guaranteed to be on $PATH for a non-interactive
 # Ansible run (no shell profile is sourced) — so every task calls the binary by
-# full path, the same way iac_tools calls ansible-galaxy. Also used to detect an
+# full path, the same way ansible_dev calls ansible-galaxy. Also used to detect an
 # existing install.
 cli_dev_env_kiro_bin: "{{ ansible_facts['env']['HOME'] }}/.local/bin/kiro-cli"
 

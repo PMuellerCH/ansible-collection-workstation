@@ -563,7 +563,7 @@
   # (base_http_proxy != ''), so a prefix= line added there by lineinfile
   # would fight it forever — base removes it, this task re-adds it, next
   # run repeats indefinitely (found live; same class of bug as #124's
-  # base/iac_tools vault.zsh collision, just no shared-filename escape hatch
+  # base/cloud_cli vault.zsh collision, just no shared-filename escape hatch
   # here since ~/.npmrc's name is fixed by npm itself). A systemd user
   # session env var in its own file sidesteps the collision entirely, and
   # — unlike a task-scoped environment: override on the install task alone —
@@ -722,7 +722,7 @@
     mode: "0600"
   become: false
   # The rendered content embeds cli_dev_env_claude_code_github_token — keep
-  # it out of -v/-vvv output the same way iac_tools' vault github_token
+  # it out of -v/-vvv output the same way cloud_cli's vault github_token
   # credential file write does.
   no_log: true
   when: >-
@@ -735,7 +735,7 @@
 # kiro-cli is a per-user, self-updating binary that lives in ~/.local/bin, so
 # every task here runs as the target user (become: false), never root, and
 # calls the binary by its full path cli_dev_env_kiro_bin (~/.local/bin is not
-# on PATH for a non-interactive Ansible run — same reason iac_tools calls
+# on PATH for a non-interactive Ansible run — same reason ansible_dev calls
 # ansible-galaxy by full path). Bundled in this role with Claude Code and
 # OpenCode: all three are CLI-first AI coding agents (see README).
 - name: Detect whether kiro-cli is already installed

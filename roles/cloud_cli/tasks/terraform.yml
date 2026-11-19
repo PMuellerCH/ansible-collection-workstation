@@ -1,0 +1,238 @@
+---
+# ansible.builtin.deb822_repository can normally auto-install python3-debian
+# itself on a real run, but not under --check ("python3-debian must be
+# installed to use check mode") — install it explicitly up front so the
+# apt-repository task works in either mode. unzip is needed for the tflint
+# .zip (ansible.builtin.unarchive has no pure-Python fallback for .zip);
+# generic utilities, left unpinned like other bundled utilities in this collection.
+
+- name: Install python3-debian and unzip
+  ansible.builtin.apt:
+    name:
+      - python3-debian
+      - unzip
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+
+- name: Download HashiCorp GPG key
+  ansible.builtin.get_url:
+    url: https://apt.releases.hashicorp.com/gpg
+    dest: /usr/share/keyrings/hashicorp-archive-keyring.asc
+    mode: "0644"
+    # force: true so a rotated upstream signing key is re-fetched. With
+    # force: false get_url skips the download whenever dest exists, leaving a
+    # stale key that fails apt signature verification after upstream rotates.
+    force: true
+  become: true
+
+- name: Remove legacy HashiCorp apt sources list
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/hashicorp.list
+    state: absent
+  become: true
+
+# terraform/vault package integrity is verified by apt itself against the
+# HashiCorp repo's signed Release metadata (signed_by above) — no separate
+# per-package checksum needed on top of that. Skipped under --check for the
+# same python3-debian reason as the Docker repository task above.
+
+- name: Add HashiCorp apt repository
+  ansible.builtin.deb822_repository:
+    name: hashicorp
+    types: deb
+    uris: https://apt.releases.hashicorp.com
+    suites: "{{ ansible_facts['distribution_release'] }}"
+    components: main
+    signed_by: /usr/share/keyrings/hashicorp-archive-keyring.asc
+    state: present
+  become: true
+  when: not ansible_check_mode
+
+- name: Install terraform and vault
+  ansible.builtin.apt:
+    name:
+      - terraform
+      - vault
+    state: present
+    update_cache: true
+  become: true
+  when: not ansible_check_mode
+
+- name: Get installed tflint version
+  ansible.builtin.command: tflint --version
+  register: cloud_cli_tflint_current_version
+  become: false
+  changed_when: false
+  failed_when: false
+
+- name: Download tflint archive
+  ansible.builtin.get_url:
+    url: "https://github.com/terraform-linters/tflint/releases/download/v{{ cloud_cli_tflint_version }}/tflint_linux_amd64.zip"
+    dest: "/tmp/tflint_{{ cloud_cli_tflint_version }}_linux_amd64.zip"
+    # tflint publishes an aggregate checksums.txt per release; get_url matches
+    # the entry by the download URL's basename, so nothing to keep in sync by
+    # hand when Renovate bumps cloud_cli_tflint_version.
+    checksum: "sha256:https://github.com/terraform-linters/tflint/releases/download/v{{ cloud_cli_tflint_version }}/checksums.txt"
+    mode: "0644"
+  when: >-
+    (cloud_cli_tflint_current_version.rc != 0 or cloud_cli_tflint_version not in cloud_cli_tflint_current_version.stdout)
+
+- name: Install tflint binary to /usr/local/bin
+  ansible.builtin.unarchive:
+    src: "/tmp/tflint_{{ cloud_cli_tflint_version }}_linux_amd64.zip"
+    dest: /usr/local/bin/
+    include:
+      - tflint
+    remote_src: true
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and (cloud_cli_tflint_current_version.rc != 0 or cloud_cli_tflint_version not in cloud_cli_tflint_current_version.stdout)
+
+- name: Get installed terraform-docs version
+  ansible.builtin.command: terraform-docs --version
+  register: cloud_cli_terraform_docs_current_version
+  become: false
+  changed_when: false
+  failed_when: false
+
+- name: Download terraform-docs archive
+  ansible.builtin.get_url:
+    url: "{{ cloud_cli_terraform_docs_download_base }}/{{ cloud_cli_terraform_docs_archive }}"
+    dest: "/tmp/{{ cloud_cli_terraform_docs_archive }}"
+    # terraform-docs publishes a sha256sum-format file per release covering
+    # every archive (matched by basename).
+    checksum: "sha256:{{ cloud_cli_terraform_docs_download_base }}/terraform-docs-v{{ cloud_cli_terraform_docs_version }}.sha256sum"
+    mode: "0644"
+  when: >-
+    (cloud_cli_terraform_docs_current_version.rc != 0 or
+     cloud_cli_terraform_docs_version not in cloud_cli_terraform_docs_current_version.stdout)
+
+- name: Install terraform-docs binary to /usr/local/bin
+  ansible.builtin.unarchive:
+    src: "/tmp/{{ cloud_cli_terraform_docs_archive }}"
+    dest: /usr/local/bin/
+    include:
+      - terraform-docs
+    remote_src: true
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and (cloud_cli_terraform_docs_current_version.rc != 0 or
+     cloud_cli_terraform_docs_version not in cloud_cli_terraform_docs_current_version.stdout)
+
+- name: Get installed tfswitch version
+  ansible.builtin.command: tfswitch --version
+  register: cloud_cli_tfswitch_current_version
+  become: false
+  changed_when: false
+  failed_when: false
+
+# Pinned release + checksum-verified download, not the upstream shell
+# installer (curl | bash against a mutable branch URL) — same tier-1
+# get_url checksum pattern as tflint/terraform-docs above.
+# warrensbox/terraform-switcher publishes a plain sha256sum-format
+# checksums file per release.
+
+- name: Download tfswitch archive
+  ansible.builtin.get_url:
+    url: "{{ cloud_cli_tfswitch_download_base }}/{{ cloud_cli_tfswitch_archive }}"
+    dest: "/tmp/{{ cloud_cli_tfswitch_archive }}"
+    checksum: "sha256:{{ cloud_cli_tfswitch_download_base }}/terraform-switcher_v{{ cloud_cli_tfswitch_version }}_checksums.txt"
+    mode: "0644"
+  when: >-
+    (cloud_cli_tfswitch_current_version.rc != 0 or
+     cloud_cli_tfswitch_version not in cloud_cli_tfswitch_current_version.stdout)
+
+- name: Install tfswitch binary to /usr/local/bin
+  ansible.builtin.unarchive:
+    src: "/tmp/{{ cloud_cli_tfswitch_archive }}"
+    dest: /usr/local/bin/
+    include:
+      - tfswitch
+    remote_src: true
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and (cloud_cli_tfswitch_current_version.rc != 0 or
+     cloud_cli_tfswitch_version not in cloud_cli_tfswitch_current_version.stdout)
+
+- name: Create Terraform plugin cache directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.terraform.d/plugin-cache"
+    state: directory
+    mode: "0755"
+  become: false
+
+- name: Create Terraform config directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/terraform"
+    state: directory
+    mode: "0755"
+  become: false
+
+- name: Deploy terraformrc (plugin cache + Terraform Cloud credentials)
+  ansible.builtin.template:
+    src: terraformrc.j2
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/terraform/terraformrc"
+    mode: "0600"
+  become: false
+  no_log: true
+
+- name: Create zsh conf.d directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d"
+    state: directory
+    mode: "0755"
+  become: false
+
+- name: Deploy terraform shell integration snippet
+  ansible.builtin.copy:
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/terraform.zsh"
+    mode: "0644"
+    content: |
+      # Terraform
+      export TF_CLI_CONFIG_FILE="$HOME/.config/terraform/terraformrc"
+      export TF_PLUGIN_CACHE_DIR="$HOME/.terraform.d/plugin-cache"
+      alias tfaa='terraform apply -auto-approve'
+      alias tfsl='terraform state list'
+      alias tfss='terraform state show'
+  become: false
+
+- name: Deploy terraform proxy environment snippet
+  ansible.builtin.copy:
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/terraform-proxy.zsh"
+    mode: "0644"
+    content: |
+      export TF_CLI_ARGS_init="-backend-config=skip_s3_checksum=true"
+  become: false
+  when: cloud_cli_http_proxy != ''
+
+- name: Create vault config directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/vault"
+    state: directory
+    mode: "0700"
+  become: false
+  when: cloud_cli_vault_addr != ''
+
+- name: Deploy vault GitHub token credential file
+  ansible.builtin.copy:
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/vault/github_token"
+    content: "{{ cloud_cli_terraform_vault_github_token }}"
+    mode: "0600"
+  become: false
+  no_log: true
+  when: >-
+    cloud_cli_vault_addr != '' and
+    cloud_cli_terraform_vault_github_token != ''
+
+- name: Deploy vault shell integration snippet
+  ansible.builtin.template:
+    src: vault.zsh.j2
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/vault.zsh"
+    mode: "0644"
+  become: false
+  when: cloud_cli_vault_addr != ''
