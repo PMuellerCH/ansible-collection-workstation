@@ -95,7 +95,7 @@ jobs:
         env:
           BASE_REF: ${{ github.event.pull_request.base.ref }}
         run: |
-          git fetch origin "$BASE_REF" --depth=1
+          git fetch origin "$BASE_REF"
           if git diff "origin/$BASE_REF"...HEAD -- .github/requirements.txt \
               | grep -qE '^[+-](ansible-core|molecule|molecule-plugins)=='; then
             echo "changed=true" >> "$GITHUB_OUTPUT"

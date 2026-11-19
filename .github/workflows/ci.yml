@@ -48,16 +48,23 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ~/.cache/pre-commit
-          key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+          key: pre-commit-${{ runner.os }}-${{ env.pythonLocation }}-${{ hashFiles('.pre-commit-config.yaml') }}
 
       - name: Run pre-commit on changed files
         shell: bash
         env:
           BASE_REF: ${{ github.base_ref }}
         run: |
-          set -o pipefail
-          pre-commit run --show-diff-on-failure --color always \
-            --from-ref "origin/$BASE_REF" --to-ref HEAD
+          # A change to the lint tooling/config itself (hook versions, rules) must be
+          # checked against the whole tree, not just the changed files.
+          if git diff --name-only "origin/$BASE_REF"...HEAD \
+              | grep -qE '^(\.pre-commit-config\.yaml|\.yamllint\.yml|\.ansible-lint|\.markdownlint-.*\.yml|\.github/requirements\.txt)$'; then
+            echo "Lint config changed - linting all files."
+            pre-commit run --show-diff-on-failure --color always --all-files
+          else
+            pre-commit run --show-diff-on-failure --color always \
+              --from-ref "origin/$BASE_REF" --to-ref HEAD
+          fi
 
   lint-full:
     name: Lint (full)

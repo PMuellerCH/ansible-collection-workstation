@@ -276,7 +276,9 @@ CI only tests what a PR changed; the full suite runs on the release PR (or manua
 
 Details and limits:
 
-- `lint-changed` runs `pre-commit run --from-ref origin/<base> --to-ref HEAD`. Checkov
+- `lint-changed` runs `pre-commit run --from-ref origin/<base> --to-ref HEAD`, or
+  `--all-files` when the PR changes lint config (`.pre-commit-config.yaml`, `.yamllint.yml`,
+  `.ansible-lint`, `.markdownlint-*.yml`, `.github/requirements.txt`). Checkov
   cannot take a file list, so it still scans the whole repo on every run. Ansible-lint
   only sees changed files under `roles/`, `meta/` and the root `galaxy.yml` /
   `requirements*.yml`, so a cross-role problem is only caught by `lint-full` on the
