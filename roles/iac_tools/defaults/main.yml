@@ -44,7 +44,7 @@ iac_tools_act_download_base: "https://github.com/nektos/act/releases/download/v{
 
 # ── aws ──────────────────────────────────────────────────────────────────
 # renovate: datasource=github-tags depName=aws/aws-cli
-iac_tools_aws_cli_version: "2.39.3"
+iac_tools_aws_cli_version: "2.42.1"
 # renovate: datasource=pypi depName=boto3
 iac_tools_aws_boto3_version: "1.43.27"
 # renovate: datasource=github-releases depName=aws/session-manager-plugin
