@@ -88,7 +88,7 @@ modern_cli_xcp_version: "0.24.9"
 modern_cli_doggo_version: "1.4.2"
 
 # renovate: datasource=github-releases depName=01mf02/jaq extractVersion=^v(?<version>.*)$
-modern_cli_jaq_version: "3.1.2"
+modern_cli_jaq_version: "3.2.0"
 # 01mf02/jaq publishes no checksum file; the binary checksum is derived at run
 # time from GitHub's per-asset digest (see tasks/main.yml).
 
