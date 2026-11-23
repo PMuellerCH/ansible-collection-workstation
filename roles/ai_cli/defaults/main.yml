@@ -6,7 +6,7 @@ ai_cli_kiro_enabled: true
 ai_cli_opencode_enabled: true
 
 # renovate: datasource=npm depName=@anthropic-ai/claude-code
-ai_cli_claude_code_version: "2.1.330"
+ai_cli_claude_code_version: "2.1.331"
 ai_cli_claude_code_aws_profile: "default"
 ai_cli_claude_code_aws_region: "eu-central-1"
 ai_cli_claude_code_github_token: ""
