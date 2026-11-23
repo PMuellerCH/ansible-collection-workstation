@@ -58,7 +58,7 @@ modern_cli_emoji_fzf_version: "0.12.0"
 # code_quality_tools_pipx_min_version; modern_cli bootstraps its own pipx
 # since it cannot assume another role already upgraded it (role independence).
 # renovate: datasource=pypi depName=pipx
-modern_cli_pipx_min_version: "1.18.13"
+modern_cli_pipx_min_version: "1.18.19"
 
 # Pinned commit of catppuccin/delta (no releases/tags published — theme is
 # fetched from an immutable ref, not the mutable "main" branch).
@@ -88,7 +88,7 @@ modern_cli_xcp_version: "0.24.9"
 modern_cli_doggo_version: "1.4.2"
 
 # renovate: datasource=github-releases depName=01mf02/jaq extractVersion=^v(?<version>.*)$
-modern_cli_jaq_version: "3.1.2"
+modern_cli_jaq_version: "3.2.0"
 # 01mf02/jaq publishes no checksum file; the binary checksum is derived at run
 # time from GitHub's per-asset digest (see tasks/main.yml).
 
@@ -96,7 +96,7 @@ modern_cli_jaq_version: "3.1.2"
 # to resolve a name clash — release assets and the installed binary are
 # named "moor", not "moar", even though the GitHub repo path is unchanged.
 # renovate: datasource=github-releases depName=walles/moar extractVersion=^v(?<version>.*)$
-modern_cli_moor_version: "2.19.6"
+modern_cli_moor_version: "2.19.7"
 # walles/moar publishes no checksum file; the binary checksum is derived at run
 # time from GitHub's per-asset digest (see tasks/main.yml), so there is no static
 # checksum to keep in sync when Renovate bumps the version.

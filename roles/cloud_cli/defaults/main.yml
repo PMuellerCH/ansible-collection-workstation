@@ -12,7 +12,7 @@ cloud_cli_vault_addr: ""
 
 # ── aws ──────────────────────────────────────────────────────────────────
 # renovate: datasource=github-tags depName=aws/aws-cli
-cloud_cli_aws_cli_version: "2.39.3"
+cloud_cli_aws_cli_version: "2.42.1"
 # renovate: datasource=pypi depName=boto3
 cloud_cli_aws_boto3_version: "1.43.27"
 # renovate: datasource=github-releases depName=aws/session-manager-plugin

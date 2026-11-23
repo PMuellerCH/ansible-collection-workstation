@@ -15,7 +15,7 @@ ansible_dev_no_proxy: ""
 # 24.04's apt-provided pipx is only 1.4.3. See README "pipx bootstrap"
 # section (same pattern as the code_quality_tools role).
 # renovate: datasource=pypi depName=pipx
-ansible_dev_pipx_min_version: "1.18.13"
+ansible_dev_pipx_min_version: "1.18.19"
 
 # ── ansible ──────────────────────────────────────────────────────────────
 # Held on the 2.21.x line: ansible-core 2.22+ requires Python >= 3.13, but the
@@ -34,5 +34,5 @@ ansible_dev_hvac_version: "2.4.0"
 
 # ── act ──────────────────────────────────────────────────────────────────
 # renovate: datasource=github-releases depName=nektos/act extractVersion=^v(?<version>.*)$
-ansible_dev_act_version: "0.2.96"
+ansible_dev_act_version: "0.2.98"
 ansible_dev_act_download_base: "https://github.com/nektos/act/releases/download/v{{ ansible_dev_act_version }}"
