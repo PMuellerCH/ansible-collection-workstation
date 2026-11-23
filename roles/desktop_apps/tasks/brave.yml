@@ -1,0 +1,81 @@
+---
+# --- brave (opt-in alternative browser; Firefox remains the default —
+# neither this nor librewolf below change that) ---
+- name: Create apt keyrings directory
+  # Deliberately duplicates the onlyoffice section's copy of this task so
+  # --tags brave alone is self-sufficient, same reasoning as presenterm.nvim's
+  # redundant directory task in the editor role.
+  ansible.builtin.file:
+    path: /usr/share/keyrings
+    state: directory
+    mode: "0755"
+  become: true
+  when: desktop_apps_brave_enabled
+  tags: [brave, desktop_apps]
+
+- name: Download Brave GPG key
+  ansible.builtin.get_url:
+    url: https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
+    dest: /usr/share/keyrings/brave-browser-archive-keyring.gpg
+    mode: "0644"
+    force: false
+  become: true
+  when: desktop_apps_brave_enabled
+  tags: [brave, desktop_apps]
+
+- name: Install python3-debian (required by deb822_repository)
+  # See the onlyoffice section above for why this is needed explicitly
+  # rather than relying on deb822_repository's own auto-install (which
+  # doesn't work under --check).
+  ansible.builtin.apt:
+    name: python3-debian
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: desktop_apps_brave_enabled
+  tags: [brave, desktop_apps]
+
+- name: Add Brave apt repository
+  ansible.builtin.deb822_repository:
+    name: brave-browser-release
+    types: deb
+    uris: https://brave-browser-apt-release.s3.brave.com/
+    suites: stable
+    components: main
+    signed_by: /usr/share/keyrings/brave-browser-archive-keyring.gpg
+    state: present
+  become: true
+  when: desktop_apps_brave_enabled and not ansible_check_mode
+  tags: [brave, desktop_apps]
+
+- name: Install Brave
+  ansible.builtin.apt:
+    name: brave-browser
+    state: present
+    update_cache: true
+  become: true
+  when: desktop_apps_brave_enabled and not ansible_check_mode
+  tags: [brave, desktop_apps]
+
+- name: Create Brave managed policies directory
+  ansible.builtin.file:
+    path: /etc/brave/policies/managed
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  become: true
+  when: desktop_apps_brave_enabled
+  tags: [brave, desktop_apps]
+
+- name: Deploy Brave policies (crypto wallet/rewards disabled, Bitwarden extension, password manager disabled)
+  ansible.builtin.copy:
+    src: brave_policies.json
+    dest: /etc/brave/policies/managed/policies.json
+    owner: root
+    group: root
+    mode: "0644"
+  become: true
+  when: desktop_apps_brave_enabled
+  tags: [brave, desktop_apps]

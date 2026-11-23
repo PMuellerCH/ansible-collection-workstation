@@ -1,0 +1,9 @@
+---
+galaxy_info:
+  role_name: desktop_integration
+  namespace: pmuellerch
+  author: Philipp Müller
+  license: MIT
+  description: Desktop integration (workspaces, Flameshot, emoji picker, clipboard tooling)
+  min_ansible_version: "2.17"
+dependencies: []

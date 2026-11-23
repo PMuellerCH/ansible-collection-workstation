@@ -1,0 +1,109 @@
+---
+# teams
+- name: Get installed teams-for-linux version
+  ansible.builtin.command: dpkg-query -W -f='${Version}' teams-for-linux
+  register: desktop_apps_teams_current_version
+  changed_when: false
+  failed_when: false
+  when: desktop_apps_teams_enabled
+  tags: [teams, desktop_apps]
+
+- name: Fetch teams-for-linux release checksum metadata
+  # electron-builder publishes this alongside every release with a sha512
+  # (base64) per asset — used to verify the .deb wasn't corrupted/tampered
+  # with in transit. Fetched fresh each run so it always matches whatever
+  # desktop_apps_teams_version Renovate has pinned, with no separate
+  # checksum value to keep in sync by hand. Uses get_url (not uri) so it
+  # goes through desktop_apps_teams_download_base like the .deb download
+  # itself — a consumer overriding that var (mirror, offline cache) gets a
+  # checksum that's still guaranteed to match what was actually downloaded.
+  ansible.builtin.get_url:
+    url: "{{ desktop_apps_teams_download_base }}/latest-linux.yml"
+    dest: "/tmp/teams-for-linux-{{ desktop_apps_teams_version }}-latest-linux.yml"
+    mode: "0644"
+  when: >-
+    desktop_apps_teams_enabled and
+    (desktop_apps_teams_current_version.rc != 0 or
+     desktop_apps_teams_version not in desktop_apps_teams_current_version.stdout)
+  tags: [teams, desktop_apps]
+
+- name: Read teams-for-linux release checksum metadata
+  # get_url reports changed but doesn't actually write the file under
+  # --check, so this (and everything downstream that depends on the file
+  # existing) must be skipped in check mode rather than hard-fail.
+  ansible.builtin.slurp:
+    src: "/tmp/teams-for-linux-{{ desktop_apps_teams_version }}-latest-linux.yml"
+  register: desktop_apps_teams_release_metadata
+  when: >-
+    not ansible_check_mode and
+    desktop_apps_teams_enabled and
+    (desktop_apps_teams_current_version.rc != 0 or
+     desktop_apps_teams_version not in desktop_apps_teams_current_version.stdout)
+  tags: [teams, desktop_apps]
+
+- name: Determine expected checksum (base64 sha512) for the .deb asset
+  ansible.builtin.set_fact:
+    desktop_apps_teams_sha512_b64: >-
+      {{ (desktop_apps_teams_release_metadata.content | b64decode | from_yaml).files
+         | selectattr('url', 'equalto', 'teams-for-linux_' ~ desktop_apps_teams_version ~ '_amd64.deb')
+         | map(attribute='sha512') | first | default('', true) }}
+  when: >-
+    not ansible_check_mode and
+    desktop_apps_teams_enabled and
+    (desktop_apps_teams_current_version.rc != 0 or
+     desktop_apps_teams_version not in desktop_apps_teams_current_version.stdout)
+  tags: [teams, desktop_apps]
+
+- name: Assert the expected checksum was found in the release metadata
+  ansible.builtin.assert:
+    that: desktop_apps_teams_sha512_b64 | length > 0
+    fail_msg: >-
+      No sha512 entry for teams-for-linux_{{ desktop_apps_teams_version }}_amd64.deb
+      found in latest-linux.yml — upstream may have changed the release
+      metadata format or asset naming.
+  when: >-
+    not ansible_check_mode and
+    desktop_apps_teams_enabled and
+    (desktop_apps_teams_current_version.rc != 0 or
+     desktop_apps_teams_version not in desktop_apps_teams_current_version.stdout)
+  tags: [teams, desktop_apps]
+
+- name: Convert expected checksum to hex (get_url requires hex, metadata is base64)
+  ansible.builtin.command:
+    argv:
+      - python3
+      - -c
+      - import base64,sys; print(base64.b64decode(sys.argv[1]).hex())
+      - "{{ desktop_apps_teams_sha512_b64 }}"
+  register: desktop_apps_teams_sha512_hex
+  changed_when: false
+  when: >-
+    not ansible_check_mode and
+    desktop_apps_teams_enabled and
+    (desktop_apps_teams_current_version.rc != 0 or
+     desktop_apps_teams_version not in desktop_apps_teams_current_version.stdout)
+  tags: [teams, desktop_apps]
+
+- name: Download teams-for-linux .deb
+  ansible.builtin.get_url:
+    url: "{{ desktop_apps_teams_download_base }}/teams-for-linux_{{ desktop_apps_teams_version }}_amd64.deb"
+    dest: "/tmp/teams-for-linux_{{ desktop_apps_teams_version }}_amd64.deb"
+    checksum: "sha512:{{ desktop_apps_teams_sha512_hex.stdout | trim }}"
+    mode: "0644"
+  when: >-
+    not ansible_check_mode and
+    desktop_apps_teams_enabled and
+    (desktop_apps_teams_current_version.rc != 0 or
+     desktop_apps_teams_version not in desktop_apps_teams_current_version.stdout)
+  tags: [teams, desktop_apps]
+
+- name: Install teams-for-linux
+  ansible.builtin.apt:
+    deb: "/tmp/teams-for-linux_{{ desktop_apps_teams_version }}_amd64.deb"
+  become: true
+  when: >-
+    not ansible_check_mode and
+    desktop_apps_teams_enabled and
+    (desktop_apps_teams_current_version.rc != 0 or
+     desktop_apps_teams_version not in desktop_apps_teams_current_version.stdout)
+  tags: [teams, desktop_apps]

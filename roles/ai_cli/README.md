@@ -200,7 +200,7 @@ confirm-each-tool session.
 `kiro-cli` is a self-updating single binary distributed only through the
 official install script. Upstream publishes no versioned, individually
 downloadable release asset, so there is nothing to exact-pin and
-checksum-verify the way the binary installs in `clipboard_tools` or `base`
+checksum-verify the way the binary installs in `desktop_integration` or `base`
 do. The install URL is therefore an **unpinned remote source** — a deliberate
 departure from this collection's "pin everything, Renovate tracks it"
 convention, documented here like the

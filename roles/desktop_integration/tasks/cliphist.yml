@@ -1,0 +1,125 @@
+---
+# ---- cliphist ----
+- name: Get installed cliphist version
+  ansible.builtin.command: cliphist version
+  register: desktop_integration_cliphist_current_version
+  changed_when: false
+  failed_when: false
+  when: desktop_integration_cliphist_enabled
+  tags: [cliphist, desktop_integration]
+
+- name: Fetch cliphist release metadata for the GitHub asset digest
+  # sentriz/cliphist publishes no checksum file, so the checksum is derived at
+  # run time from GitHub's own per-asset digest for the pinned version (see the
+  # "Checksum verification" note in README). Nothing to keep in sync by hand
+  # when Renovate bumps desktop_integration_cliphist_version.
+  ansible.builtin.get_url:
+    url: "https://api.github.com/repos/sentriz/cliphist/releases/tags/v{{ desktop_integration_cliphist_version }}"
+    dest: "/tmp/cliphist-{{ desktop_integration_cliphist_version }}_release.json"
+    force: true
+    headers: >-
+      {{ {'Accept': 'application/vnd.github+json'}
+         | combine({'Authorization': 'Bearer ' + desktop_integration_github_api_token}
+                   if desktop_integration_github_api_token else {}) }}
+    mode: "0644"
+  # Suppress output only when a token is in use, so the Bearer header cannot
+  # leak into invocation.module_args under -v or on failure. Unauthenticated
+  # runs keep full logging.
+  no_log: "{{ desktop_integration_github_api_token | length > 0 }}"
+  when: >-
+    not ansible_check_mode and
+    desktop_integration_cliphist_enabled and
+    (desktop_integration_cliphist_current_version.rc != 0 or
+     desktop_integration_cliphist_version not in desktop_integration_cliphist_current_version.stderr)
+  tags: [cliphist, desktop_integration]
+
+- name: Read cliphist release metadata
+  ansible.builtin.slurp:
+    path: "/tmp/cliphist-{{ desktop_integration_cliphist_version }}_release.json"
+  register: desktop_integration_cliphist_release_raw
+  when: >-
+    not ansible_check_mode and
+    desktop_integration_cliphist_enabled and
+    (desktop_integration_cliphist_current_version.rc != 0 or
+     desktop_integration_cliphist_version not in desktop_integration_cliphist_current_version.stderr)
+  tags: [cliphist, desktop_integration]
+
+- name: Resolve cliphist binary checksum from the release metadata
+  ansible.builtin.set_fact:
+    desktop_integration_cliphist_checksum: >-
+      {{ (desktop_integration_cliphist_release_raw.content | b64decode | from_json).assets
+         | selectattr('name', 'equalto', 'v' + desktop_integration_cliphist_version + '-linux-amd64')
+         | map(attribute='digest') | select('string') | first | default('') }}
+  when: >-
+    not ansible_check_mode and
+    desktop_integration_cliphist_enabled and
+    (desktop_integration_cliphist_current_version.rc != 0 or
+     desktop_integration_cliphist_version not in desktop_integration_cliphist_current_version.stderr)
+  tags: [cliphist, desktop_integration]
+
+- name: Assert GitHub published a sha256 digest for the cliphist binary
+  ansible.builtin.assert:
+    that: desktop_integration_cliphist_checksum.startswith('sha256:')
+    fail_msg: >-
+      GitHub published no sha256 digest for v{{ desktop_integration_cliphist_version }}-linux-amd64;
+      cannot verify the download.
+  when: >-
+    not ansible_check_mode and
+    desktop_integration_cliphist_enabled and
+    (desktop_integration_cliphist_current_version.rc != 0 or
+     desktop_integration_cliphist_version not in desktop_integration_cliphist_current_version.stderr)
+  tags: [cliphist, desktop_integration]
+
+- name: Download cliphist binary
+  ansible.builtin.get_url:
+    url: "{{ desktop_integration_cliphist_download_base }}/v{{ desktop_integration_cliphist_version }}-linux-amd64"
+    dest: "/tmp/cliphist-{{ desktop_integration_cliphist_version }}"
+    checksum: "{{ desktop_integration_cliphist_checksum }}"
+    mode: "0755"
+  when: >-
+    not ansible_check_mode and
+    desktop_integration_cliphist_enabled and
+    (desktop_integration_cliphist_current_version.rc != 0 or
+     desktop_integration_cliphist_version not in desktop_integration_cliphist_current_version.stderr)
+  tags: [cliphist, desktop_integration]
+
+- name: Install cliphist binary to /usr/local/bin
+  ansible.builtin.command:
+    cmd: install -m 0755 /tmp/cliphist-{{ desktop_integration_cliphist_version }} /usr/local/bin/cliphist
+  become: true
+  when: >-
+    not ansible_check_mode and
+    desktop_integration_cliphist_enabled and
+    (desktop_integration_cliphist_current_version.rc != 0 or
+     desktop_integration_cliphist_version not in desktop_integration_cliphist_current_version.stderr)
+  changed_when: true
+  tags: [cliphist, desktop_integration]
+  # noqa: command-instead-of-module - copy remote_src=true triggers ansible-core _ansible_inject_invocation bug
+
+# ---- cliphist autostart (soft runtime dependency on wl-clipboard's
+# wl-paste — see README "Soft cross-tool dependencies" for why this is
+# documentation-only and not hard-gated on desktop_integration_wl_clipboard_enabled) ----
+- name: Create autostart directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/autostart"
+    state: directory
+    mode: "0755"
+  become: false
+  when: desktop_integration_cliphist_enabled
+  tags: [cliphist, desktop_integration]
+
+- name: Deploy cliphist autostart entry
+  ansible.builtin.copy:
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/autostart/cliphist.desktop"
+    mode: "0644"
+    content: |
+      [Desktop Entry]
+      Type=Application
+      Name=cliphist daemon
+      Exec=wl-paste --watch cliphist store
+      Hidden=false
+      NoDisplay=false
+      X-GNOME-Autostart-enabled=true
+  become: false
+  when: desktop_integration_cliphist_enabled
+  tags: [cliphist, desktop_integration]

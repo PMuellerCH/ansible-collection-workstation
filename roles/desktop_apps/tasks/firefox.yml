@@ -1,0 +1,25 @@
+---
+# --- firefox ---
+# Firefox itself is not installed by this role — it ships pre-installed with
+# Pop!_OS / most Ubuntu desktop images. This only deploys system-wide policy.
+- name: Create Firefox policies directory
+  ansible.builtin.file:
+    path: /etc/firefox/policies
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  become: true
+  when: desktop_apps_firefox_enabled
+  tags: [firefox, desktop_apps]
+
+- name: Deploy Firefox policies (Bitwarden extension, de-CH dictionary, password manager disabled)
+  ansible.builtin.copy:
+    src: policies.json
+    dest: /etc/firefox/policies/policies.json
+    owner: root
+    group: root
+    mode: "0644"
+  become: true
+  when: desktop_apps_firefox_enabled
+  tags: [firefox, desktop_apps]

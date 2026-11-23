@@ -1,0 +1,70 @@
+---
+# --- onlyoffice ---
+- name: Create apt keyrings directory
+  ansible.builtin.file:
+    path: /usr/share/keyrings
+    state: directory
+    mode: "0755"
+  become: true
+  when: desktop_apps_onlyoffice_enabled
+  tags: [onlyoffice, desktop_apps]
+
+- name: Download OnlyOffice GPG key
+  ansible.builtin.get_url:
+    url: https://download.onlyoffice.com/GPG-KEY-ONLYOFFICE
+    dest: /usr/share/keyrings/onlyoffice.asc
+    mode: "0644"
+    force: false
+  become: true
+  when: desktop_apps_onlyoffice_enabled
+  tags: [onlyoffice, desktop_apps]
+
+- name: Install python3-debian (required by deb822_repository)
+  # deb822_repository can normally auto-install this dependency itself on a
+  # real run, but not under --check ("python3-debian must be installed to
+  # use check mode") — install it explicitly up front so the apt-repository
+  # task below behaves consistently in either mode. Same pattern as this
+  # collection's ansible_dev and cloud_cli roles (Docker/Terraform apt repositories).
+  ansible.builtin.apt:
+    name: python3-debian
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: desktop_apps_onlyoffice_enabled
+  tags: [onlyoffice, desktop_apps]
+
+- name: Add OnlyOffice apt repository
+  ansible.builtin.deb822_repository:
+    name: onlyoffice
+    types: deb
+    uris: https://download.onlyoffice.com/repo/debian
+    # Suite squeeze is intentional — this is OnlyOffice's actual apt suite
+    # name regardless of Ubuntu version, not a stale/incorrect value.
+    suites: squeeze
+    components: main
+    signed_by: /usr/share/keyrings/onlyoffice.asc
+    state: present
+  become: true
+  # python3-debian is only installed for real on a real (non-check) run —
+  # see the task above — so under --check it would still be missing at this
+  # point (a normal apt task never installs anything for real in check
+  # mode). Skip here rather than fail, matching this collection's general
+  # pattern for resources that would only exist after a real run.
+  when: desktop_apps_onlyoffice_enabled and not ansible_check_mode
+  tags: [onlyoffice, desktop_apps]
+
+- name: Install OnlyOffice Desktop Editors
+  ansible.builtin.apt:
+    name: onlyoffice-desktopeditors
+    state: present
+    update_cache: true
+  become: true
+  # Depends on both the GPG key download and the apt repository having
+  # actually happened for real — neither does under --check (get_url
+  # reports changed without writing; deb822_repository is skipped outright
+  # above) — so this must be skipped too, not merely tolerated via
+  # ignore_errors. See "Check-mode guards for chained download→consume
+  # tasks" in this collection's conventions.
+  when: desktop_apps_onlyoffice_enabled and not ansible_check_mode
+  tags: [onlyoffice, desktop_apps]

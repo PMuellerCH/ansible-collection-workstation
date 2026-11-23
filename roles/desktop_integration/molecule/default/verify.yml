@@ -1,0 +1,178 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: true
+  # Load the role's own defaults so pinned-version assertions track
+  # defaults/main.yml as their single source of truth, rather than a second
+  # hardcoded literal that would silently go stale whenever Renovate bumps it.
+  vars_files:
+    - ../../defaults/main.yml
+  tasks:
+    - name: Gather package facts
+      ansible.builtin.package_facts:
+        manager: apt
+
+    - name: Assert flameshot is installed
+      ansible.builtin.assert:
+        that: "'flameshot' in ansible_facts.packages"
+
+    - name: Check flameshot autostart entry was deployed
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/autostart/flameshot.desktop"
+      register: _desktop_integration_autostart
+
+    - name: Assert flameshot autostart entry exists
+      ansible.builtin.assert:
+        that: _desktop_integration_autostart.stat.exists
+
+    - name: Read GNOME dynamic-workspaces dconf key
+      community.general.dconf:
+        key: /org/gnome/mutter/dynamic-workspaces
+        state: read
+      register: _desktop_integration_dynamic_workspaces
+
+    - name: Read GNOME num-workspaces dconf key
+      community.general.dconf:
+        key: /org/gnome/desktop/wm/preferences/num-workspaces
+        state: read
+      register: _desktop_integration_num_workspaces
+
+    - name: Assert fixed-workspace dconf keys were set
+      ansible.builtin.assert:
+        that:
+          - _desktop_integration_dynamic_workspaces.value == "false"
+          - _desktop_integration_num_workspaces.value == "9"
+
+    - name: Read GNOME flameshot custom keybinding name
+      community.general.dconf:
+        key: /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/flameshot/name
+        state: read
+      register: _desktop_integration_kb_name
+
+    - name: Read GNOME flameshot custom keybinding command
+      community.general.dconf:
+        key: /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/flameshot/command
+        state: read
+      register: _desktop_integration_kb_command
+
+    - name: Read GNOME flameshot custom keybinding binding
+      community.general.dconf:
+        key: /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/flameshot/binding
+        state: read
+      register: _desktop_integration_kb_binding
+
+    - name: Assert flameshot GNOME custom keybinding was configured
+      ansible.builtin.assert:
+        that:
+          - _desktop_integration_kb_name.value == "'Flameshot'"
+          - _desktop_integration_kb_command.value == "'flameshot gui'"
+          - _desktop_integration_kb_binding.value == "'Print'"
+
+    - name: Read GNOME custom-keybindings registration list
+      community.general.dconf:
+        key: /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings
+        state: read
+      register: _desktop_integration_kb_list
+
+    - name: Assert flameshot keybinding path is registered
+      ansible.builtin.assert:
+        that: "'/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/flameshot/' in _desktop_integration_kb_list.value"
+
+    - name: Assert the pre-existing unrelated keybinding was preserved (not overwritten)
+      ansible.builtin.assert:
+        that: "'/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/pre-existing-test/' in _desktop_integration_kb_list.value"
+
+    - name: Read default GNOME screenshot keybinding
+      community.general.dconf:
+        key: /org/gnome/shell/keybindings/screenshot
+        state: read
+      register: _desktop_integration_default_screenshot_kb
+
+    - name: Assert default GNOME screenshot keybinding was disabled
+      ansible.builtin.assert:
+        that: _desktop_integration_default_screenshot_kb.value == "@as []"
+
+    - name: Check Flathub remote is configured
+      ansible.builtin.command: flatpak remotes --system
+      register: _desktop_integration_flatpak_remotes
+      changed_when: false
+
+    - name: Assert Flathub remote is present
+      ansible.builtin.assert:
+        that: "'flathub' in _desktop_integration_flatpak_remotes.stdout"
+
+    - name: Check smile is installed via Flatpak
+      ansible.builtin.command: flatpak info --system it.mijorus.smile
+      register: _desktop_integration_smile_flatpak
+      changed_when: false
+      failed_when: false
+
+    - name: Assert smile Flatpak is installed
+      ansible.builtin.assert:
+        that: _desktop_integration_smile_flatpak.rc == 0
+
+    - name: Gather package facts
+      ansible.builtin.package_facts:
+        manager: apt
+
+    - name: Assert wl-clipboard is installed
+      ansible.builtin.assert:
+        that: "'wl-clipboard' in ansible_facts.packages"
+
+    - name: Check cliphist runs
+      ansible.builtin.command: cliphist version
+      register: _desktop_integration_cliphist_version
+      changed_when: false
+
+    - name: Assert cliphist reports the pinned version
+      ansible.builtin.assert:
+        # cliphist writes its version output to stderr, not stdout (same as
+        # the current-version idempotency check in tasks/main.yml).
+        that: "desktop_integration_cliphist_version in _desktop_integration_cliphist_version.stderr"
+
+    - name: Check clipse runs
+      ansible.builtin.command: clipse -v
+      register: _desktop_integration_clipse_version
+      changed_when: false
+
+    - name: Assert clipse reports the pinned version
+      ansible.builtin.assert:
+        that: "desktop_integration_clipse_version in _desktop_integration_clipse_version.stdout"
+
+    - name: Check cliphist autostart entry was deployed
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/autostart/cliphist.desktop"
+      register: _desktop_integration_autostart
+
+    - name: Assert cliphist autostart entry exists
+      ansible.builtin.assert:
+        that: _desktop_integration_autostart.stat.exists
+
+    - name: Read cliphist autostart entry content
+      ansible.builtin.slurp:
+        src: "{{ ansible_facts['env']['HOME'] }}/.config/autostart/cliphist.desktop"
+      register: _desktop_integration_autostart_content
+
+    - name: Assert cliphist autostart entry shells out to wl-paste
+      ansible.builtin.assert:
+        that: "'Exec=wl-paste --watch cliphist store' in (_desktop_integration_autostart_content.content | b64decode)"
+
+    - name: Stat zsh alias snippet
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/desktop_integration.zsh"
+      register: _desktop_integration_zsh_snippet
+
+    - name: Assert zsh alias snippet was deployed
+      ansible.builtin.assert:
+        that: _desktop_integration_zsh_snippet.stat.exists
+
+    - name: Read zsh alias snippet content
+      ansible.builtin.slurp:
+        src: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/desktop_integration.zsh"
+      register: _desktop_integration_zsh_snippet_content
+
+    - name: Assert zsh alias snippet contains the ch function and clipboard alias
+      ansible.builtin.assert:
+        that:
+          - "'ch() {' in (_desktop_integration_zsh_snippet_content.content | b64decode)"
+          - "\"alias clipboard='clipse'\" in (_desktop_integration_zsh_snippet_content.content | b64decode)"

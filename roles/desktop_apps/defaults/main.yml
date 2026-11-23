@@ -1,7 +1,16 @@
 ---
+# desktop_apps: browsers, office suite and chat clients
+
 desktop_apps_onlyoffice_enabled: true
 desktop_apps_firefox_enabled: true
+
 # Opt-in alternative browsers — default disabled: Firefox stays the default
 # for every consumer of this role unless explicitly toggled on.
 desktop_apps_brave_enabled: false
 desktop_apps_librewolf_enabled: false
+desktop_apps_slack_enabled: true
+desktop_apps_teams_enabled: true
+
+# renovate: datasource=github-releases depName=IsmaelMartinez/teams-for-linux extractVersion=^v(?<version>.*)$
+desktop_apps_teams_version: "2.32.1"
+desktop_apps_teams_download_base: "https://github.com/IsmaelMartinez/teams-for-linux/releases/download/v{{ desktop_apps_teams_version }}"

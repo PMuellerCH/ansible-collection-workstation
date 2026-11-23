@@ -1,0 +1,41 @@
+---
+# --- emoji-picker: flatpak/flathub bootstrap ---
+# desktop_integration has no other Flatpak dependency (flameshot is a plain
+# apt install) — this is the first task in the role that needs Flatpak, so
+# bootstrap it here, self-contained, mirroring desktop_apps's exact pattern
+# (per this collection's role-independence convention: don't assume another
+# role already did this). Gated on desktop_integration_smile_enabled, the
+# only consumer of Flatpak in this role, the same way desktop_apps gates its
+# own bootstrap on desktop_apps_slack_enabled.
+- name: Install flatpak and xdg-utils
+  ansible.builtin.apt:
+    name:
+      - flatpak
+      - xdg-utils
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: desktop_integration_smile_enabled
+  tags: [emoji-picker, desktop_integration]
+
+- name: Add Flathub remote
+  community.general.flatpak_remote:
+    name: flathub
+    state: present
+    flatpakrepo_url: https://flathub.org/repo/flathub.flatpakrepo
+    method: system
+  become: true
+  when: desktop_integration_smile_enabled
+  ignore_errors: "{{ ansible_check_mode }}"
+  tags: [emoji-picker, desktop_integration]
+
+# --- emoji-picker: smile install ---
+- name: Install smile emoji picker via Flatpak
+  community.general.flatpak:
+    name: it.mijorus.smile
+    state: present
+    method: system
+  become: true
+  when: desktop_integration_smile_enabled
+  tags: [emoji-picker, desktop_integration]

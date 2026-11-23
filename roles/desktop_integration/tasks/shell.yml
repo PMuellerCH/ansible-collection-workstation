@@ -1,0 +1,28 @@
+---
+# ---- shell integration ----
+- name: Create zsh conf.d directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d"
+    state: directory
+    mode: "0755"
+  become: false
+  when: desktop_integration_deploy_shell_aliases
+  tags: [wl-clipboard, cliphist, clipse, desktop_integration]
+
+- name: Deploy desktop_integration shell integration snippet
+  ansible.builtin.template:
+    src: desktop_integration.zsh.j2
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/desktop_integration.zsh"
+    mode: "0644"
+  become: false
+  when: desktop_integration_deploy_shell_aliases
+  tags: [wl-clipboard, cliphist, clipse, desktop_integration]
+
+- name: Remove the pre-merge clipboard_tools.zsh snippet
+  # Renamed to desktop_integration.zsh when clipboard_tools was merged into this role;
+  # left in place, the old file would define the same `ch`/`clipboard` entries twice.
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/clipboard_tools.zsh"
+    state: absent
+  become: false
+  tags: [wl-clipboard, cliphist, clipse, desktop_integration]

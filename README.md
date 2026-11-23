@@ -22,11 +22,9 @@ already in place.
 | [editor](roles/editor/README.md) | neovim (LazyVim), presenterm + mermaid-cli |
 | [ai_cli](roles/ai_cli/README.md) | Claude Code CLI, Kiro CLI, OpenCode |
 | [cli_tools](roles/cli_tools/README.md) | bat, btop, eza, fd, fzf, htop, ripgrep, zoxide, emoji-fzf, sd, duf, gping, hexyl, procs, dust, viddy, xcp, doggo, jaq, moor, yazi |
-| [chat_clients](roles/chat_clients/README.md) | Slack, Microsoft Teams |
-| [clipboard_tools](roles/clipboard_tools/README.md) | Wayland clipboard tooling: wl-clipboard, cliphist, clipse |
 | [code_quality_tools](roles/code_quality_tools/README.md) | trivy, pre-commit, detect-secrets, yamllint, checkov, ansible-lint |
-| [desktop_apps](roles/desktop_apps/README.md) | OnlyOffice Desktop Editors, Firefox policies |
-| [desktop_customization](roles/desktop_customization/README.md) | GNOME/COSMIC workspace settings, Flameshot, emoji picker (GUI) |
+| [desktop_apps](roles/desktop_apps/README.md) | OnlyOffice, Firefox policies, Brave, LibreWolf, Slack, Microsoft Teams |
+| [desktop_integration](roles/desktop_integration/README.md) | GNOME workspaces and keybindings, Flameshot, emoji picker (smile), Wayland clipboard tooling (wl-clipboard, cliphist, clipse) |
 | [ansible_dev](roles/ansible_dev/README.md) | ansible-core (pipx) + molecule, Docker CE, act |
 | [cloud_cli](roles/cloud_cli/README.md) | AWS CLI + session-manager-plugin, Terraform/Vault, tfswitch, tflint, terraform-docs, floci |
 | [k8s_tools](roles/k8s_tools/README.md) | kubectl, k9s, helm, kubectx/kubens, stern, krew, kubeconform, kube-linter |
@@ -35,8 +33,7 @@ already in place.
 | [bitwarden](roles/bitwarden/README.md) | Bitwarden password manager desktop app |
 | [synology](roles/synology/README.md) | Synology Drive and Chat clients |
 | [betterbird](roles/betterbird/README.md) | Betterbird (Thunderbird fork) email client |
-| [multimedia](roles/multimedia/README.md) | beets, Spotify + ncspot, Plex Desktop and Plexamp — each independently toggleable |
-| [graphics](roles/graphics/README.md) | Graphics tools (Inkscape, GIMP, Pinta) |
+| [media](roles/media/README.md) | Inkscape, GIMP, Pinta, beets, Spotify + ncspot, Plex Desktop and Plexamp — each independently toggleable |
 
 Every role uses per-tool Ansible tags (in addition to an umbrella
 `<role_name>` tag) so a consuming playbook can select a single tool with
@@ -116,20 +113,20 @@ fresh proxied machine:
     - role: pmuellerch.workstation.editor
     - role: pmuellerch.workstation.ai_cli
     - role: pmuellerch.workstation.cli_tools
-    # 5. clipboard tooling (Wayland), then the infra toolchain.
+    # 5. the infra toolchain.
     #    ansible_dev must come before cloud_cli and k8s_tools: it creates the
     #    ansible-core pipx venv they inject boto3 / the Python Kubernetes
     #    libraries into (they skip the inject if it doesn't exist yet).
-    - role: pmuellerch.workstation.clipboard_tools
     - role: pmuellerch.workstation.ansible_dev
     - role: pmuellerch.workstation.cloud_cli
     - role: pmuellerch.workstation.k8s_tools
     # 6. code-quality / security scanners.
     - role: pmuellerch.workstation.code_quality_tools
-    # 7. desktop apps and customization (GUI — skip on a headless box).
+    # 7. desktop apps (browsers, office, chat) and desktop integration (workspaces,
+    #    Flameshot, clipboard tooling) — GUI, skip on a headless box.
     - role: pmuellerch.workstation.desktop_apps
-    - role: pmuellerch.workstation.desktop_customization
-    - role: pmuellerch.workstation.chat_clients
+    - role: pmuellerch.workstation.desktop_integration
+    # 8. media and graphics tools (home machines): add pmuellerch.workstation.media.
 ```
 
 Run it against the local machine:
@@ -200,11 +197,28 @@ gone (each tool has its own), and `base` has new component tags (`system`, `prox
 `python`, `fonts`). The zsh snippet `modern_cli.zsh` is replaced by `cli_tools.zsh`, `git.zsh` (delta alias) and
 `presenterm.zsh` (mmdc wrapper); the old file is removed.
 
+## Migrating the desktop and media roles
+
+`chat_clients`, `clipboard_tools`, `desktop_customization`, `graphics` and `multimedia` were merged into
+`desktop_apps`, `desktop_integration` and `media` (a breaking change; variables were renamed with no aliases).
+
+| Old | New |
+| --- | --- |
+| `chat_clients_*` | `desktop_apps_*` (`desktop_apps_slack_enabled`, `desktop_apps_teams_*`) |
+| `desktop_customization_*`, `clipboard_tools_*` | `desktop_integration_*` (new switches: `_workspaces_enabled`, `_flameshot_enabled`; new `_cliphist_download_base`) |
+| `multimedia_*` | `media_*` (new switches: `_graphics_enabled`, `_beets_enabled`, `_spotify_enabled`, `_plex_enabled`; new `_ncspot_download_base`) |
+| the `graphics` role (no variables) | `media` (`media_graphics_enabled`) |
+
+Tags are unchanged (`slack`, `teams`, `gui-customization`, `flameshot`, `emoji-picker`, `wl-clipboard`, `cliphist`,
+`clipse`, `beets`, `spotify`, `plex`); the umbrella tags are `desktop_apps`, `desktop_integration` and `media`, and
+`graphics` now selects Inkscape, GIMP and Pinta. The zsh snippet `clipboard_tools.zsh` is replaced by
+`desktop_integration.zsh`; the old file is removed. The ncspot download is now checksum-verified.
+
 ## Shell aliases
 
 Several roles deploy zsh snippets to `~/.config/zsh/conf.d/*.zsh`. They take
 effect only in an interactive zsh that sources that directory —
-`terminal_env`'s `.zshrc` does this. Most `cli_tools` and `clipboard_tools`
+`terminal_env`'s `.zshrc` does this. Most `cli_tools` and `desktop_integration`
 entries, and the `ai_cli` Kiro (`ki`/`kil`) and OpenCode (`oc`/`ocr`)
 aliases, are additionally
 guarded by a `command -v` check so they are defined only when the tool is
@@ -238,8 +252,8 @@ Items written as `name()` are shell functions rather than plain aliases.
 | `emoji()` | fzf emoji picker → `wl-copy` | cli_tools | `cli_tools_emoji_fzf_enabled` (needs fzf + wl-copy) |
 | `mmdc()` | mermaid-cli via system Chrome | editor | `editor_presenterm_enabled` |
 | `y()` | yazi, then `cd` to its exit directory | cli_tools | `cli_tools_yazi_enabled` |
-| `ch()` | `cliphist` history → fzf → `wl-copy` | clipboard_tools | `clipboard_tools_cliphist_enabled` (needs fzf + wl-copy) |
-| `clipboard` | `clipse` | clipboard_tools | `clipboard_tools_clipse_enabled` |
+| `ch()` | `cliphist` history → fzf → `wl-copy` | desktop_integration | `desktop_integration_cliphist_enabled` + `desktop_integration_deploy_shell_aliases` (needs fzf + wl-copy) |
+| `clipboard` | `clipse` | desktop_integration | `desktop_integration_clipse_enabled` + `desktop_integration_deploy_shell_aliases` |
 | `vi`, `vim` | `nvim` | editor | `editor_neovim_enabled` |
 | `ki` | `kiro-cli chat --trust-all-tools` (autonomous) | ai_cli | `ai_cli_kiro_enabled` + `ai_cli_kiro_deploy_shell_aliases` |
 | `kil` | `kiro-cli login` | ai_cli | `ai_cli_kiro_enabled` + `ai_cli_kiro_deploy_shell_aliases` |

@@ -2,6 +2,11 @@
 - name: Verify
   hosts: all
   gather_facts: true
+  # Load the role's own defaults so pinned-version assertions track
+  # defaults/main.yml as their single source of truth, rather than a second
+  # hardcoded literal that would silently go stale whenever Renovate bumps it.
+  vars_files:
+    - ../../defaults/main.yml
   tasks:
     - name: Gather package facts
       ansible.builtin.package_facts:
@@ -78,3 +83,26 @@
         that: >-
           (_desktop_apps_librewolf_policies_raw.content | b64decode | from_json)
           == _desktop_apps_firefox_policies
+
+    - name: Assert teams-for-linux is installed
+      ansible.builtin.assert:
+        that: "'teams-for-linux' in ansible_facts.packages"
+
+    - name: Check Flathub remote is configured
+      ansible.builtin.command: flatpak remotes --system
+      register: _desktop_apps_flatpak_remotes
+      changed_when: false
+
+    - name: Assert Flathub remote is present
+      ansible.builtin.assert:
+        that: "'flathub' in _desktop_apps_flatpak_remotes.stdout"
+
+    - name: Check Slack is installed via Flatpak
+      ansible.builtin.command: flatpak info --system com.slack.Slack
+      register: _desktop_apps_slack_flatpak
+      changed_when: false
+      failed_when: false
+
+    - name: Assert Slack Flatpak is installed
+      ansible.builtin.assert:
+        that: _desktop_apps_slack_flatpak.rc == 0

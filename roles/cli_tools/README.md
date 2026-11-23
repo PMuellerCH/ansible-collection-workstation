@@ -8,7 +8,7 @@ Installs modern replacements for the classic CLI tools: `bat` (cat), `btop`/`hto
 
 `bat`, `btop`, `fzf` and `yazi` are Catppuccin-Mocha themed (the collection-wide theme; the other tools have no official
 port or no themeable config). `emoji-fzf` covers only the CLI picker — the GUI picker (`smile`) belongs to
-`desktop_customization`.
+`desktop_integration`.
 
 > **Size:** with 21 components this role is above the "~8 components per role" budget from #130. They are small,
 > independent task files behind per-tool switches (about 700 task lines in total), and the tools share nothing but the
@@ -28,7 +28,7 @@ port or no themeable config). `emoji-fzf` covers only the CLI picker — the GUI
 | Ubuntu 24.04 | yes |
 
 Standalone; on a real workstation run `base` first. Your `.zshrc` must source `~/.config/zsh/conf.d/*.zsh` for the
-aliases to take effect. `emoji-fzf`'s `emoji` function pipes through `wl-copy` (`clipboard_tools`).
+aliases to take effect. `emoji-fzf`'s `emoji` function pipes through `wl-copy` (`desktop_integration`).
 
 ## Role Variables
 
@@ -37,7 +37,7 @@ aliases to take effect. `emoji-fzf`'s `emoji` function pipes through `wl-copy` (
 | `cli_tools_github_api_token` | see `defaults/main.yml` | Optional GitHub API token, only to raise the rate limit when resolving release-asset digests (dust, jaq, moor, procs, xcp, yazi). Defaults to `GH_TOKEN`/`GITHUB_TOKEN` |
 | `cli_tools_bat_enabled` | `true` | Whether to install bat. |
 | `cli_tools_btop_enabled` | `true` | Whether to install btop. |
-| `cli_tools_emoji_fzf_enabled` | `true` | Whether to install emoji-fzf via pipx (also gates the pipx bootstrap). Requires fzf and wl-copy (this collection's clipboard_tools role, clipboard_tools_wl_clipboard_enabled) at runtime for the deployed `emoji` shell function. |
+| `cli_tools_emoji_fzf_enabled` | `true` | Whether to install emoji-fzf via pipx (also gates the pipx bootstrap). Requires fzf and wl-copy (this collection's desktop_integration role, desktop_integration_wl_clipboard_enabled) at runtime for the deployed `emoji` shell function. |
 | `cli_tools_eza_enabled` | `true` | Whether to install eza. |
 | `cli_tools_fd_enabled` | `true` | Whether to install fd-find (and symlink it to fd). |
 | `cli_tools_fzf_enabled` | `true` | Whether to install fzf. |

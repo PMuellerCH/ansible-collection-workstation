@@ -1,39 +1,25 @@
 # pmuellerch.workstation.desktop_apps
 
-Installs standard/mainstream desktop applications that don't share any
-functional state with each other: OnlyOffice Desktop Editors (office suite,
-installed from its own apt repository), system-wide Firefox policies
-(Bitwarden extension force-installed, de-CH dictionary force-installed,
-native password manager disabled), and Brave/LibreWolf as opt-in
-alternative browsers (default **disabled** — Firefox stays the default for
-every consumer of this role unless explicitly toggled on).
+Installs standard desktop applications that share no functional state with each other: OnlyOffice Desktop Editors
+(own apt repository), system-wide Firefox policies, Brave and LibreWolf as opt-in alternative browsers (default
+**disabled** — Firefox stays the default), and the workplace chat clients Slack (Flatpak) and Microsoft Teams
+(`teams-for-linux`). Merged from the former `desktop_apps` and `chat_clients` roles.
 
-This is a deliberate **category-level bundle** — the same precedent as this
-collection's `code_quality_tools` role (trivy, pre-commit, yamllint, checkov,
-ansible-lint bundled purely because they're "tools a repo's pre-commit
-config invokes", not because they share files or state). OnlyOffice and
-Firefox share **zero** functional coupling: they don't touch the same files,
-depend on each other's state, or need to run in any particular order
-relative to one another. They're bundled here purely because both are
-"a standard desktop application most workstations want", the same category
-of thing a developer expects pre-installed on a fresh machine — not a
-functional coupling like `desktop_customization`'s `gui-customization`+
-`flameshot` (where flameshot's COSMIC keybinding is wired through a file
-`gui-customization`'s tasks create — a real ordering dependency).
+This is a deliberate **category-level bundle**: the applications share no files or state; they are bundled because
+each is a standard desktop application a workstation wants. Each lives in its own task file behind its own switch.
 
 ## What it does
 
 - Installs OnlyOffice Desktop Editors from its own apt repository.
-- Deploys `/etc/firefox/policies/policies.json`: disables the native
-  Firefox password manager, force-installs the Bitwarden extension pinned
-  to the navigation bar, force-installs the Swiss German (`de-CH`)
-  dictionary, and sets it as the default spellcheck language.
-- Installs Brave from its own apt repository (opt-in, disabled by default);
-  disables Brave Wallet and Brave Rewards via managed policy, force-installs
-  the Bitwarden extension, and disables the native password manager.
-- Installs LibreWolf via `extrepo` (opt-in, disabled by default); deploys
-  the same Firefox `policies.json` (LibreWolf reads the identical Mozilla
-  policy schema).
+- Deploys `/etc/firefox/policies/policies.json`: disables the native Firefox password manager, force-installs the
+  Bitwarden extension pinned to the navigation bar and the Swiss German (`de-CH`) dictionary, and sets it as the
+  default spellcheck language.
+- Installs Brave from its own apt repository (opt-in); disables Brave Wallet and Rewards via managed policy,
+  force-installs the Bitwarden extension and disables the native password manager.
+- Installs LibreWolf via `extrepo` (opt-in) and deploys the same Firefox `policies.json`.
+- Installs Slack as the Flatpak `com.slack.Slack` (bootstrapping Flatpak and Flathub first).
+- Downloads the `teams-for-linux` `.deb` from GitHub releases and installs it via `apt`; the installed version is
+  checked first, for idempotency.
 
 ## Requirements
 
@@ -41,23 +27,24 @@ functional coupling like `desktop_customization`'s `gui-customization`+
 | --- | --- |
 | Ubuntu 24.04 | yes |
 
-No Ansible role dependency (this role runs standalone in Molecule) — but on
-a real workstation, run `base` first, per the root README. Firefox itself
-is **not installed** by this role — it's assumed pre-installed (ships with
-Pop!_OS / most Ubuntu desktop images).
+No Ansible role dependency, but on a real workstation run `base` first. Firefox itself is **not installed** by this
+role — it ships pre-installed with most Ubuntu desktop images.
 
 ## Role Variables
 
 | Variable | Default | Description |
 | --- | --- | --- |
-| `desktop_apps_onlyoffice_enabled` | `true` | Install OnlyOffice Desktop Editors |
-| `desktop_apps_firefox_enabled` | `true` | Deploy system-wide Firefox policies |
-| `desktop_apps_brave_enabled` | `false` | Install Brave (opt-in alternative browser) |
-| `desktop_apps_librewolf_enabled` | `false` | Install LibreWolf (opt-in alternative browser) |
+| `desktop_apps_onlyoffice_enabled` | `true` | Whether to install OnlyOffice Desktop Editors. |
+| `desktop_apps_firefox_enabled` | `true` | Whether to deploy system-wide Firefox policies. |
+| `desktop_apps_brave_enabled` | `false` | Whether to install Brave as an opt-in alternative browser, with crypto wallet/rewards features disabled via managed policy. Default false — Firefox stays the default for every consumer of this role unless explicitly toggled on. |
+| `desktop_apps_librewolf_enabled` | `false` | Whether to install LibreWolf as an opt-in alternative browser (via extrepo). Default false — Firefox stays the default for every consumer of this role unless explicitly toggled on. |
+| `desktop_apps_slack_enabled` | `true` | Whether to install Slack (also gates the Flatpak/Flathub bootstrap). |
+| `desktop_apps_teams_enabled` | `true` | Whether to install teams-for-linux. |
+| `desktop_apps_teams_version` | see `defaults/main.yml` | teams-for-linux version (github-releases IsmaelMartinez/teams-for-linux). |
+| `desktop_apps_teams_download_base` | see `defaults/main.yml` | Base URL the teams-for-linux .deb is downloaded from, before the filename. |
 
-Firefox has no configurable variables beyond its enable toggle — the policy
-content is fixed. `de-CH` is the Swiss standard locale, not something
-meant to be parameterized per machine.
+Firefox has no configurable variables beyond its switch — the policy content is fixed (`de-CH` is the Swiss standard
+locale, not something meant to be parameterized per machine).
 
 ## Example Playbook
 
@@ -65,22 +52,22 @@ meant to be parameterized per machine.
 - hosts: workstations
   roles:
     - role: pmuellerch.workstation.desktop_apps
+      vars:
+        desktop_apps_brave_enabled: true
 ```
 
 ## Tags
 
-Every task carries its own tag(s) in addition to the umbrella
-`desktop_apps` tag, so a consuming playbook can filter to a single app:
-
-| App | Tags |
+| Component | Tags |
 | --- | --- |
-| OnlyOffice Desktop Editors | `onlyoffice`, `desktop_apps` |
-| Firefox policies | `firefox`, `desktop_apps` |
-| Brave | `brave`, `desktop_apps` |
-| LibreWolf | `librewolf`, `desktop_apps` |
+| onlyoffice | `onlyoffice`, `desktop_apps` |
+| firefox | `firefox`, `desktop_apps` |
+| brave | `brave`, `desktop_apps` |
+| librewolf | `librewolf`, `desktop_apps` |
+| slack | `slack`, `desktop_apps` |
+| teams | `teams`, `desktop_apps` |
 
-**Do not** put an outer `tags:` on the role invocation in your play — that
-tag cascades to every task in the role and defeats this per-app filtering.
+**Do not** put an outer `tags:` on the role invocation in your play — it cascades to every task and defeats the per-component filtering.
 
 ## OnlyOffice
 
@@ -161,3 +148,17 @@ false`) — same posture as Brave above.
 - Deploys the **same** `/etc/librewolf/policies/policies.json` file as
   Firefox above, unmodified — LibreWolf is a Firefox fork and reads the
   identical Mozilla policy schema from its own config path.
+
+## Slack and Teams
+
+- No mature Slack TUI supports all features and there is no maintained apt repository, so Flatpak is the install
+  method. Launch with `flatpak run com.slack.Slack` and log in.
+- The teams-for-linux download is checksum-verified against the `sha512` in upstream's own `latest-linux.yml` release
+  metadata, fetched fresh on every run — this guards against corruption or tampering in transit, not against a
+  compromised upstream release. There is no static checksum to keep in sync with version bumps.
+
+### Known limitation: download staging
+
+Release downloads land in a fixed `/tmp` path and their checksum is verified at download time; the root-level install
+follows. On a single-user workstation the window in between is accepted (tracked in #170). The OnlyOffice and Brave apt
+keys are fetched over TLS without a fingerprint pin (tracked in #171).

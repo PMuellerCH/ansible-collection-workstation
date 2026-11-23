@@ -1,0 +1,36 @@
+---
+# desktop_integration: workspaces, Flameshot, emoji picker and clipboard tooling
+
+# Whether to configure fixed workspaces and the Super+1-9 keybindings (GNOME only; a no-op on COSMIC).
+desktop_integration_workspaces_enabled: true
+
+# Whether to install Flameshot, autostart it and bind it to the Print key.
+desktop_integration_flameshot_enabled: true
+desktop_integration_desktop_environment: gnome
+desktop_integration_smile_enabled: true
+desktop_integration_wl_clipboard_enabled: true
+desktop_integration_cliphist_enabled: true
+desktop_integration_clipse_enabled: true
+
+# Optional GitHub API token used only to raise the rate limit when resolving
+# the cliphist release-asset digest (cliphist publishes no checksum file — see
+# tasks/main.yml). Defaults to GH_TOKEN/GITHUB_TOKEN from the environment;
+# unauthenticated (empty) still works but is subject to GitHub's 60 requests/hour
+# per-IP limit. On GitHub Actions the workflow passes GITHUB_TOKEN.
+desktop_integration_github_api_token: "{{ lookup('ansible.builtin.env', 'GH_TOKEN') or lookup('ansible.builtin.env', 'GITHUB_TOKEN') }}"
+
+# renovate: datasource=github-releases depName=sentriz/cliphist extractVersion=^v(?<version>.*)$
+desktop_integration_cliphist_version: "0.7.0"
+desktop_integration_cliphist_download_base: "https://github.com/sentriz/cliphist/releases/download/v{{ desktop_integration_cliphist_version }}"
+
+# sentriz/cliphist publishes only raw platform binaries per release (e.g.
+# v0.7.0-linux-amd64) — no checksums.txt, .sha256, or similar sidecar. The
+# binary checksum is derived at run time from GitHub's per-asset digest (see
+# tasks/main.yml), so there is no static checksum to keep in sync when Renovate
+# bumps the version.
+
+# renovate: datasource=github-releases depName=savedra1/clipse extractVersion=^v(?<version>.*)$
+desktop_integration_clipse_version: "1.2.1"
+desktop_integration_clipse_archive: "clipse_v{{ desktop_integration_clipse_version }}_linux_wayland_amd64.tar.gz"
+desktop_integration_clipse_download_base: "https://github.com/savedra1/clipse/releases/download/v{{ desktop_integration_clipse_version }}"
+desktop_integration_deploy_shell_aliases: true

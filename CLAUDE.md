@@ -117,9 +117,10 @@ machine, then fail in CI with `couldn't resolve module/action`.
 ### Role naming
 
 All role names use underscores (never hyphens) — matches this collection's existing roles
-(`bitwarden`, `synology`, `betterbird`, `multimedia`, `graphics`) and the roles merged from `swisstopo.workstation`
+(`bitwarden`, `synology`, `betterbird`, `media`) and the roles merged from `swisstopo.workstation`
 (`code_quality_tools`, `terminal_env`, etc.), the roles split from `iac_tools` (`ansible_dev`, `cloud_cli`,
-`k8s_tools`) and the roles split from `cli_dev_env`/`modern_cli`/`gh` (`git`, `editor`, `ai_cli`, `cli_tools`).
+`k8s_tools`), the roles split from `cli_dev_env`/`modern_cli`/`gh` (`git`, `editor`, `ai_cli`, `cli_tools`) and the
+desktop and media roles merged into `desktop_apps`, `desktop_integration` and `media`.
 
 ### Theming
 

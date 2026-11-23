@@ -1,6 +1,6 @@
 ---
 # emoji-fzf (CLI half of emoji-picker; the GUI half, smile, belongs to
-# desktop_customization). Installed via pipx — the only pipx-based tool in this
+# desktop_integration). Installed via pipx — the only pipx-based tool in this
 # role, so it bootstraps its own adequate pipx, self-contained,
 # same pattern as the code_quality_tools role: community.general.pipx
 # requires pipx >= 1.7.0, but Ubuntu 24.04's apt-provided pipx is only 1.4.3.

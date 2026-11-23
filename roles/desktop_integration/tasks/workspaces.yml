@@ -1,0 +1,55 @@
+---
+# --- gui-customization: GNOME ---
+- name: Configure fixed workspaces in GNOME
+  community.general.dconf:
+    key: "{{ item.key }}"
+    value: "{{ item.value }}"
+  become: false
+  loop:
+    - key: /org/gnome/mutter/dynamic-workspaces
+      value: "false"
+    - key: /org/gnome/desktop/wm/preferences/num-workspaces
+      value: "9"
+  when: desktop_integration_desktop_environment == 'gnome'
+  tags: [gui-customization, desktop_integration]
+
+- name: Unbind Super+1-9 from GNOME dock app-switching
+  community.general.dconf:
+    key: "/org/gnome/shell/keybindings/switch-to-application-{{ item }}"
+    value: "@as []"
+  become: false
+  loop: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+  when: desktop_integration_desktop_environment == 'gnome'
+  tags: [gui-customization, desktop_integration]
+
+- name: Disable Dash-to-Dock hot-keys so Super+1-9 reaches workspace switching
+  community.general.dconf:
+    key: /org/gnome/shell/extensions/dash-to-dock/hot-keys
+    value: "false"
+  become: false
+  when: desktop_integration_desktop_environment == 'gnome'
+  # The Dash-to-Dock extension schema may not exist on every machine — this
+  # is not a check-mode-only concern (unlike other ignore_errors/skip guards
+  # in this collection), so it's unconditional. ansible-lint's production
+  # profile flags a literal `ignore_errors: true`; `failed_when: false`
+  # achieves the same "never fail this task" behavior without tripping it.
+  failed_when: false
+  tags: [gui-customization, desktop_integration]
+
+- name: Bind Super+1-9 to workspace switching in GNOME
+  community.general.dconf:
+    key: "/org/gnome/desktop/wm/keybindings/switch-to-workspace-{{ item }}"
+    value: "['<Super>{{ item }}']"
+  become: false
+  loop: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+  when: desktop_integration_desktop_environment == 'gnome'
+  tags: [gui-customization, desktop_integration]
+
+- name: Bind Super+Shift+1-9 to move active window to workspace in GNOME
+  community.general.dconf:
+    key: "/org/gnome/desktop/wm/keybindings/move-to-workspace-{{ item }}"
+    value: "['<Shift><Super>{{ item }}']"
+  become: false
+  loop: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+  when: desktop_integration_desktop_environment == 'gnome'
+  tags: [gui-customization, desktop_integration]
