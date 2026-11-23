@@ -118,7 +118,8 @@ machine, then fail in CI with `couldn't resolve module/action`.
 
 All role names use underscores (never hyphens) — matches this collection's existing roles
 (`bitwarden`, `synology`, `betterbird`, `multimedia`, `graphics`) and the roles merged from `swisstopo.workstation`
-(`cli_dev_env`, `modern_cli`, `iac_tools`, etc.).
+(`cli_dev_env`, `modern_cli`, `code_quality_tools`, etc.) and the roles split from `iac_tools`
+(`ansible_dev`, `cloud_cli`, `k8s_tools`).
 
 ### Theming
 

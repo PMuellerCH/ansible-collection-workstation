@@ -1,0 +1,80 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: true
+  # Load the role's own defaults so the pinned-version assertions below track
+  # the pinned versions as their single source of truth, rather than
+  # hardcoded literals that would silently go stale whenever Renovate bumps
+  # defaults/main.yml.
+  vars_files:
+    - ../../defaults/main.yml
+  vars:
+    _ansible_dev_local_bin: "{{ ansible_facts['env']['HOME'] }}/.local/bin"
+  tasks:
+    # ── ansible ──────────────────────────────────────────────────────────
+    - name: Check ansible-core is importable via its pipx-installed binary
+      ansible.builtin.command: "{{ _ansible_dev_local_bin }}/ansible --version"
+      register: _ansible_dev_ansible_core_check
+      changed_when: false
+
+    - name: Assert ansible-core reports the pinned version
+      ansible.builtin.assert:
+        that: "ansible_dev_ansible_core_version in _ansible_dev_ansible_core_check.stdout"
+
+    - name: Inspect hvac injected into the ansible-core pipx venv
+      ansible.builtin.command: "{{ _ansible_dev_local_bin }}/pipx runpip ansible-core show hvac"
+      register: _ansible_dev_hvac_check
+      changed_when: false
+
+    - name: Assert the injected hvac is the expected version
+      ansible.builtin.assert:
+        that: "'Version: ' + ansible_dev_hvac_version in _ansible_dev_hvac_check.stdout"
+
+    - name: Inspect molecule injected into the ansible-core pipx venv
+      ansible.builtin.command: "{{ _ansible_dev_local_bin }}/pipx runpip ansible-core show molecule"
+      register: _ansible_dev_molecule_check
+      changed_when: false
+
+    - name: Assert the injected molecule is the expected version
+      ansible.builtin.assert:
+        that: "'Version: ' + ansible_dev_molecule_version in _ansible_dev_molecule_check.stdout"
+
+    - name: Check Galaxy collections were installed
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.ansible/collections/ansible_collections/community/general"
+      register: _ansible_dev_galaxy_check
+
+    - name: Assert community.general Galaxy collection is present
+      ansible.builtin.assert:
+        that: _ansible_dev_galaxy_check.stat.exists
+
+    # ── docker ───────────────────────────────────────────────────────────
+    - name: Gather package facts
+      ansible.builtin.package_facts:
+        manager: apt
+
+    - name: Assert Docker packages are present
+      ansible.builtin.assert:
+        that:
+          - "'docker-ce' in ansible_facts.packages"
+          - "'docker-ce-cli' in ansible_facts.packages"
+          - "'containerd.io' in ansible_facts.packages"
+
+    - name: Check docker user is in the docker group
+      ansible.builtin.command: "id -nG {{ ansible_facts['user_id'] }}"
+      register: _ansible_dev_docker_group_check
+      changed_when: false
+
+    - name: Assert user was added to the docker group
+      ansible.builtin.assert:
+        that: "'docker' in _ansible_dev_docker_group_check.stdout"
+
+    # ── act ──────────────────────────────────────────────────────────────
+    - name: Check act reports the pinned version
+      ansible.builtin.command: act --version
+      register: _ansible_dev_act_check
+      changed_when: false
+
+    - name: Assert act reports the pinned version
+      ansible.builtin.assert:
+        that: "ansible_dev_act_version in _ansible_dev_act_check.stdout"

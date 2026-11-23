@@ -1,7 +1,0 @@
-plugin_cache_dir = "$HOME/.terraform.d/plugin-cache"
-{% if iac_tools_terraform_cloud_token != '' %}
-
-credentials "app.terraform.io" {
-  token = "{{ iac_tools_terraform_cloud_token }}"
-}
-{% endif %}

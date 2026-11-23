@@ -1,0 +1,116 @@
+---
+# pipx bootstrap — community.general.pipx requires pipx >= 1.7.0, but Ubuntu
+# 24.04's apt-provided pipx is only 1.4.3. This role owns the shared
+# ansible-core pipx venv; cloud_cli and k8s_tools inject packages into it only
+# if it already exists. See README.
+
+- name: Install python3-pip and python3-venv (required to bootstrap a newer pipx and its managed venvs)
+  ansible.builtin.apt:
+    name:
+      - python3-pip
+      - python3-venv
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+
+- name: Ensure pipx >= minimum version is importable via `python -m pipx`
+  ansible.builtin.pip:
+    name: "pipx=={{ ansible_dev_pipx_min_version }}"
+    extra_args: "--user --break-system-packages"
+    executable: pip3
+  become: false
+
+- name: Install ansible-core via pipx
+  community.general.pipx:
+    name: "ansible-core=={{ ansible_dev_ansible_core_version }}"
+    state: present
+  become: false
+  when: not ansible_check_mode
+
+- name: Inject hvac into ansible-core pipx venv
+  community.general.pipx:
+    name: ansible-core
+    state: inject
+    inject_packages:
+      - "hvac=={{ ansible_dev_hvac_version }}"
+  become: false
+  when: not ansible_check_mode
+
+- name: Inject molecule into ansible-core pipx venv
+  community.general.pipx:
+    name: ansible-core
+    state: inject
+    inject_packages:
+      - "molecule=={{ ansible_dev_molecule_version }}"
+    install_apps: true
+  become: false
+  when: not ansible_check_mode
+
+- name: Inject molecule-plugins into ansible-core pipx venv
+  community.general.pipx:
+    name: ansible-core
+    state: inject
+    inject_packages:
+      - "molecule-plugins[docker]=={{ ansible_dev_molecule_plugins_version }}"
+  become: false
+  when: not ansible_check_mode
+
+# The requirements file is staged in a private temporary directory (mode 0700,
+# unpredictable name) rather than a fixed /tmp path, so another local user can't
+# pre-create or swap it between the copy and the ansible-galaxy run. Skipped
+# under --check: ansible.builtin.tempfile doesn't run there, and everything
+# downstream depends on the pipx-installed ansible-galaxy anyway.
+
+- name: Create private temporary directory for the Galaxy requirements file
+  ansible.builtin.tempfile:
+    state: directory
+    prefix: ansible_dev_galaxy_
+  register: ansible_dev_galaxy_tmp
+  become: false
+  # Staging only — creating/removing the scratch directory isn't a change to
+  # the machine, and reporting it would break the idempotence check.
+  changed_when: false
+  when: not ansible_check_mode
+
+- name: Install common Ansible Galaxy collections
+  when: not ansible_check_mode
+  block:
+    - name: Copy Galaxy collections requirements file to the target
+      # role_path is a controller-side path — it only happens to also be valid
+      # on the target in computer-setup (which always uses connection: local,
+      # so controller == target). A reusable role can't assume that; copy the
+      # file to the target first so the command below has something real to
+      # read regardless of connection type (ssh, docker, ...).
+      ansible.builtin.copy:
+        src: requirements.yml
+        dest: "{{ ansible_dev_galaxy_tmp.path }}/requirements.yml"
+        mode: "0600"
+      become: false
+      changed_when: false
+
+    - name: Install Ansible Galaxy collections from the requirements file
+      # Full path, not just "ansible-galaxy" — pipx installs its entry-point
+      # binaries to ~/.local/bin, which isn't guaranteed to be on $PATH for a
+      # non-interactive Ansible run (no shell profile sourced). --upgrade is
+      # required for exact-pinned versions to actually apply on a re-run —
+      # without it, ansible-galaxy silently skips a collection that's already
+      # installed at any version, so a Renovate-driven version bump in
+      # requirements.yml would otherwise never take effect on an
+      # already-provisioned machine.
+      ansible.builtin.command:
+        cmd: "{{ ansible_facts['env']['HOME'] }}/.local/bin/ansible-galaxy collection install --upgrade -r {{ ansible_dev_galaxy_tmp.path }}/requirements.yml"
+      become: false
+      changed_when: false
+  rescue:
+    - name: Report the failed Galaxy collection install
+      ansible.builtin.fail:
+        msg: "Installing the Galaxy collections failed; the staging directory is removed. See the preceding task's error."
+  always:
+    - name: Remove the private temporary directory
+      ansible.builtin.file:
+        path: "{{ ansible_dev_galaxy_tmp.path }}"
+        state: absent
+      become: false
+      changed_when: false
+      when: ansible_dev_galaxy_tmp.path is defined

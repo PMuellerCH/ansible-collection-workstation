@@ -1,0 +1,20 @@
+---
+
+- name: Get installed kubectl version
+  ansible.builtin.command: kubectl version --client
+  register: k8s_tools_kubectl_installed
+  become: false
+  changed_when: false
+  failed_when: false
+
+- name: Download kubectl binary
+  ansible.builtin.get_url:
+    url: "{{ k8s_tools_kubectl_url }}"
+    dest: /usr/local/bin/kubectl
+    checksum: "sha256:{{ lookup('url', k8s_tools_kubectl_checksum_url) }}"
+    mode: "0755"
+    owner: root
+    group: root
+  become: true
+  when: >-
+    (k8s_tools_kubectl_installed.rc != 0 or k8s_tools_kubectl_version not in k8s_tools_kubectl_installed.stdout)

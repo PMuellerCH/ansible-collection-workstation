@@ -24,7 +24,7 @@
   # real run, but not under --check ("python3-debian must be installed to
   # use check mode") — install it explicitly up front so the apt-repository
   # task below behaves consistently in either mode. Same pattern as this
-  # collection's iac_tools role (Docker/Terraform apt repositories).
+  # collection's ansible_dev and cloud_cli roles (Docker/Terraform apt repositories).
   ansible.builtin.apt:
     name: python3-debian
     state: present

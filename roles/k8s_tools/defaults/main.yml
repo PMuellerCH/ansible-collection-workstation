@@ -1,0 +1,45 @@
+---
+# renovate: datasource=github-releases depName=kubernetes/kubernetes extractVersion=^v(?<version>.*)$
+k8s_tools_kubectl_version: "1.37.2"
+k8s_tools_kubectl_url: "https://dl.k8s.io/release/v{{ k8s_tools_kubectl_version }}/bin/linux/amd64/kubectl"
+k8s_tools_kubectl_checksum_url: "https://dl.k8s.io/release/v{{ k8s_tools_kubectl_version }}/bin/linux/amd64/kubectl.sha256"
+# renovate: datasource=github-releases depName=derailed/k9s extractVersion=^v(?<version>.*)$
+k8s_tools_k9s_version: "0.50.18"
+# renovate: datasource=github-releases depName=helm/helm extractVersion=^v(?<version>.*)$
+k8s_tools_helm_version: "4.3.2"
+# renovate: datasource=github-releases depName=ahmetb/kubectx extractVersion=^v(?<version>.*)$
+k8s_tools_kubectx_version: "0.11.0"
+k8s_tools_kubectx_archive: "kubectx_v{{ k8s_tools_kubectx_version }}_linux_x86_64.tar.gz"
+k8s_tools_kubens_archive: "kubens_v{{ k8s_tools_kubectx_version }}_linux_x86_64.tar.gz"
+# renovate: datasource=github-releases depName=stern/stern extractVersion=^v(?<version>.*)$
+k8s_tools_stern_version: "1.35.0"
+# renovate: datasource=github-releases depName=kubernetes-sigs/krew extractVersion=^v(?<version>.*)$
+k8s_tools_krew_version: "0.5.0"
+# renovate: datasource=github-releases depName=yannh/kubeconform extractVersion=^v(?<version>.*)$
+k8s_tools_kubeconform_version: "0.8.0"
+# renovate: datasource=github-releases depName=stackrox/kube-linter extractVersion=^v(?<version>.*)$
+k8s_tools_kube_linter_version: "0.8.3"
+# renovate: datasource=pypi depName=kubernetes
+k8s_tools_pip_kubernetes_version: "37.0.3"
+# renovate: datasource=pypi depName=jsonpatch
+k8s_tools_pip_jsonpatch_version: "1.48"
+# renovate: datasource=pypi depName=pyhcl
+k8s_tools_pip_pyhcl_version: "0.4.5"
+
+# EKS clusters for ~/.kube/config, one entry per cluster/context. Empty by
+# default — no kubeconfig is deployed until a consumer supplies real
+# cluster data. Each item reconstructs one cluster + matching context + aws
+# exec-auth user entry:
+#   context_name: friendly context name (e.g. "myproject-dev")
+#   cluster_name: short EKS cluster name (e.g. "dev") — used in the ARN and
+#         passed to `aws eks get-token --cluster-name`
+#   region: AWS region the cluster runs in
+#   account_id: AWS account ID the cluster belongs to
+#   certificate_authority_data: base64 cluster CA cert
+#   server: cluster API server URL
+#   role_arn: IAM role ARN assumed via `aws eks get-token --role`
+#   aws_profile: AWS_PROFILE used for the exec credential plugin
+k8s_tools_clusters: []
+# Context name to set as `current-context`. Defaults to the first entry in
+# k8s_tools_clusters when left empty and the list is non-empty.
+k8s_tools_current_context: ""

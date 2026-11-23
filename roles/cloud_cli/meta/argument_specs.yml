@@ -1,0 +1,120 @@
+---
+argument_specs:
+  main:
+    short_description: "Install cloud CLI tooling: AWS CLI v2, session-manager-plugin, Terraform/Vault, tfswitch,\
+      \ tflint, terraform-docs and floci (local AWS emulator) \u2014 each component independently toggleable."
+    options:
+      cloud_cli_aws_enabled:
+        default: true
+        description: Whether to install AWS CLI v2 and session-manager-plugin.
+        required: false
+        type: bool
+      cloud_cli_terraform_enabled:
+        default: true
+        description: Whether to install Terraform, Vault, tfswitch, tflint, terraform-docs.
+        required: false
+        type: bool
+      cloud_cli_floci_enabled:
+        default: true
+        description: "Whether to install the floci CLI (local AWS emulator for validating Terraform/AWS changes\
+          \ without a real AWS account). Only installs the CLI binary \u2014 floci start pulls and manages the actual\
+          \ emulator engine as a Docker container itself, requiring a working Docker daemon (e.g. from the ansible_dev\
+          \ role) at runtime."
+        required: false
+        type: bool
+      cloud_cli_vault_addr:
+        default: ''
+        description: HashiCorp Vault server address. Leave empty to skip Vault shell integration.
+        required: false
+        type: str
+      cloud_cli_aws_cli_version:
+        description: AWS CLI v2 version (github-tags aws/aws-cli), installed from the official installer.
+        required: false
+        type: str
+      cloud_cli_aws_boto3_version:
+        description: boto3 version (pypi), injected into the ansible-core pipx venv.
+        required: false
+        type: str
+      cloud_cli_aws_session_manager_plugin_version:
+        description: session-manager-plugin version (github-releases aws/session-manager-plugin), installed from
+          a .deb.
+        required: false
+        type: str
+      cloud_cli_aws_profiles:
+        default: []
+        description: "AWS SSO profiles rendered into ~/.aws/config. Empty by default \u2014 no file is deployed\
+          \ until a consumer supplies real profile data. See README for the exact dict shape."
+        elements: dict
+        required: false
+        type: list
+      cloud_cli_tflint_version:
+        description: tflint binary version (github-releases terraform-linters/tflint).
+        required: false
+        type: str
+      cloud_cli_terraform_docs_version:
+        description: terraform-docs binary version (github-releases terraform-docs/terraform-docs).
+        required: false
+        type: str
+      cloud_cli_terraform_docs_download_base:
+        type: str
+        required: false
+        default: https://github.com/terraform-docs/terraform-docs/releases/download/v{{ cloud_cli_terraform_docs_version
+          }}
+        description: Base URL the terraform-docs archive and its sha256sum file are downloaded from, before the
+          filename.
+      cloud_cli_terraform_docs_archive:
+        default: terraform-docs-v{{ cloud_cli_terraform_docs_version }}-linux-amd64.tar.gz
+        description: Archive filename terraform-docs is downloaded as, before extraction.
+        required: false
+        type: str
+      cloud_cli_tfswitch_version:
+        description: >-
+          tfswitch binary version (github-releases warrensbox/terraform-switcher), installed from a checksum-verified
+          archive.
+        required: false
+        type: str
+      cloud_cli_tfswitch_archive:
+        default: terraform-switcher_v{{ cloud_cli_tfswitch_version }}_linux_amd64.tar.gz
+        description: Archive filename tfswitch is downloaded as, before extraction.
+        required: false
+        type: str
+      cloud_cli_tfswitch_download_base:
+        default: https://github.com/warrensbox/terraform-switcher/releases/download/v{{ cloud_cli_tfswitch_version
+          }}
+        description: Base URL the tfswitch archive and its checksums file are downloaded from, before the filename.
+        required: false
+        type: str
+      cloud_cli_terraform_cloud_token:
+        default: ''
+        description: "Terraform Cloud API token (from the consumer's own secret store, e.g. Ansible Vault). Empty\
+          \ by default \u2014 the credentials block is omitted from terraformrc when unset."
+        required: false
+        type: str
+      cloud_cli_terraform_vault_github_token:
+        default: ''
+        description: "GitHub PAT used for `vault login --method=github` (from the consumer's own secret store).\
+          \ Empty by default \u2014 the credential file is not deployed when unset."
+        required: false
+        type: str
+      cloud_cli_floci_version:
+        description: floci CLI version (github-releases floci-io/floci-cli), installed from a checksum-verified
+          binary.
+        required: false
+        type: str
+      cloud_cli_http_proxy:
+        default: ''
+        description: >-
+          Corporate HTTP proxy URL. Only toggles the AWS/Terraform proxy shell snippets; leave empty on machines
+          without a proxy.
+        required: false
+        type: str
+      cloud_cli_aws_cli_key_fingerprint:
+        description: >-
+          Expected primary-key fingerprint (spaces ignored) of the AWS CLI team signing key shipped in files/aws-cli-team.asc.
+        required: false
+        type: str
+      cloud_cli_aws_session_manager_plugin_key_fingerprint:
+        description: >-
+          Expected primary-key fingerprint (spaces ignored) of the Session Manager plugin signing key shipped in files/session-manager-plugin-signer.asc.
+        required: false
+        type: str

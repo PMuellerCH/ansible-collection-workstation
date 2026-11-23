@@ -25,7 +25,9 @@ already in place.
 | [desktop_apps](roles/desktop_apps/README.md) | OnlyOffice Desktop Editors, Firefox policies |
 | [desktop_customization](roles/desktop_customization/README.md) | GNOME/COSMIC workspace settings, Flameshot, emoji picker (GUI) |
 | [gh](roles/gh/README.md) | GitHub CLI |
-| [iac_tools](roles/iac_tools/README.md) | ansible-core, Docker CE, AWS CLI, Terraform/Vault, Kubernetes toolchain |
+| [ansible_dev](roles/ansible_dev/README.md) | ansible-core (pipx) + molecule, Docker CE, act |
+| [cloud_cli](roles/cloud_cli/README.md) | AWS CLI + session-manager-plugin, Terraform/Vault, tfswitch, tflint, terraform-docs, floci |
+| [k8s_tools](roles/k8s_tools/README.md) | kubectl, k9s, helm, kubectx/kubens, stern, krew, kubeconform, kube-linter |
 | [maintenance](roles/maintenance/README.md) | apt update/safe-upgrade, autoremove/autoclean, journal vacuum, Docker prune, Flatpak cleanup — for a separate maintenance playbook, not `site.yml` |
 | [modern_cli](roles/modern_cli/README.md) | bat, btop, eza, fd, fzf, htop, presenterm, ripgrep, zoxide, emoji-fzf |
 | [terminal_env](roles/terminal_env/README.md) | zsh, tmux, kitty |
@@ -92,12 +94,13 @@ fresh proxied machine:
     base_git_user_email: jane.doe@example.com
     # --- corporate network (leave "" off-network) ---
     base_http_proxy: "http://proxy.example.com:8080"
-    iac_tools_http_proxy: "{{ base_http_proxy }}"
+    ansible_dev_http_proxy: "{{ base_http_proxy }}"
+    cloud_cli_http_proxy: "{{ base_http_proxy }}"
     # --- Vault (enables the vault-login shell helper) ---
     base_vault_addr: "https://vault.example.com"
-    iac_tools_vault_addr: "{{ base_vault_addr }}"
+    cloud_cli_vault_addr: "{{ base_vault_addr }}"
     # vault-login also needs a GitHub token written to ~/.config/vault/github_token:
-    iac_tools_terraform_vault_github_token: "{{ lookup('ansible.builtin.env', 'VAULT_GITHUB_PAT') }}"
+    cloud_cli_terraform_vault_github_token: "{{ lookup('ansible.builtin.env', 'VAULT_GITHUB_PAT') }}"
     # --- Claude Code github MCP server token (from your own secret store) ---
     cli_dev_env_claude_code_github_token: "{{ lookup('ansible.builtin.env', 'GITHUB_PAT') }}"
   roles:
@@ -110,10 +113,15 @@ fresh proxied machine:
     - role: pmuellerch.workstation.cli_dev_env
     # 4. modern CLI replacements (bat, eza, fd, fzf, ripgrep, zoxide, ...).
     - role: pmuellerch.workstation.modern_cli
-    # 5. clipboard tooling (Wayland), GitHub CLI, IaC toolchain.
+    # 5. clipboard tooling (Wayland), GitHub CLI, then the infra toolchain.
+    #    ansible_dev must come before cloud_cli and k8s_tools: it creates the
+    #    ansible-core pipx venv they inject boto3 / the Python Kubernetes
+    #    libraries into (they skip the inject if it doesn't exist yet).
     - role: pmuellerch.workstation.clipboard_tools
     - role: pmuellerch.workstation.gh
-    - role: pmuellerch.workstation.iac_tools
+    - role: pmuellerch.workstation.ansible_dev
+    - role: pmuellerch.workstation.cloud_cli
+    - role: pmuellerch.workstation.k8s_tools
     # 6. code-quality / security scanners.
     - role: pmuellerch.workstation.code_quality_tools
     # 7. desktop apps and customization (GUI — skip on a headless box).
@@ -141,6 +149,30 @@ Notes:
   Code), `kil` / `kiro-cli login` (Kiro CLI), and the `opencode` login plus a
   `MISTRAL_API_KEY` in your environment (OpenCode).
 
+## Migrating from `iac_tools`
+
+The `iac_tools` role was split into `ansible_dev`, `cloud_cli` and `k8s_tools` (a breaking change; variables were
+renamed with no aliases). Replace the role in your play with the three new ones, in this order — `ansible_dev` creates
+the `ansible-core` pipx venv that `cloud_cli` (boto3) and `k8s_tools` (Python Kubernetes libraries, non-Ubuntu) inject
+into, and they skip that inject if the venv isn't there yet.
+
+| Old | New |
+| --- | --- |
+| `iac_tools_ansible_enabled`, `_docker_enabled`, `_act_enabled` | `ansible_dev_ansible_enabled`, `_docker_enabled`, `_act_enabled` |
+| `iac_tools_aws_enabled`, `_terraform_enabled`, `_floci_enabled` | `cloud_cli_aws_enabled`, `_terraform_enabled`, `_floci_enabled` |
+| `iac_tools_kubernetes_tools_enabled` | removed — include `k8s_tools` or don't |
+| `iac_tools_http_proxy`, `_https_proxy`, `_no_proxy` | `ansible_dev_*` (Docker daemon/client) and `cloud_cli_http_proxy` (AWS/Terraform snippets) |
+| `iac_tools_vault_addr`, `iac_tools_terraform_*`, `iac_tools_aws_*`, `_tflint_*`, `_tfswitch_*`, `_floci_*` | same name with the `cloud_cli_` prefix |
+| `iac_tools_pipx_min_version`, `_ansible_core_version`, `_hvac_version`, `_act_*` | same name with the `ansible_dev_` prefix |
+| `iac_tools_ansible_molecule_version`, `_ansible_molecule_plugins_version` | `ansible_dev_molecule_version`, `ansible_dev_molecule_plugins_version` |
+| `iac_tools_kubernetes_clusters`, `_kubernetes_current_context` | `k8s_tools_clusters`, `k8s_tools_current_context` |
+| `iac_tools_kubernetes_pip_*` | `k8s_tools_pip_*` |
+| `iac_tools_kubectl_*`, `_k9s_*`, `_helm_*`, `_kubectx_*`, `_kubens_*`, `_stern_*`, `_krew_*`, `_kubeconform_*`, `_kube_linter_*` | same name with the `k8s_tools_` prefix |
+
+Tags: `kubernetes_tools` is replaced by `kubectl`, `k9s`, `helm`, `kube_utils`, `python_libs`, `config`, and the umbrella
+tags are `ansible_dev`, `cloud_cli` and `k8s_tools` instead of `iac_tools`. The AWS CLI and session-manager-plugin are now
+GPG-verified (see the `cloud_cli` README).
+
 ## Shell aliases
 
 Several roles deploy zsh snippets to `~/.config/zsh/conf.d/*.zsh`. They take
@@ -149,7 +181,7 @@ effect only in an interactive zsh that sources that directory —
 entries, and the `cli_dev_env` Kiro (`ki`/`kil`) and OpenCode (`oc`/`ocr`)
 aliases, are additionally
 guarded by a `command -v` check so they are defined only when the tool is
-actually installed; the `cli_dev_env` `vi`/`vim` and the `iac_tools` entries
+actually installed; the `cli_dev_env` `vi`/`vim` and the `cloud_cli` entries
 are plain aliases gated only by the role variable in the last column.
 Items written as `name()` are shell functions rather than plain aliases.
 
@@ -186,14 +218,14 @@ Items written as `name()` are shell functions rather than plain aliases.
 | `kil` | `kiro-cli login` | cli_dev_env | `cli_dev_env_kiro_enabled` + `cli_dev_env_kiro_deploy_shell_aliases` |
 | `oc` | `opencode` (interactive TUI) | cli_dev_env | `cli_dev_env_opencode_enabled` + `cli_dev_env_opencode_deploy_shell_aliases` |
 | `ocr` | `opencode run` (headless prompt) | cli_dev_env | `cli_dev_env_opencode_enabled` + `cli_dev_env_opencode_deploy_shell_aliases` |
-| `asl` | `aws sso login` | iac_tools | `iac_tools_aws_enabled` |
-| `tfaa` | `terraform apply -auto-approve` | iac_tools | `iac_tools_terraform_enabled` |
-| `tfsl` | `terraform state list` | iac_tools | `iac_tools_terraform_enabled` |
-| `tfss` | `terraform state show` | iac_tools | `iac_tools_terraform_enabled` |
-| `vault-login()` | `vault login --method=github` (token from `~/.config/vault/github_token`) | iac_tools | `iac_tools_terraform_enabled` + `iac_tools_vault_addr` set |
+| `asl` | `aws sso login` | cloud_cli | `cloud_cli_aws_enabled` |
+| `tfaa` | `terraform apply -auto-approve` | cloud_cli | `cloud_cli_terraform_enabled` |
+| `tfsl` | `terraform state list` | cloud_cli | `cloud_cli_terraform_enabled` |
+| `tfss` | `terraform state show` | cloud_cli | `cloud_cli_terraform_enabled` |
+| `vault-login()` | `vault login --method=github` (token from `~/.config/vault/github_token`) | cloud_cli | `cloud_cli_terraform_enabled` + `cloud_cli_vault_addr` set |
 
 The `cli_dev_env` role also sets `EDITOR=nvim`/`VISUAL=nvim`, `base` and
-`iac_tools` set Vault/AWS/Terraform environment variables, and `modern_cli`
+`cloud_cli` set Vault/AWS/Terraform environment variables, and `modern_cli`
 sets an `FZF_DEFAULT_OPTS` theme; the `ki`/`kil` alias names are configurable
 (`cli_dev_env_kiro_alias_chat` / `cli_dev_env_kiro_alias_login`) as are the
 `oc`/`ocr` alias names (`cli_dev_env_opencode_alias_tui` /

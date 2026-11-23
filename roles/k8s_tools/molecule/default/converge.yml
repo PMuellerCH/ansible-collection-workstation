@@ -1,0 +1,24 @@
+---
+- name: Converge
+  hosts: all
+  gather_facts: true
+  environment:
+    http_proxy: "{{ lookup('env', 'http_proxy') }}"
+    https_proxy: "{{ lookup('env', 'https_proxy') or lookup('env', 'http_proxy') }}"
+    HTTP_PROXY: "{{ lookup('env', 'http_proxy') }}"
+    HTTPS_PROXY: "{{ lookup('env', 'https_proxy') or lookup('env', 'http_proxy') }}"
+  vars:
+    # Non-empty test data so the templated-config deploy path (not just the
+    # empty-list skip path) is exercised for real. Fake account IDs / ARNs /
+    # a placeholder base64 CA — none of this is real data.
+    k8s_tools_clusters:
+      - context_name: molecule-test-dev
+        cluster_name: dev
+        region: eu-central-1
+        account_id: "123456789012"
+        certificate_authority_data: "TW9sZWN1bGUgdGVzdCBDQQ=="
+        server: "https://molecule-test.eks.amazonaws.com"
+        role_arn: "arn:aws:iam::123456789012:role/kubernetes-admins-dev"
+        aws_profile: molecule-test
+  roles:
+    - role: pmuellerch.workstation.k8s_tools

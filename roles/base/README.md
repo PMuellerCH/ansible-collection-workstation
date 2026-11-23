@@ -128,14 +128,14 @@ cascades to every task in the role and defeats this per-tool filtering.
   run this role while logged into a graphical session, not over a headless SSH
   connection.
 - `base_vault_addr` is exported via `~/.config/zsh/conf.d/base-vault.zsh` —
-  deliberately not `vault.zsh`, which `iac_tools` owns for its own (richer)
+  deliberately not `vault.zsh`, which `cloud_cli` owns for its own (richer)
   Vault shell integration when terraform/vault are enabled. Set both
-  `base_vault_addr` and `iac_tools_vault_addr` to the same value if you use
+  `base_vault_addr` and `cloud_cli_vault_addr` to the same value if you use
   both roles together.
 - On machines that ran an older version of this role (pre the `base-vault.zsh`
   rename), the role auto-removes a legacy `~/.config/zsh/conf.d/vault.zsh`
   left over from before — but only if its content is still the old
-  single-line `export VAULT_ADDR=...` snippet, never an `iac_tools`-managed
+  single-line `export VAULT_ADDR=...` snippet, never a `cloud_cli`-managed
   `vault.zsh`.
 - All apt-installed packages (see the note under Role Variables above) are
   installed unpinned via `state: present`, not exact-version-pinned and

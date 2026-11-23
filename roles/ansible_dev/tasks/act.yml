@@ -1,0 +1,40 @@
+---
+# act — run GitHub Actions workflows locally via Docker, for actually
+# executing a job rather than just linting it (see code_quality_tools'
+# actionlint for the linting half). Installing the binary doesn't itself
+# require this role's docker component, but act needs a working Docker daemon
+# (this role's own, or an externally provided one) to run anything.
+
+- name: Get installed act version
+  ansible.builtin.command: act --version
+  register: ansible_dev_act_current_version
+  changed_when: false
+  failed_when: false
+
+- name: Download act archive
+  ansible.builtin.get_url:
+    url: "{{ ansible_dev_act_download_base }}/act_Linux_x86_64.tar.gz"
+    dest: "/tmp/act_{{ ansible_dev_act_version }}_Linux_x86_64.tar.gz"
+    # nektos/act publishes an aggregate checksums.txt per release — get_url
+    # fetches it and matches the entry by the source URL's basename, so
+    # there's no static checksum to keep in sync by hand when Renovate bumps
+    # ansible_dev_act_version.
+    checksum: "sha256:{{ ansible_dev_act_download_base }}/checksums.txt"
+    mode: "0644"
+  when: >-
+    (ansible_dev_act_current_version.rc != 0 or
+     ansible_dev_act_version not in ansible_dev_act_current_version.stdout)
+
+- name: Install act binary to /usr/local/bin
+  ansible.builtin.unarchive:
+    src: "/tmp/act_{{ ansible_dev_act_version }}_Linux_x86_64.tar.gz"
+    dest: /usr/local/bin/
+    include:
+      - act
+    remote_src: true
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and
+    (ansible_dev_act_current_version.rc != 0 or
+     ansible_dev_act_version not in ansible_dev_act_current_version.stdout)

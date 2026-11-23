@@ -1,0 +1,137 @@
+---
+# ansible.builtin.deb822_repository can normally auto-install this dependency
+# itself on a real run, but not under --check ("python3-debian must be
+# installed to use check mode") — install it explicitly up front so the
+# apt-repository task works in either mode.
+
+- name: Install python3-debian (required by deb822_repository)
+  ansible.builtin.apt:
+    name: python3-debian
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+
+- name: Create apt keyrings directory
+  ansible.builtin.file:
+    path: /usr/share/keyrings
+    state: directory
+    mode: "0755"
+  become: true
+
+- name: Download Docker GPG key
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    dest: /usr/share/keyrings/docker.asc
+    mode: "0644"
+    # force: true so a rotated upstream signing key is re-fetched. With
+    # force: false get_url skips the download whenever dest exists, leaving a
+    # stale key that fails apt signature verification after upstream rotates.
+    force: true
+  become: true
+
+- name: Remove legacy Docker apt sources list
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/docker.list
+    state: absent
+  become: true
+
+# python3-debian is only installed for real on a real (non-check) run — see
+# the task above. Under --check it would still be missing at this point (a
+# normal apt task never installs anything for real in check mode), so
+# deb822_repository (and everything that depends on the repo it adds) is
+# skipped in check mode too, matching this collection's general pattern for
+# resources that would only exist after a real run.
+
+- name: Add Docker apt repository
+  ansible.builtin.deb822_repository:
+    name: docker
+    types: deb
+    uris: https://download.docker.com/linux/ubuntu
+    suites: noble
+    components: stable
+    architectures: amd64
+    signed_by: /usr/share/keyrings/docker.asc
+    state: present
+  become: true
+  when: not ansible_check_mode
+
+- name: Install Docker packages
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - docker-ce-rootless-extras
+      - containerd.io
+      - docker-buildx-plugin
+      - docker-compose-plugin
+    state: present
+    update_cache: true
+  become: true
+  when: not ansible_check_mode
+
+- name: Add user to docker group
+  # ansible_facts['user_id'], not ansible_facts['env']['USER'] — $USER isn't
+  # guaranteed to be exported (e.g. no login shell in a minimal/systemd
+  # target such as a Molecule container), while user_id is always populated
+  # by the setup module regardless of environment. Skipped under --check —
+  # the docker group is created by docker-ce's postinst script, which never
+  # ran for real above in check mode, so the group wouldn't exist yet.
+  ansible.builtin.user:
+    name: "{{ ansible_facts['user_id'] }}"
+    groups: docker
+    append: true
+  become: true
+  when: not ansible_check_mode
+
+- name: Create Docker systemd drop-in directory
+  ansible.builtin.file:
+    path: /etc/systemd/system/docker.service.d
+    state: directory
+    mode: "0755"
+  become: true
+  when: ansible_dev_http_proxy != ''
+
+- name: Deploy Docker proxy systemd drop-in
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/docker.service.d/http-proxy.conf
+    mode: "0644"
+    content: |
+      [Service]
+      Environment="http_proxy={{ ansible_dev_http_proxy }}"
+      Environment="https_proxy={{ ansible_dev_https_proxy }}"
+      Environment="HTTP_PROXY={{ ansible_dev_http_proxy }}"
+      Environment="HTTPS_PROXY={{ ansible_dev_https_proxy }}"
+      Environment="no_proxy={{ ansible_dev_no_proxy }}"
+      Environment="NO_PROXY={{ ansible_dev_no_proxy }}"
+  become: true
+  when: ansible_dev_http_proxy != ''
+  notify:
+    - Reload systemd daemon
+    - Restart docker
+
+- name: Create Docker client config directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.docker"
+    state: directory
+    mode: "0700"
+  become: false
+  when: ansible_dev_http_proxy != ''
+
+- name: Deploy Docker client proxy config
+  ansible.builtin.copy:
+    dest: "{{ ansible_facts['env']['HOME'] }}/.docker/config.json"
+    mode: "0600"
+    force: false
+    content: |
+      {
+        "proxies": {
+          "default": {
+            "httpProxy": "{{ ansible_dev_http_proxy }}",
+            "httpsProxy": "{{ ansible_dev_https_proxy }}",
+            "noProxy": "{{ ansible_dev_no_proxy }}"
+          }
+        }
+      }
+  become: false
+  when: ansible_dev_http_proxy != ''

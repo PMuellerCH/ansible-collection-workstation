@@ -1,0 +1,62 @@
+---
+# Per-component enable flags.
+cloud_cli_aws_enabled: true
+cloud_cli_terraform_enabled: true
+cloud_cli_floci_enabled: true
+
+# Corporate proxy / Vault — role-scoped (a reusable role can't assume a
+# consumer's global base_* vars). Leave empty on machines without a proxy.
+# The proxy URL only toggles the AWS/Terraform proxy shell snippets.
+cloud_cli_http_proxy: ""
+cloud_cli_vault_addr: ""
+
+# ── aws ──────────────────────────────────────────────────────────────────
+# renovate: datasource=github-tags depName=aws/aws-cli
+cloud_cli_aws_cli_version: "2.42.1"
+# renovate: datasource=pypi depName=boto3
+cloud_cli_aws_boto3_version: "1.43.27"
+# renovate: datasource=github-releases depName=aws/session-manager-plugin
+cloud_cli_aws_session_manager_plugin_version: "1.2.814.0"
+
+# Primary-key fingerprints (spaces optional) of the vendor keys shipped in files/ and used to
+# verify the AWS CLI installer and the session-manager-plugin .deb (both are
+# published with a detached GPG signature only). Not versions, so not
+# Renovate-managed: see README "Signature verification" for how to rotate. The
+# AWS CLI team key expires 2027-07-01.
+cloud_cli_aws_cli_key_fingerprint: "FB5D B77F D5C1 18B8 0511 ADA8 A631 0ACC 4672 475C"
+cloud_cli_aws_session_manager_plugin_key_fingerprint: "7959 6371 24CE 093A D501 D47A 2C4D 4AFF 6F67 57EE"
+
+# AWS SSO profiles for ~/.aws/config, one entry per [default]/[profile ...]
+# block. Empty by default — no ~/.aws/config is deployed until a consumer
+# supplies real profile data. Each item:
+#   name: "default" (renders a bare [default] block) or a profile name
+#         (renders [profile <name>])
+#   sso_start_url, sso_region, output: as in the AWS config file
+#   sso_role_name, sso_account_id, region: profile-specific (omit for a bare
+#         [default] block that only sets sso_start_url/sso_region/output)
+cloud_cli_aws_profiles: []
+
+# ── terraform ────────────────────────────────────────────────────────────
+# renovate: datasource=github-releases depName=terraform-linters/tflint extractVersion=^v(?<version>.*)$
+cloud_cli_tflint_version: "0.65.0"
+# renovate: datasource=github-releases depName=terraform-docs/terraform-docs extractVersion=^v(?<version>.*)$
+cloud_cli_terraform_docs_version: "0.24.0"
+cloud_cli_terraform_docs_download_base: "https://github.com/terraform-docs/terraform-docs/releases/download/v{{ cloud_cli_terraform_docs_version }}"
+cloud_cli_terraform_docs_archive: "terraform-docs-v{{ cloud_cli_terraform_docs_version }}-linux-amd64.tar.gz"
+# renovate: datasource=github-releases depName=warrensbox/terraform-switcher extractVersion=^v(?<version>.*)$
+cloud_cli_tfswitch_version: "1.20.0"
+cloud_cli_tfswitch_archive: "terraform-switcher_v{{ cloud_cli_tfswitch_version }}_linux_amd64.tar.gz"
+cloud_cli_tfswitch_download_base: "https://github.com/warrensbox/terraform-switcher/releases/download/v{{ cloud_cli_tfswitch_version }}"
+
+# Terraform Cloud / Vault secrets — already externalized via Ansible Vault
+# upstream; consumers pass these in. Empty defaults so the role degrades
+# gracefully (no credentials block deployed) when unset.
+cloud_cli_terraform_cloud_token: ""
+cloud_cli_terraform_vault_github_token: ""
+
+# ── floci ─────────────────────────────────────────────────────────────────
+# Pinned against floci-io/floci-cli (the CLI wrapper), not floci-io/floci
+# (the emulator engine itself, which ships only as a Docker image with no
+# GitHub release binaries — floci start pulls and manages it directly).
+# renovate: datasource=github-releases depName=floci-io/floci-cli extractVersion=^(?<version>.*)$
+cloud_cli_floci_version: "0.4.0"

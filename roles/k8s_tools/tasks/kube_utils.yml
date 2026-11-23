@@ -1,0 +1,228 @@
+---
+
+- name: Get installed kubectx version
+  ansible.builtin.command: kubectx --version
+  register: k8s_tools_kubectx_installed
+  become: false
+  changed_when: false
+  failed_when: false
+
+- name: Download kubectx archive
+  ansible.builtin.get_url:
+    url: "https://github.com/ahmetb/kubectx/releases/download/v{{ k8s_tools_kubectx_version }}/{{ k8s_tools_kubectx_archive }}"
+    dest: "/tmp/kubectx_{{ k8s_tools_kubectx_version }}_linux_x86_64.tar.gz"
+    # kubectx/kubens share one checksums.txt per release (matched by basename).
+    checksum: "sha256:https://github.com/ahmetb/kubectx/releases/download/v{{ k8s_tools_kubectx_version }}/checksums.txt"
+    mode: "0644"
+  when: >-
+    (k8s_tools_kubectx_installed.rc != 0 or k8s_tools_kubectx_version not in k8s_tools_kubectx_installed.stdout)
+
+- name: Install kubectx binary
+  ansible.builtin.unarchive:
+    src: "/tmp/kubectx_{{ k8s_tools_kubectx_version }}_linux_x86_64.tar.gz"
+    dest: /usr/local/bin/
+    include:
+      - kubectx
+    remote_src: true
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and (k8s_tools_kubectx_installed.rc != 0 or k8s_tools_kubectx_version not in k8s_tools_kubectx_installed.stdout)
+
+- name: Download kubens archive
+  ansible.builtin.get_url:
+    url: "https://github.com/ahmetb/kubectx/releases/download/v{{ k8s_tools_kubectx_version }}/{{ k8s_tools_kubens_archive }}"
+    dest: "/tmp/kubens_{{ k8s_tools_kubectx_version }}_linux_x86_64.tar.gz"
+    checksum: "sha256:https://github.com/ahmetb/kubectx/releases/download/v{{ k8s_tools_kubectx_version }}/checksums.txt"
+    mode: "0644"
+  when: >-
+    (k8s_tools_kubectx_installed.rc != 0 or k8s_tools_kubectx_version not in k8s_tools_kubectx_installed.stdout)
+
+- name: Install kubens binary
+  ansible.builtin.unarchive:
+    src: "/tmp/kubens_{{ k8s_tools_kubectx_version }}_linux_x86_64.tar.gz"
+    dest: /usr/local/bin/
+    include:
+      - kubens
+    remote_src: true
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and (k8s_tools_kubectx_installed.rc != 0 or k8s_tools_kubectx_version not in k8s_tools_kubectx_installed.stdout)
+
+- name: Get installed stern version
+  ansible.builtin.command: stern --version
+  register: k8s_tools_stern_installed
+  become: false
+  changed_when: false
+  failed_when: false
+
+- name: Download stern archive
+  ansible.builtin.get_url:
+    url: "https://github.com/stern/stern/releases/download/v{{ k8s_tools_stern_version }}/stern_{{ k8s_tools_stern_version }}_linux_amd64.tar.gz"
+    dest: "/tmp/stern_{{ k8s_tools_stern_version }}_linux_amd64.tar.gz"
+    checksum: "sha256:https://github.com/stern/stern/releases/download/v{{ k8s_tools_stern_version }}/checksums.txt"
+    mode: "0644"
+  when: >-
+    (k8s_tools_stern_installed.rc != 0 or k8s_tools_stern_version not in k8s_tools_stern_installed.stdout)
+
+- name: Install stern binary
+  ansible.builtin.unarchive:
+    src: "/tmp/stern_{{ k8s_tools_stern_version }}_linux_amd64.tar.gz"
+    dest: /usr/local/bin/
+    include:
+      - stern
+    remote_src: true
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and (k8s_tools_stern_installed.rc != 0 or k8s_tools_stern_version not in k8s_tools_stern_installed.stdout)
+
+- name: Check if krew is already installed
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.krew/bin/kubectl-krew"
+  register: k8s_tools_krew_stat
+
+# Same private-tempdir pattern as helm: the krew bootstrap binary is executed, so
+# it must not live at a predictable /tmp path.
+- name: Install krew
+  when: >-
+    not ansible_check_mode and not k8s_tools_krew_stat.stat.exists
+  block:
+    - name: Create private temporary directory for the krew download
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: k8s_tools_krew_
+      register: k8s_tools_krew_tmp
+      become: false
+      changed_when: false
+
+    - name: Download krew archive
+      ansible.builtin.get_url:
+        url: "https://github.com/kubernetes-sigs/krew/releases/download/v{{ k8s_tools_krew_version }}/krew-linux_amd64.tar.gz"
+        dest: "{{ k8s_tools_krew_tmp.path }}/krew.tar.gz"
+        # krew's .sha256 file holds just the hash (no filename), which get_url accepts.
+        checksum: "sha256:https://github.com/kubernetes-sigs/krew/releases/download/v{{ k8s_tools_krew_version }}/krew-linux_amd64.tar.gz.sha256"
+        mode: "0600"
+      become: false
+
+    - name: Extract krew installer binary
+      ansible.builtin.unarchive:
+        src: "{{ k8s_tools_krew_tmp.path }}/krew.tar.gz"
+        dest: "{{ k8s_tools_krew_tmp.path }}"
+        include:
+          - ./krew-linux_amd64
+        remote_src: true
+      become: false
+
+    - name: Run the krew bootstrap
+      ansible.builtin.command:
+        cmd: "{{ k8s_tools_krew_tmp.path }}/krew-linux_amd64 install krew"
+      become: false
+      changed_when: true
+      # noqa: command-instead-of-module - krew bootstrap requires running the extracted binary; no Ansible module available
+  rescue:
+    - name: Report the failed krew install
+      ansible.builtin.fail:
+        msg: "Installing krew failed (download, checksum or bootstrap); see the preceding error."
+  always:
+    - name: Remove the krew working directory
+      ansible.builtin.file:
+        path: "{{ k8s_tools_krew_tmp.path }}"
+        state: absent
+      become: false
+      changed_when: false
+      when: k8s_tools_krew_tmp.path is defined
+
+- name: Get installed kubeconform version
+  ansible.builtin.command: kubeconform -v
+  register: k8s_tools_kubeconform_installed
+  become: false
+  changed_when: false
+  failed_when: false
+
+- name: Download kubeconform archive
+  ansible.builtin.get_url:
+    url: "https://github.com/yannh/kubeconform/releases/download/v{{ k8s_tools_kubeconform_version }}/kubeconform-linux-amd64.tar.gz"
+    dest: "/tmp/kubeconform-{{ k8s_tools_kubeconform_version }}-linux-amd64.tar.gz"
+    checksum: "sha256:https://github.com/yannh/kubeconform/releases/download/v{{ k8s_tools_kubeconform_version }}/CHECKSUMS"
+    mode: "0644"
+  when: >-
+    (k8s_tools_kubeconform_installed.rc != 0 or k8s_tools_kubeconform_version not in k8s_tools_kubeconform_installed.stdout)
+
+- name: Install kubeconform binary
+  ansible.builtin.unarchive:
+    src: "/tmp/kubeconform-{{ k8s_tools_kubeconform_version }}-linux-amd64.tar.gz"
+    dest: /usr/local/bin/
+    include:
+      - kubeconform
+    remote_src: true
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and (k8s_tools_kubeconform_installed.rc != 0 or k8s_tools_kubeconform_version not in k8s_tools_kubeconform_installed.stdout)
+
+- name: Get installed kube-linter version
+  ansible.builtin.command: kube-linter version
+  register: k8s_tools_kube_linter_installed
+  become: false
+  changed_when: false
+  failed_when: false
+
+# kube-linter publishes no checksum file (only sigstore bundles), but GitHub
+# records a sha256 digest for every release asset. Read it from the releases API
+# at run time instead of pinning a static hash that would go stale on every
+# Renovate bump (tier-2 pattern: fetch + parse). Only called when an install or
+# upgrade is actually needed.
+
+- name: Get kube-linter release asset digest
+  ansible.builtin.uri:
+    url: "https://api.github.com/repos/stackrox/kube-linter/releases/tags/v{{ k8s_tools_kube_linter_version }}"
+    return_content: true
+  register: k8s_tools_kube_linter_release
+  become: false
+  when: >-
+    not ansible_check_mode and
+    (k8s_tools_kube_linter_installed.rc != 0 or k8s_tools_kube_linter_version not in k8s_tools_kube_linter_installed.stdout)
+
+- name: Assert the kube-linter release asset has a sha256 digest
+  # GitHub's `digest` is null on some older release assets; get_url would then
+  # download without any verification. Fail closed instead.
+  ansible.builtin.assert:
+    that:
+      - >-
+        (k8s_tools_kube_linter_release.json.assets
+         | selectattr('name', 'equalto', 'kube-linter-linux.tar.gz')
+         | map(attribute='digest') | first | default('', true))
+        is match('^sha256:[0-9a-f]{64}$')
+    fail_msg: "GitHub reports no sha256 digest for kube-linter v{{ k8s_tools_kube_linter_version }}; refusing an unverified download."
+  when: >-
+    not ansible_check_mode and
+    (k8s_tools_kube_linter_installed.rc != 0 or k8s_tools_kube_linter_version not in k8s_tools_kube_linter_installed.stdout)
+
+- name: Download kube-linter archive
+  ansible.builtin.get_url:
+    url: "https://github.com/stackrox/kube-linter/releases/download/v{{ k8s_tools_kube_linter_version }}/kube-linter-linux.tar.gz"
+    dest: "/tmp/kube-linter-{{ k8s_tools_kube_linter_version }}-linux.tar.gz"
+    checksum: >-
+      {{
+        (k8s_tools_kube_linter_release.json.assets
+         | selectattr('name', 'equalto', 'kube-linter-linux.tar.gz')
+         | map(attribute='digest') | first)
+        if k8s_tools_kube_linter_release.json is defined else ''
+      }}
+    mode: "0644"
+  when: >-
+    (k8s_tools_kube_linter_installed.rc != 0 or k8s_tools_kube_linter_version not in k8s_tools_kube_linter_installed.stdout)
+
+- name: Install kube-linter binary
+  ansible.builtin.unarchive:
+    src: "/tmp/kube-linter-{{ k8s_tools_kube_linter_version }}-linux.tar.gz"
+    dest: /usr/local/bin/
+    include:
+      - kube-linter
+    remote_src: true
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and (k8s_tools_kube_linter_installed.rc != 0 or k8s_tools_kube_linter_version not in k8s_tools_kube_linter_installed.stdout)
