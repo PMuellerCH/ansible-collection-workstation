@@ -76,7 +76,7 @@ command -v fzf &>/dev/null && eval "$(fzf --zsh)"
 {% endif %}
 {% if cli_tools_emoji_fzf_enabled %}
 
-# emoji-fzf — requires fzf (cli_tools_fzf) and wl-copy (clipboard_tools role, external dependency)
+# emoji-fzf — requires fzf (cli_tools_fzf) and wl-copy (desktop_integration role, external dependency)
 if command -v emoji-fzf &>/dev/null && command -v fzf &>/dev/null && command -v wl-copy &>/dev/null; then
   emoji() {
     emoji-fzf preview | fzf --preview "emoji-fzf get --name {1}" \

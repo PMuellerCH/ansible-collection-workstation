@@ -1,0 +1,125 @@
+---
+# --- COSMIC custom shortcuts file ---
+# Must run before the flameshot COSMIC task below, which edits the file
+# created here. It lives in this component (not in workspaces.yml) so a run with
+# `--tags flameshot` alone on COSMIC still gets this prerequisite — otherwise the
+# lineinfile task below would hard-fail on a fresh machine where the file
+# was never created. The `gui-customization` tag is kept on the include for
+# backwards compatibility.
+- name: Create COSMIC custom shortcuts config directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/cosmic/com.system76.CosmicSettings.Shortcuts/v1"
+    state: directory
+    mode: "0755"
+  become: false
+  when: desktop_integration_desktop_environment == 'cosmic'
+  tags: [gui-customization, flameshot, desktop_integration]
+
+- name: Initialise COSMIC custom shortcuts file (empty hashmap)
+  ansible.builtin.copy:
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/cosmic/com.system76.CosmicSettings.Shortcuts/v1/custom"
+    mode: "0644"
+    content: |
+      {
+      }
+    force: false
+  become: false
+  when: desktop_integration_desktop_environment == 'cosmic'
+  tags: [gui-customization, flameshot, desktop_integration]
+
+# --- flameshot: install ---
+- name: Install flameshot
+  ansible.builtin.apt:
+    name: flameshot
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  tags: [flameshot, desktop_integration]
+
+- name: Create autostart directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/autostart"
+    state: directory
+    mode: "0755"
+  become: false
+  tags: [flameshot, desktop_integration]
+
+- name: Autostart flameshot on login
+  ansible.builtin.copy:
+    src: flameshot.desktop
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/autostart/flameshot.desktop"
+    mode: "0644"
+  become: false
+  tags: [flameshot, desktop_integration]
+
+# --- flameshot: COSMIC keybinding ---
+- name: Bind Print key to flameshot in COSMIC custom shortcuts
+  ansible.builtin.lineinfile:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/cosmic/com.system76.CosmicSettings.Shortcuts/v1/custom"
+    line: '    (modifiers: [], key: "Print"): Spawn("env XDG_CURRENT_DESKTOP=sway flameshot gui"),'
+    # Anchored to our own exact (no-modifier) Print binding, not just the
+    # substring "Print" — a bare substring match would also hit (and
+    # silently replace) an unrelated binding like Shift+Print if the user
+    # has one configured. insertbefore tolerates a leading-whitespace
+    # closing brace in case anything ever reformats the file with
+    # indentation.
+    regexp: '\(modifiers: \[\], key: "Print"\):'
+    insertbefore: '^\s*}\s*$'
+  become: false
+  when: desktop_integration_desktop_environment == 'cosmic' and not ansible_check_mode
+  tags: [flameshot, desktop_integration]
+
+# --- flameshot: GNOME keybindings via dconf ---
+- name: Disable default GNOME Shell screenshot keybinding (Print)
+  community.general.dconf:
+    key: /org/gnome/shell/keybindings/screenshot
+    value: "@as []"
+  become: false
+  when: desktop_integration_desktop_environment == 'gnome'
+  tags: [flameshot, desktop_integration]
+
+- name: Configure flameshot custom keybinding in GNOME
+  community.general.dconf:
+    key: "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/flameshot/{{ item.key }}"
+    value: "{{ item.value }}"
+  become: false
+  loop:
+    - key: name
+      value: "'Flameshot'"
+    - key: command
+      value: "'flameshot gui'"
+    - key: binding
+      value: "'Print'"
+  when: desktop_integration_desktop_environment == 'gnome'
+  tags: [flameshot, desktop_integration]
+
+- name: Read existing GNOME custom keybindings list
+  community.general.dconf:
+    key: /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings
+    state: read
+  become: false
+  register: desktop_integration_gnome_existing_keybindings
+  when: desktop_integration_desktop_environment == 'gnome'
+  tags: [flameshot, desktop_integration]
+
+- name: Register flameshot keybinding path in GNOME custom keybindings list
+  community.general.dconf:
+    key: /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings
+    # Merge into whatever custom keybindings already exist instead of
+    # overwriting the whole list — a user may have other custom shortcuts
+    # configured (via GNOME Settings, or another role) that aren't ours to
+    # discard. dconf's read format ("['/a/', '/b/']", or "@as []"/null when
+    # unset) parses cleanly as YAML once the GVariant empty-array marker is
+    # normalised to a plain empty list.
+    value: >-
+      {{
+        (
+          (desktop_integration_gnome_existing_keybindings.value | default('[]', true) | replace('@as []', '[]'))
+          | from_yaml
+          + ['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/flameshot/']
+        ) | unique | list
+      }}
+  become: false
+  when: desktop_integration_desktop_environment == 'gnome'
+  tags: [flameshot, desktop_integration]

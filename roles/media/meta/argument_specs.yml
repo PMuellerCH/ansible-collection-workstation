@@ -1,0 +1,43 @@
+---
+argument_specs:
+  main:
+    short_description: 'Install media and graphics tools: Inkscape, GIMP, Pinta, beets, Spotify with ncspot, and Plex Desktop with Plexamp — each independently
+      toggleable.'
+    options:
+      media_beets_version:
+        description: beets PyPI version, see defaults/main.yml
+        required: false
+        type: str
+      media_beets_pyacoustid_version:
+        description: pyacoustid PyPI version (enables beets' chroma plugin), see defaults/main.yml
+        required: false
+        type: str
+      media_ncspot_download_base:
+        default: https://github.com/hrkfdn/ncspot/releases/download/v{{ media_ncspot_version }}
+        description: Base URL the ncspot archive and its .sha256 file are downloaded from.
+        required: false
+        type: str
+      media_ncspot_version:
+        description: ncspot binary version (GitHub release tag v<version>), see defaults/main.yml
+        required: false
+        type: str
+      media_graphics_enabled:
+        default: true
+        description: Whether to install Inkscape, GIMP and Pinta (Flatpak).
+        required: false
+        type: bool
+      media_beets_enabled:
+        default: true
+        description: Whether to install beets (pipx) and deploy its config.
+        required: false
+        type: bool
+      media_spotify_enabled:
+        default: true
+        description: Whether to install Spotify (Flatpak) and ncspot.
+        required: false
+        type: bool
+      media_plex_enabled:
+        default: true
+        description: Whether to install Plex Desktop and Plexamp (Flatpak).
+        required: false
+        type: bool

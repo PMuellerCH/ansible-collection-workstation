@@ -1,0 +1,58 @@
+---
+# Thin dispatcher: one task file per component, each behind its own switch.
+# Tags use include_tasks' `apply:` so they reach the tasks inside the file.
+- name: Configure workspaces and keybindings
+  ansible.builtin.include_tasks:
+    file: workspaces.yml
+    apply:
+      tags: [gui-customization, desktop_integration]
+  when: desktop_integration_workspaces_enabled
+  tags: [gui-customization, desktop_integration]
+
+- name: Install flameshot
+  ansible.builtin.include_tasks:
+    file: flameshot.yml
+    apply:
+      tags: [flameshot, gui-customization, desktop_integration]
+  when: desktop_integration_flameshot_enabled
+  tags: [flameshot, gui-customization, desktop_integration]
+
+- name: Install the smile emoji picker (Flatpak)
+  ansible.builtin.include_tasks:
+    file: smile.yml
+    apply:
+      tags: [emoji-picker, desktop_integration]
+  when: desktop_integration_smile_enabled
+  tags: [emoji-picker, desktop_integration]
+
+- name: Install wl-clipboard
+  ansible.builtin.include_tasks:
+    file: wl_clipboard.yml
+    apply:
+      tags: [wl-clipboard, desktop_integration]
+  when: desktop_integration_wl_clipboard_enabled
+  tags: [wl-clipboard, desktop_integration]
+
+- name: Install cliphist
+  ansible.builtin.include_tasks:
+    file: cliphist.yml
+    apply:
+      tags: [cliphist, desktop_integration]
+  when: desktop_integration_cliphist_enabled
+  tags: [cliphist, desktop_integration]
+
+- name: Install clipse
+  ansible.builtin.include_tasks:
+    file: clipse.yml
+    apply:
+      tags: [clipse, desktop_integration]
+  when: desktop_integration_clipse_enabled
+  tags: [clipse, desktop_integration]
+
+- name: Deploy the clipboard shell integration
+  ansible.builtin.include_tasks:
+    file: shell.yml
+    apply:
+      tags: [wl-clipboard, cliphist, clipse, desktop_integration]
+  when: desktop_integration_deploy_shell_aliases
+  tags: [wl-clipboard, cliphist, clipse, desktop_integration]

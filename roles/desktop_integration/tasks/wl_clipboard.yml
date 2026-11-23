@@ -1,0 +1,11 @@
+---
+# ---- wl-clipboard ----
+- name: Install wl-clipboard
+  ansible.builtin.apt:
+    name: wl-clipboard
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: desktop_integration_wl_clipboard_enabled
+  tags: [wl-clipboard, desktop_integration]

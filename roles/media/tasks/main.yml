@@ -1,0 +1,42 @@
+---
+# Thin dispatcher: one task file per component, each behind its own switch.
+# Tags use include_tasks' `apply:` so they reach the tasks inside the file.
+- name: Bootstrap Flatpak and Flathub
+  ansible.builtin.include_tasks:
+    file: flatpak.yml
+    apply:
+      tags: [graphics, spotify, plex, media]
+  when: media_graphics_enabled or media_spotify_enabled or media_plex_enabled
+  tags: [graphics, spotify, plex, media]
+
+- name: Install graphics tools (Inkscape, GIMP, Pinta)
+  ansible.builtin.include_tasks:
+    file: graphics.yml
+    apply:
+      tags: [graphics, media]
+  when: media_graphics_enabled
+  tags: [graphics, media]
+
+- name: Install beets
+  ansible.builtin.include_tasks:
+    file: beets.yml
+    apply:
+      tags: [beets, media]
+  when: media_beets_enabled
+  tags: [beets, media]
+
+- name: Install Spotify and ncspot
+  ansible.builtin.include_tasks:
+    file: spotify.yml
+    apply:
+      tags: [spotify, media]
+  when: media_spotify_enabled
+  tags: [spotify, media]
+
+- name: Install Plex Desktop and Plexamp
+  ansible.builtin.include_tasks:
+    file: plex.yml
+    apply:
+      tags: [plex, media]
+  when: media_plex_enabled
+  tags: [plex, media]

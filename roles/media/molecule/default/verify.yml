@@ -1,0 +1,31 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: true
+  # Load the role's own defaults so pinned-version assertions track
+  # defaults/main.yml as their single source of truth, rather than a second
+  # hardcoded literal that would silently go stale whenever Renovate bumps it.
+  vars_files:
+    - ../../defaults/main.yml
+  tasks:
+    - name: Check beets is installed
+      ansible.builtin.command: beet --version
+      register: media_beet_check
+      changed_when: false
+
+    - name: Check pyacoustid was injected (chroma plugin dependency)
+      ansible.builtin.command: /usr/local/pipx/venvs/beets/bin/python -c 'import acoustid'
+      register: media_pyacoustid_check
+      changed_when: false
+
+    - name: Check beets config was deployed
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/beets/config.yaml"
+      register: media_beets_config
+
+    - name: Assert everything installed and configured correctly
+      ansible.builtin.assert:
+        that:
+          - media_beet_check.rc == 0
+          - media_pyacoustid_check.rc == 0
+          - media_beets_config.stat.exists

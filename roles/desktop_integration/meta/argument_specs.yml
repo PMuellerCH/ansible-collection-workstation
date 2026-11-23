@@ -1,0 +1,84 @@
+---
+argument_specs:
+  main:
+    short_description: >-
+      Desktop integration: GNOME workspaces and keybindings, Flameshot, the smile emoji picker and
+      Wayland clipboard tooling (wl-clipboard, cliphist, clipse) — each independently toggleable.
+    options:
+      desktop_integration_desktop_environment:
+        choices:
+          - gnome
+          - cosmic
+        default: gnome
+        description: Desktop environment in use. Controls which task set is applied.
+        required: false
+        type: str
+      desktop_integration_smile_enabled:
+        default: true
+        description: Whether to install the smile emoji picker (also gates the Flatpak/Flathub bootstrap).
+        required: false
+        type: bool
+      desktop_integration_wl_clipboard_enabled:
+        default: true
+        description: Whether to install wl-clipboard (provides wl-copy/wl-paste). cliphist's autostart entry and the deployed `ch` shell function both depend
+          on wl-copy/wl-paste at runtime — see README "Soft cross-tool dependencies" if disabling this while cliphist stays enabled.
+        required: false
+        type: bool
+      desktop_integration_cliphist_enabled:
+        default: true
+        description: Whether to install cliphist and deploy its autostart entry (`wl-paste --watch cliphist store`). Requires wl-clipboard at runtime —
+          not hard-gated, see README.
+        required: false
+        type: bool
+      desktop_integration_clipse_enabled:
+        default: true
+        description: Whether to install clipse (clipboard history TUI).
+        required: false
+        type: bool
+      desktop_integration_github_api_token:
+        default: "{{ lookup('ansible.builtin.env', 'GH_TOKEN') or lookup('ansible.builtin.env', 'GITHUB_TOKEN') }}"
+        description: >-
+          Optional GitHub API token used only to raise the rate limit when resolving the cliphist release-asset digest.
+          Defaults to GH_TOKEN/GITHUB_TOKEN from the environment; unauthenticated still works within GitHub's
+          60 requests/hour per-IP limit.
+        required: false
+        type: str
+      desktop_integration_cliphist_version:
+        description: cliphist version (github-releases sentriz/cliphist), installed from a checksum-verified binary.
+        required: false
+        type: str
+      desktop_integration_cliphist_download_base:
+        default: https://github.com/sentriz/cliphist/releases/download/v{{ desktop_integration_cliphist_version }}
+        description: Base URL the cliphist release binary is downloaded from.
+        required: false
+        type: str
+      desktop_integration_clipse_version:
+        description: clipse version (github-releases savedra1/clipse), installed from a checksum-verified archive.
+        required: false
+        type: str
+      desktop_integration_clipse_archive:
+        default: clipse_v{{ desktop_integration_clipse_version }}_linux_wayland_amd64.tar.gz
+        description: Filename of the clipse release archive to download.
+        required: false
+        type: str
+      desktop_integration_clipse_download_base:
+        default: https://github.com/savedra1/clipse/releases/download/v{{ desktop_integration_clipse_version }}
+        description: Base URL the clipse archive and its checksums.txt are downloaded from.
+        required: false
+        type: str
+      desktop_integration_deploy_shell_aliases:
+        default: true
+        description: Whether to deploy a zsh conf.d snippet (~/.config/zsh/conf.d/desktop_integration.zsh) with the `ch` function (cliphist) and `clipboard`
+          alias (clipse) for enabled tools.
+        required: false
+        type: bool
+      desktop_integration_workspaces_enabled:
+        default: true
+        description: Whether to configure fixed workspaces and the Super+1-9 keybindings (GNOME only; a no-op on COSMIC).
+        required: false
+        type: bool
+      desktop_integration_flameshot_enabled:
+        default: true
+        description: Whether to install Flameshot, autostart it and bind it to the Print key.
+        required: false
+        type: bool
