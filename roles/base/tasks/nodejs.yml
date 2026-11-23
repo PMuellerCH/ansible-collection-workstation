@@ -95,8 +95,9 @@
       - nodejs
       - build-essential
     state: present
+    # No cache_valid_time: the NodeSource repo was only just added above, so the
+    # cache must be refreshed here or apt installs Ubuntu's older nodejs (no npm).
     update_cache: true
-    cache_valid_time: 3600
   become: true
   when: >-
     not ansible_check_mode and
