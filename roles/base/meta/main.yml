@@ -6,6 +6,6 @@ galaxy_info:
   license: MIT
   description: >-
     Foundational workstation setup: base system packages, hostname, locale,
-    corporate proxy, git, SSH, Python toolchain, and fonts.
+    corporate proxy, SSH, Python toolchain, Node.js, and fonts.
   min_ansible_version: "2.17"
 dependencies: []

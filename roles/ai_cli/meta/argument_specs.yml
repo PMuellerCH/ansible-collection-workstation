@@ -6,7 +6,7 @@ argument_specs:
     options:
       ai_cli_claude_code_enabled:
         default: true
-        description: Whether to install the Claude Code CLI, its NodeSource-sourced Node.js dependency, and configure its MCP servers.
+        description: Whether to install the Claude Code CLI, and configure its MCP servers (needs Node.js/npm from the base role).
         required: false
         type: bool
       ai_cli_kiro_enabled:

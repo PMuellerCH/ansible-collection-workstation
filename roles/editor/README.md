@@ -9,9 +9,9 @@ roles.
 
 1. **neovim** — installs neovim from a checksum-verified GitHub release, clones the LazyVim starter on first run,
    deploys the LazyVim extras, Catppuccin colour scheme, tmux-navigator and keymaps config, the `presenterm.nvim`
-   plugin config, a zsh snippet (`EDITOR`/`VISUAL`, `vi`/`vim` aliases) and runs a headless `lazy.nvim` sync.
+   plugin config, a zsh snippet `neovim.zsh` (`EDITOR`/`VISUAL`, `vi`/`vim` aliases) and runs a headless `lazy.nvim` sync.
 2. **presenterm** — installs the `presenterm` binary (sha512-verified release archive), `mermaid-cli` (npm) with a
-   puppeteer config, and a zsh `mmdc` wrapper.
+   puppeteer config, and a zsh `mmdc` wrapper (`~/.config/zsh/conf.d/presenterm.zsh`).
 
 ## Requirements
 
@@ -33,13 +33,13 @@ roles.
 | `editor_neovim_enabled` | `true` | Whether to install neovim and bootstrap the LazyVim configuration. Also gates the presenterm.nvim plugin config below. |
 | `editor_presenterm_plugin_enabled` | `true` | Whether to deploy the presenterm.nvim plugin config (~/.config/nvim/lua/plugins/presenterm.lua). The presenterm binary this plugin needs is installed by editor_presenterm_enabled — keep the two in sync. Only applies when editor_neovim_enabled is true. |
 | `editor_neovim_lazy_sync_enabled` | `true` | Whether to run a headless `lazy.nvim` sync (install + update + clean) on every apply, instead of relying on a human running :Lazy sync manually. Only applies when editor_neovim_enabled is true. |
-| `editor_neovim_version` | `""` | Neovim version (github-releases neovim/neovim), installed from a checksum-verified archive. |
-| `editor_github_api_token` | see `defaults/main.yml` | Optional GitHub API token used only to raise the rate limit when resolving the neovim and opencode release-asset digests. Defaults to GH_TOKEN/GITHUB_TOKEN from the environment; unauthenticated (empty) still works but is subject to GitHub's 60 requests/hour per-IP limit. |
+| `editor_neovim_version` | see `defaults/main.yml` | Neovim version (github-releases neovim/neovim), installed from a checksum-verified archive. |
+| `editor_github_api_token` | see `defaults/main.yml` | Optional GitHub API token used only to raise the rate limit when resolving the neovim release-asset digest. Defaults to GH_TOKEN/GITHUB_TOKEN from the environment; unauthenticated (empty) still works but is subject to GitHub's 60 requests/hour per-IP limit. |
 | `editor_presenterm_enabled` | `true` | Whether to install presenterm (binary + mermaid-cli; the presenterm.nvim plugin config is controlled by editor_presenterm_plugin_enabled). |
-| `editor_presenterm_version` | `""` | presenterm version (github-releases mfontanini/presenterm), installed from a checksum-verified binary tarball. |
+| `editor_presenterm_version` | see `defaults/main.yml` | presenterm version (github-releases mfontanini/presenterm), installed from a checksum-verified binary tarball. |
 | `editor_presenterm_download_base` | see `defaults/main.yml` | Base URL the presenterm archive and its .sha512 checksum file are downloaded from, before the filename. |
 | `editor_presenterm_archive` | see `defaults/main.yml` | Filename of the presenterm release archive to download. |
-| `editor_presenterm_mermaid_cli_version` | `""` | @mermaid-js/mermaid-cli npm version, installed globally for presenterm's mermaid diagram rendering. |
+| `editor_presenterm_mermaid_cli_version` | see `defaults/main.yml` | @mermaid-js/mermaid-cli npm version, installed globally for presenterm's mermaid diagram rendering. |
 
 ## Example Playbook
 
@@ -60,7 +60,8 @@ roles.
 
 **Do not** put an outer `tags:` on the role invocation in your play — it cascades to every task and defeats the per-component filtering.
 
-The `presenterm.nvim` plugin tasks carry the `presenterm` tag, so `--tags presenterm` also deploys the plugin config.
+The `presenterm.nvim` plugin config is deployed by the neovim component (it must exist before the headless sync),
+so use `--tags neovim` to (re)deploy it; `--tags presenterm` covers the binary, mermaid-cli and the `mmdc` wrapper.
 
 ## neovim
 
@@ -172,3 +173,9 @@ If Mason's own toolchain ever turns out to meaningfully conflict with a
 system-installed `terraform`/`ansible` from `cloud_cli`/`ansible_dev` (e.g. version
 skew causing confusing LSP behaviour), revisit this — but as shipped, no
 toggle is added.
+
+### Known limitation: download staging
+
+Release archives are downloaded to a fixed `/tmp` path and their checksum is verified at download time; the root-level
+extraction follows. On a single-user workstation the window in between is accepted. (The AWS CLI and
+session-manager-plugin downloads in `cloud_cli` and the OpenCode install in `ai_cli` use private directories instead.)

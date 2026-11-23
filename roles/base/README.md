@@ -143,3 +143,10 @@ cascades to every task in the role and defeats this per-tool filtering.
   remit; `uv`/`uvx` and Nerd Fonts stay pinned+checksummed since those are
   downloaded release artifacts, not apt-repo packages, and don't have this
   failure mode.
+
+### Known limitation: NodeSource signing key
+
+The NodeSource apt key is fetched over TLS from `deb.nodesource.com` (re-fetched on every run, so rotations are picked up)
+and is used as `signed_by` for the NodeSource repository only; there is no fingerprint pin yet. apt then verifies every
+package against the signed repository metadata. The same applies to the Docker and HashiCorp keys in `ansible_dev` and
+`cloud_cli`.

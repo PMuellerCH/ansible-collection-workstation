@@ -29,9 +29,9 @@ role's molecule scenario.
 
 | Variable | Default | Description |
 | --- | --- | --- |
-| `ai_cli_claude_code_enabled` | `true` | Whether to install the Claude Code CLI, its NodeSource-sourced Node.js dependency, and configure its MCP servers. |
+| `ai_cli_claude_code_enabled` | `true` | Whether to install the Claude Code CLI, and configure its MCP servers (needs Node.js/npm from the `base` role). |
 | `ai_cli_kiro_enabled` | `true` | Whether to install the Kiro CLI (kiro-cli), set its default behaviour (v3 agent engine, tool auto-search, autonomous mode), and deploy its shell aliases. |
-| `ai_cli_claude_code_version` | `""` | @anthropic-ai/claude-code npm package version (npm datasource). |
+| `ai_cli_claude_code_version` | see `defaults/main.yml` | @anthropic-ai/claude-code npm package version (npm datasource). |
 | `ai_cli_claude_code_aws_profile` | `default` | AWS_PROFILE passed to the awslabs.core MCP server. |
 | `ai_cli_claude_code_aws_region` | `eu-central-1` | AWS_REGION passed to the awslabs.core MCP server. |
 | `ai_cli_claude_code_github_token` | `""` | GitHub PAT passed as GITHUB_PERSONAL_ACCESS_TOKEN to the github MCP server (from the consumer's own secret store, e.g. Ansible Vault). Empty by default. |
@@ -46,7 +46,7 @@ role's molecule scenario.
 | `ai_cli_kiro_alias_login` | `kil` | Alias name for `kiro-cli login`. |
 | `ai_cli_opencode_enabled` | `true` | Whether to install OpenCode (model-agnostic AI coding agent), deploy its default-model config, and deploy its shell aliases. |
 | `ai_cli_opencode_bin` | see `defaults/main.yml` | Absolute path to the opencode binary. Used to detect an existing install, read the installed version, and invoke the binary by full path, since ~/.local/bin is not guaranteed to be on $PATH for a non-interactive Ansible run. |
-| `ai_cli_opencode_version` | `""` | OpenCode version (github-releases anomalyco/opencode), installed from a release tarball verified against GitHub's per-asset digest. |
+| `ai_cli_opencode_version` | see `defaults/main.yml` | OpenCode version (github-releases anomalyco/opencode), installed from a release tarball verified against GitHub's per-asset digest. |
 | `ai_cli_opencode_download_base` | see `defaults/main.yml` | Base URL the opencode release asset is downloaded from, before the filename. |
 | `ai_cli_opencode_asset` | `opencode-linux-x64.tar.gz` | Linux x64 release asset filename. Contains a single flat `opencode` binary and is verified against GitHub's per-asset sha256 digest (OpenCode publishes no checksum file). |
 | `ai_cli_opencode_github_api_token` | see `defaults/main.yml` | Optional GitHub API token used only to raise the rate limit when resolving the opencode release-asset digest. Defaults to the same GH_TOKEN/GITHUB_TOKEN env lookup as ai_cli_github_api_token. |
@@ -82,7 +82,7 @@ role's molecule scenario.
 ## Claude Code
 
 Installs the [Claude Code](https://docs.claude.com/en/docs/claude-code) CLI
-globally via npm, plus the Node.js runtime it needs.
+globally via npm. Node.js itself comes from the `base` role (see [Node.js](#nodejs)).
 
 **Requires a [Claude Pro (or higher) subscription](https://claude.com/pricing)
 and running `claude login` interactively after install** — this role only
@@ -106,7 +106,7 @@ colliding with `cloud_cli` over `vault.zsh`. The `claude` binary ends up in
 `~/.local/bin`, which `terminal_env`'s `.zshrc` already puts ahead of
 `/usr/bin` on `PATH`. This means Claude Code can self-update (`claude
 update` / auto-update) without root, and a re-run of this role doesn't need
-root for the CLI itself either (Node.js/npm's own apt install still does).
+root for the CLI itself either (the Node.js/npm install, done by `base`, does).
 
 If a machine already has the old root-owned global install from a previous
 version of this role, it's detected (`stat
@@ -153,8 +153,7 @@ servers belong exclusively in `~/.claude.json`, and an older Claude Code
 version or manual edit may have left one there.
 
 Both JSON-writing tasks run **without `become`** (as the invoking user, not
-root) since they write into `$HOME` — same posture as the neovim/LazyVim
-config tasks above.
+root) since they write into `$HOME` — the same as every other user-config task in this role.
 
 ## Kiro CLI
 
@@ -258,8 +257,8 @@ environment or secret store.
   model onto it, and rewrites the file only when `model` differs from
   `ai_cli_opencode_model`. A changed model therefore takes effect on a
   re-run (unlike a blind `force: false`), while any other keys a user added by
-  hand are preserved (unlike a blind overwrite). This mirrors the
-  read-compare-then-write posture of the `lazyvim.json` extras task. If the
+  hand are preserved (unlike a blind overwrite). This is a
+  read-compare-then-write merge. If the
   existing file is not valid JSON (or not a JSON object), it cannot be merged
   into: the role replaces it with a minimal config and keeps a timestamped
   `.bak` alongside it (`copy`'s `backup: true`).
@@ -284,14 +283,14 @@ In contrast to kiro-cli — whose upstream ships no versioned, individually
 downloadable release asset, forcing an unpinned installer — OpenCode publishes
 versioned release tarballs, so it is **exact-version-pinned
 (`ai_cli_opencode_version`, Renovate-tracked via a
-`github-releases` manager) and checksum-verified**, the same as lazygit and
-neovim. This is the collection's normal "pin everything, Renovate tracks it"
+`github-releases` manager) and checksum-verified**, the same as the pinned, checksum-verified
+binaries in the `git` and `editor` roles. This is the collection's normal "pin everything, Renovate tracks it"
 convention, **not** a deviation — so OpenCode does not belong with the
 [kiro-cli](#kiro-cli-is-installed-via-the-official-script-unpinned) or
 [apt-unpinned](../../README.md#apt-package-versions-are-unpinned) exceptions.
 
 anomalyco/opencode publishes no checksum file of any kind with its releases,
-so — exactly like neovim — the archive is verified against GitHub's own
+so the archive (as for neovim in the `editor` role) is verified against GitHub's own
 per-asset sha256 digest: the role fetches the release metadata from the GitHub
 API for the pinned version, reads the `sha256` digest of the asset, and feeds
 it to `get_url`. The checksum is always derived from the pinned version, so a

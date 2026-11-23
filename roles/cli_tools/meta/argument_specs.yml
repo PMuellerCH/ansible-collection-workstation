@@ -4,6 +4,14 @@ argument_specs:
     short_description: Install modern CLI tool replacements (bat, btop, eza, fd, fzf, ripgrep, zoxide and more) — each independently toggleable, with Catppuccin
       Mocha theming where the tool has a themeable config.
     options:
+      cli_tools_github_api_token:
+        default: "{{ lookup('ansible.builtin.env', 'GH_TOKEN') or lookup('ansible.builtin.env', 'GITHUB_TOKEN') }}"
+        description: >-
+          Optional GitHub API token used only to raise the rate limit when resolving release-asset digests for tools
+          that publish no checksum file (dust, jaq, moor, procs, xcp, yazi). Defaults to GH_TOKEN/GITHUB_TOKEN from the
+          environment; unauthenticated still works within GitHub's 60 requests/hour per-IP limit.
+        required: false
+        type: str
       cli_tools_bat_enabled:
         default: true
         description: Whether to install bat.

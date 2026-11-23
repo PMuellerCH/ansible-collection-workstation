@@ -4,7 +4,9 @@
 # wired into git itself (unlike bat/btop, which have standalone config files).
 - name: Install delta
   ansible.builtin.apt:
-    name: git-delta
+    name:
+      - git
+      - git-delta
     state: present
     update_cache: true
     cache_valid_time: 3600

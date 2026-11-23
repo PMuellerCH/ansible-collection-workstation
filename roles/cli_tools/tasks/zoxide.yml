@@ -8,4 +8,4 @@
     cache_valid_time: 3600
   become: true
   when: cli_tools_zoxide_enabled
-  tags: [cli-tools, cli_tools]
+  tags: [zoxide, cli_tools]

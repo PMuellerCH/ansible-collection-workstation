@@ -276,11 +276,10 @@
 # installed by presenterm.yml; the plugin config stays here because the headless
 # LazyVim sync below must run after it is deployed) ----
 - name: Ensure nvim plugins directory exists (presenterm.nvim)
-  # Deliberately kept self-contained (duplicates the neovim "Ensure plugins
-  # directory exists" task above) so `--tags presenterm` alone is
-  # self-sufficient and does not implicitly depend on the neovim tag having
-  # also run in the same invocation — same redundancy the source
-  # computer-setup roles already had, for the same reason.
+  # Duplicates the neovim "Ensure plugins directory exists" task above so this
+  # block does not depend on that task's position. Tagged `neovim` (not
+  # `presenterm`): this file is only included under the neovim tag, and the
+  # plugin config must be deployed before the headless sync below.
   ansible.builtin.file:
     path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lua/plugins"
     state: directory
@@ -290,7 +289,7 @@
     not ansible_check_mode and
     editor_neovim_enabled and
     editor_presenterm_plugin_enabled
-  tags: [presenterm, editor]
+  tags: [neovim, editor]
 
 - name: Deploy presenterm.nvim plugin config
   # Gated on editor_presenterm_plugin_enabled, independently of the presenterm
@@ -304,7 +303,7 @@
     not ansible_check_mode and
     editor_neovim_enabled and
     editor_presenterm_plugin_enabled
-  tags: [presenterm, editor]
+  tags: [neovim, editor]
 
 # ---- LazyVim headless plugin sync (runs after every plugin config file
 # above is deployed, so a single apply on a fresh machine both configures

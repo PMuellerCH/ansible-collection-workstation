@@ -30,11 +30,11 @@ without a mapping in the playbook.
 | Variable | Default | Description |
 | --- | --- | --- |
 | `git_lazygit_enabled` | `true` | Whether to install lazygit. |
-| `git_lazygit_version` | `""` | lazygit version (github-releases jesseduffield/lazygit), installed from a checksum-verified archive. |
+| `git_lazygit_version` | see `defaults/main.yml` | lazygit version (github-releases jesseduffield/lazygit), installed from a checksum-verified archive. |
 | `git_lazygit_download_base` | see `defaults/main.yml` | Base URL the lazygit archive and its checksums.txt are downloaded from, before the filename. |
 | `git_delta_enabled` | `true` | Whether to install delta (apt package git-delta), with Catppuccin Mocha theming wired into git config. |
-| `git_delta_catppuccin_ref` | `""` | Pinned commit of catppuccin/delta the theme gitconfig is downloaded from (no releases/tags published upstream). |
-| `git_delta_catppuccin_checksum` | `""` | Checksum of the catppuccin.gitconfig file at git_delta_catppuccin_ref, verified by get_url. |
+| `git_delta_catppuccin_ref` | see `defaults/main.yml` | Pinned commit of catppuccin/delta the theme gitconfig is downloaded from (no releases/tags published upstream). |
+| `git_delta_catppuccin_checksum` | see `defaults/main.yml` | Checksum of the catppuccin.gitconfig file at git_delta_catppuccin_ref, verified by get_url. |
 | `git_user_name` | *(required)* | Value for git's global user.name. No sensible generic default exists — must be supplied by the consumer. |
 | `git_user_email` | *(required)* | Value for git's global user.email. No sensible generic default exists — must be supplied by the consumer. |
 | `git_default_branch` | `main` | Value for git's global init.defaultBranch. |
@@ -90,11 +90,16 @@ wired into git itself. This role sets `core.pager = delta` and
 and downloads `catppuccin/delta`'s theme gitconfig (pinned to a commit SHA —
 that repo publishes no releases/tags) to
 `~/.config/git/catppuccin-delta.gitconfig`, included into the global
-gitconfig via `include.path`. This is the one exception to "git identity/
-behavior config belongs to the `base` role" — it's delta-specific
-integration, not generic git configuration, so it lives here next to the
-delta install itself.
+gitconfig via `include.path`. This is delta-specific
+integration rather than generic git configuration, so it lives in `delta.yml` next to the delta install, not in
+`config.yml`. The `diff` → `delta` alias is deployed to `~/.config/zsh/conf.d/git.zsh`.
 
 ## Migrating from `base`
 
-`git_*` variables were renamed to `git_*` (`git_user_name` → `git_user_name`, and so on). There are no aliases.
+The `base_git_*` variables were renamed to `git_*` (`base_git_user_name` → `git_user_name`, and so on). There are no aliases.
+
+### Known limitation: download staging
+
+Release archives are downloaded to a fixed `/tmp` path and their checksum is verified at download time; the root-level
+extraction follows. On a single-user workstation the window in between is accepted. (The AWS CLI and
+session-manager-plugin downloads in `cloud_cli` and the OpenCode install in `ai_cli` use private directories instead.)

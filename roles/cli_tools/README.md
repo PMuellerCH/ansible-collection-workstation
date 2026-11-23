@@ -34,6 +34,7 @@ aliases to take effect. `emoji-fzf`'s `emoji` function pipes through `wl-copy` (
 
 | Variable | Default | Description |
 | --- | --- | --- |
+| `cli_tools_github_api_token` | see `defaults/main.yml` | Optional GitHub API token, only to raise the rate limit when resolving release-asset digests (dust, jaq, moor, procs, xcp, yazi). Defaults to `GH_TOKEN`/`GITHUB_TOKEN` |
 | `cli_tools_bat_enabled` | `true` | Whether to install bat. |
 | `cli_tools_btop_enabled` | `true` | Whether to install btop. |
 | `cli_tools_emoji_fzf_enabled` | `true` | Whether to install emoji-fzf via pipx (also gates the pipx bootstrap). Requires fzf and wl-copy (this collection's clipboard_tools role, clipboard_tools_wl_clipboard_enabled) at runtime for the deployed `emoji` shell function. |
@@ -57,21 +58,21 @@ aliases to take effect. `emoji-fzf`'s `emoji` function pipes through `wl-copy` (
 | `cli_tools_yazi_enabled` | `true` | Whether to install yazi (from a GitHub-released .deb). |
 | `cli_tools_bat_theme_ref` | see `defaults/main.yml` | Pinned commit of catppuccin/bat the theme file is downloaded from (immutable, unlike the "main" branch). |
 | `cli_tools_bat_theme_checksum` | see `defaults/main.yml` | Checksum of the bat theme file at cli_tools_bat_theme_ref, verified by get_url. |
-| `cli_tools_btop_catppuccin_version` | `""` | Release tag of catppuccin/btop to download the Mocha theme archive from. |
+| `cli_tools_btop_catppuccin_version` | see `defaults/main.yml` | Release tag of catppuccin/btop to download the Mocha theme archive from. |
 | `cli_tools_btop_catppuccin_checksum` | see `defaults/main.yml` | Checksum of the themes.tar.gz archive at cli_tools_btop_catppuccin_version, verified by get_url. |
-| `cli_tools_fzf_version` | `""` | fzf version (github-releases junegunn/fzf), installed from a checksum-verified binary tarball. |
-| `cli_tools_emoji_fzf_version` | `""` | emoji-fzf version (pypi), installed via pipx. |
-| `cli_tools_pipx_min_version` | `""` | pipx version (pypi) installed via pip --user to satisfy community.general.pipx's >= 1.7.0 requirement, since Ubuntu 24.04's apt-provided pipx is only 1.4.3. Only used when cli_tools_emoji_fzf_enabled. |
-| `cli_tools_procs_version` | `""` | procs version (github-releases dalance/procs), installed from a checksum-verified zip. |
-| `cli_tools_dust_version` | `""` | dust version (github-releases bootandy/dust), installed from a checksum-verified .deb. |
-| `cli_tools_viddy_version` | `""` | viddy version (github-releases sachaos/viddy), installed from a checksum-verified binary tarball. |
-| `cli_tools_xcp_version` | `""` | xcp version (github-releases tarka/xcp), installed from a checksum-verified binary tarball. |
-| `cli_tools_doggo_version` | `""` | doggo version (github-releases mr-karan/doggo), installed from a checksum-verified binary tarball. |
-| `cli_tools_jaq_version` | `""` | jaq version (github-releases 01mf02/jaq), installed from a checksum-verified bare binary. |
-| `cli_tools_moor_version` | `""` | moor version (github-releases walles/moar), installed from a checksum-verified bare binary. |
-| `cli_tools_yazi_version` | `""` | yazi version (github-releases sxyazi/yazi), installed from a checksum-verified .deb. |
-| `cli_tools_yazi_theme_ref` | `""` | Pinned commit of catppuccin/yazi the theme file is downloaded from (no releases/tags published upstream). |
-| `cli_tools_yazi_theme_checksum` | `""` | Checksum of the yazi theme file at cli_tools_yazi_theme_ref, verified by get_url. |
+| `cli_tools_fzf_version` | see `defaults/main.yml` | fzf version (github-releases junegunn/fzf), installed from a checksum-verified binary tarball. |
+| `cli_tools_emoji_fzf_version` | see `defaults/main.yml` | emoji-fzf version (pypi), installed via pipx. |
+| `cli_tools_pipx_min_version` | see `defaults/main.yml` | pipx version (pypi) installed via pip --user to satisfy community.general.pipx's >= 1.7.0 requirement, since Ubuntu 24.04's apt-provided pipx is only 1.4.3. Only used when cli_tools_emoji_fzf_enabled. |
+| `cli_tools_procs_version` | see `defaults/main.yml` | procs version (github-releases dalance/procs), installed from a checksum-verified zip. |
+| `cli_tools_dust_version` | see `defaults/main.yml` | dust version (github-releases bootandy/dust), installed from a checksum-verified .deb. |
+| `cli_tools_viddy_version` | see `defaults/main.yml` | viddy version (github-releases sachaos/viddy), installed from a checksum-verified binary tarball. |
+| `cli_tools_xcp_version` | see `defaults/main.yml` | xcp version (github-releases tarka/xcp), installed from a checksum-verified binary tarball. |
+| `cli_tools_doggo_version` | see `defaults/main.yml` | doggo version (github-releases mr-karan/doggo), installed from a checksum-verified binary tarball. |
+| `cli_tools_jaq_version` | see `defaults/main.yml` | jaq version (github-releases 01mf02/jaq), installed from a checksum-verified bare binary. |
+| `cli_tools_moor_version` | see `defaults/main.yml` | moor version (github-releases walles/moar), installed from a checksum-verified bare binary. |
+| `cli_tools_yazi_version` | see `defaults/main.yml` | yazi version (github-releases sxyazi/yazi), installed from a checksum-verified .deb. |
+| `cli_tools_yazi_theme_ref` | see `defaults/main.yml` | Pinned commit of catppuccin/yazi the theme file is downloaded from (no releases/tags published upstream). |
+| `cli_tools_yazi_theme_checksum` | see `defaults/main.yml` | Checksum of the yazi theme file at cli_tools_yazi_theme_ref, verified by get_url. |
 | `cli_tools_deploy_shell_aliases` | `true` | Whether to deploy a zsh conf.d snippet (~/.config/zsh/conf.d/cli_tools.zsh) with aliases for each enabled tool. |
 
 ## Example Playbook
@@ -93,7 +94,7 @@ the alias snippet. The snippet is also (re)deployed whenever a single tool tag r
 
 Most GitHub-release tools here verify their download against a checksum file
 the upstream project publishes (`get_url`'s `checksum:` fetches it directly —
-fzf, presenterm, viddy, doggo). Six tools (`dust`, `jaq`, `moor`, `procs`,
+fzf, viddy, doggo). Six tools (`dust`, `jaq`, `moor`, `procs`,
 `xcp`, `yazi`) publish **no** checksum file of any kind. Rather than hand-pin a
 static checksum that goes stale on every Renovate version bump, the role
 derives the checksum at run time from GitHub's own per-asset digest: it fetches
@@ -131,7 +132,7 @@ shell to whatever directory you navigated to inside the file manager
 ## apt package versions
 
 Apt-installed tools in this role (`bat`, `btop`, `duf`, `eza`, `fd-find`,
-`gping`, `hexyl`, `htop`, `git-delta`, `nodejs`/`npm`, `ripgrep`, `sd`,
+`gping`, `hexyl`, `htop`, `ripgrep`, `sd`,
 `zoxide`) install unpinned (`state: present`) — see the
 [root README](../../README.md#apt-package-versions-are-unpinned) for why.
 `dust` and `yazi` are downloaded as pinned, checksum-verified local `.deb`
@@ -139,3 +140,9 @@ files (their exact version determines which GitHub release artifact is
 fetched) but, like every other package in this role, are no longer
 dpkg-held after install — a held package blocks even a legitimate reinstall
 of a newer pinned `.deb`.
+
+### Known limitation: download staging
+
+Release archives are downloaded to a fixed `/tmp` path and their checksum is verified at download time; the root-level
+extraction follows. On a single-user workstation the window in between is accepted. (The AWS CLI and
+session-manager-plugin downloads in `cloud_cli` and the OpenCode install in `ai_cli` use private directories instead.)

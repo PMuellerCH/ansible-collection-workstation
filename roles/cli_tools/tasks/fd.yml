@@ -8,7 +8,7 @@
     cache_valid_time: 3600
   become: true
   when: cli_tools_fd_enabled
-  tags: [cli-tools, cli_tools]
+  tags: [fd, cli_tools]
 
 - name: Create /usr/local/bin/fd symlink (fd-find installs as fdfind on Debian/Ubuntu)
   ansible.builtin.file:
@@ -19,4 +19,4 @@
   become: true
   when: cli_tools_fd_enabled
   ignore_errors: "{{ ansible_check_mode }}"
-  tags: [cli-tools, cli_tools]
+  tags: [fd, cli_tools]
