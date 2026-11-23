@@ -8,7 +8,7 @@
 terminal_env_zsh_omz_commit: "0912e05c0589d26ea20d79555487900880aad4d5"  # pragma: allowlist secret
 
 # renovate: datasource=github-tags depName=romkatv/powerlevel10k extractVersion=^v(?<version>.*)$
-terminal_env_zsh_powerlevel10k_version: "1.20.0"
+terminal_env_zsh_powerlevel10k_version: "1.21.0"
 # renovate: datasource=github-tags depName=Aloxaf/fzf-tab extractVersion=^v(?<version>.*)$
 terminal_env_zsh_fzf_tab_version: "1.3.0"
 # renovate: datasource=github-tags depName=zsh-users/zsh-autosuggestions extractVersion=^v(?<version>.*)$
