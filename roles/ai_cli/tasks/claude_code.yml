@@ -1,0 +1,235 @@
+---
+# Claude Code is an npm package, so it needs Node.js and npm. The base role
+# installs Node.js (NodeSource LTS); this role does not install it itself, so a
+# machine without base fails here with a clear message instead of a bare
+# "Failed to find required executable npm" from the npm module.
+- name: Check that npm is available
+  ansible.builtin.command: npm --version
+  register: ai_cli_npm_check
+  become: false
+  changed_when: false
+  failed_when: false
+  when: ai_cli_claude_code_enabled and not ansible_check_mode
+  tags: [claude-code, ai_cli]
+
+- name: Assert Node.js and npm were installed by the base role
+  ansible.builtin.assert:
+    that: ai_cli_npm_check.rc == 0
+    fail_msg: >-
+      npm was not found on PATH. Claude Code needs Node.js: run the base role first (its nodejs component,
+      `--tags nodejs`) or disable Claude Code with ai_cli_claude_code_enabled: false.
+  when: ai_cli_claude_code_enabled and not ansible_check_mode
+  tags: [claude-code, ai_cli]
+
+- name: Check for legacy root-owned global Claude Code install
+  ansible.builtin.stat:
+    path: /usr/lib/node_modules/@anthropic-ai/claude-code
+  register: ai_cli_claude_code_legacy_global_stat
+  when: ai_cli_claude_code_enabled
+  tags: [claude-code, ai_cli]
+
+- name: Remove legacy root-owned global Claude Code install
+  # Older versions of this role installed Claude Code as a root-owned global
+  # npm package (become: true, default npm prefix on a NodeSource install is
+  # /usr). This role now installs it under the invoking user's own npm
+  # prefix instead (see NPM_CONFIG_PREFIX below), so a fresh `claude` on
+  # PATH no longer needs root to self-update — but a machine that already
+  # ran the old version has a stale root-owned copy left on disk. It no
+  # longer wins on PATH (the user prefix's bin dir is prepended ahead of
+  # /usr/bin by terminal_env's .zshrc), but remove it so there isn't a
+  # second, never-updated copy sitting around.
+  community.general.npm:
+    name: "@anthropic-ai/claude-code"
+    global: true
+    state: absent
+  become: true
+  when: >-
+    ai_cli_claude_code_enabled and
+    ai_cli_claude_code_legacy_global_stat.stat.exists and
+    not ansible_check_mode
+  tags: [claude-code, ai_cli]
+
+- name: Create environment.d directory
+  # Not assuming base already created this — role independence (this role
+  # must be runnable standalone, see README/collection conventions).
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/environment.d"
+    state: directory
+    mode: "0755"
+  become: false
+  when: ai_cli_claude_code_enabled
+  tags: [claude-code, ai_cli]
+
+- name: Deploy npm prefix environment.d config
+  # Not a ~/.npmrc prefix= line: base's own "Deploy npm proxy configuration
+  # (~/.npmrc)" task fully overwrites that file on every run it's enabled
+  # (base_http_proxy != ''), so a prefix= line added there by lineinfile
+  # would fight it forever — base removes it, this task re-adds it, next
+  # run repeats indefinitely (found live; same class of bug as #124's
+  # base/cloud_cli vault.zsh collision, just no shared-filename escape hatch
+  # here since ~/.npmrc's name is fixed by npm itself). A systemd user
+  # session env var in its own file sidesteps the collision entirely, and
+  # — unlike a task-scoped environment: override on the install task alone —
+  # also covers the user's own future interactive `npm install -g`/Claude
+  # Code self-update calls, not just this Ansible-driven install.
+  ansible.builtin.copy:
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/environment.d/npm-prefix.conf"
+    mode: "0644"
+    content: |
+      NPM_CONFIG_PREFIX={{ ansible_facts['env']['HOME'] }}/.local
+  become: false
+  when: ai_cli_claude_code_enabled
+  tags: [claude-code, ai_cli]
+
+- name: Install Claude Code CLI globally via npm
+  # NPM_CONFIG_PREFIX here too, not just via the environment.d file above:
+  # environment.d only takes effect for new systemd user sessions started
+  # after this file is deployed, not for this ansible-playbook run itself
+  # (which inherited whatever environment the user's current session had at
+  # invocation time, e.g. before a first-ever run).
+  community.general.npm:
+    name: "@anthropic-ai/claude-code"
+    version: "{{ ai_cli_claude_code_version }}"
+    global: true
+    state: present
+  environment:
+    NPM_CONFIG_PREFIX: "{{ ansible_facts['env']['HOME'] }}/.local"
+  become: false
+  when: ai_cli_claude_code_enabled and not ansible_check_mode
+  tags: [claude-code, ai_cli]
+
+- name: Stat ~/.claude/settings.json
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.claude/settings.json"
+  register: ai_cli_claude_code_settings_stat
+  become: false
+  when: ai_cli_claude_code_enabled
+  tags: [claude-code, ai_cli]
+
+- name: Read ~/.claude/settings.json
+  # A remote read (slurp), not lookup('file', ...): lookup() runs on the
+  # controller, not the target host, so it silently reads (or misses) the
+  # wrong machine's file whenever controller != target (e.g. over SSH) —
+  # this collection cannot assume connection: local, unlike computer-setup.
+  # Gated on the stat above rather than unconditionally, since slurp
+  # hard-fails on a missing file — true here on a fresh install before
+  # ~/.claude/ has been created by the CLI itself.
+  ansible.builtin.slurp:
+    src: "{{ ansible_facts['env']['HOME'] }}/.claude/settings.json"
+  register: ai_cli_claude_code_settings_raw
+  become: false
+  when: >-
+    not ansible_check_mode and
+    ai_cli_claude_code_enabled and
+    ai_cli_claude_code_settings_stat.stat.exists
+  tags: [claude-code, ai_cli]
+
+- name: Remove mcpServers from ~/.claude/settings.json if present (belongs in ~/.claude.json)
+  vars:
+    # The "if stat.exists else {}" ternary short-circuits (Jinja evaluates
+    # only the taken branch), so the undefined/skipped slurp result is never
+    # touched when the file doesn't exist.
+    _ai_cli_claude_code_settings_current: >-
+      {{ (ai_cli_claude_code_settings_raw.content | b64decode | from_json)
+         if ai_cli_claude_code_settings_stat.stat.exists else {} }}
+  ansible.builtin.copy:
+    content: "{{ _ai_cli_claude_code_settings_current | dict2items | selectattr('key', '!=', 'mcpServers') | items2dict | to_nice_json }}\n"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.claude/settings.json"
+    mode: "0600"
+  become: false
+  when: >-
+    not ansible_check_mode and
+    ai_cli_claude_code_enabled and
+    (_ai_cli_claude_code_settings_current.mcpServers | default(none)) is not none
+  tags: [claude-code, ai_cli]
+
+- name: Stat ~/.claude.json
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.claude.json"
+  register: ai_cli_claude_code_global_stat
+  become: false
+  when: ai_cli_claude_code_enabled
+  tags: [claude-code, ai_cli]
+
+- name: Read current Claude Code global config
+  # Not ansible.builtin.slurp unconditionally, and not lookup('file', ...)
+  # — same two reasons as ~/.claude/settings.json above: lookup() reads the
+  # controller's filesystem, not the target's, and ~/.claude.json does not
+  # exist yet on a fresh install (created by the CLI on first run/login,
+  # not by the npm install above).
+  ansible.builtin.slurp:
+    src: "{{ ansible_facts['env']['HOME'] }}/.claude.json"
+  register: ai_cli_claude_code_global_raw
+  become: false
+  when: >-
+    not ansible_check_mode and
+    ai_cli_claude_code_enabled and
+    ai_cli_claude_code_global_stat.stat.exists
+  tags: [claude-code, ai_cli]
+
+- name: Configure MCP servers in Claude Code global config
+  vars:
+    _ai_cli_claude_code_current_global: >-
+      {{ (ai_cli_claude_code_global_raw.content | b64decode | from_json)
+         if ai_cli_claude_code_global_stat.stat.exists else {} }}
+    _ai_cli_claude_code_desired_mcp_servers:
+      ansible:
+        type: stdio
+        command: npx
+        args: ["-y", "@ansible/ansible-mcp-server", "--stdio"]
+        env: {}
+      awslabs.aws-documentation:
+        type: stdio
+        command: uvx
+        args: ["awslabs.aws-documentation-mcp-server@latest"]
+        env:
+          FASTMCP_LOG_LEVEL: ERROR
+          UV_SYSTEM_CERTS: "true"
+      awslabs.core:
+        type: stdio
+        command: uvx
+        args: ["awslabs.core-mcp-server@latest"]
+        env:
+          AWS_PROFILE: "{{ ai_cli_claude_code_aws_profile }}"
+          AWS_REGION: "{{ ai_cli_claude_code_aws_region }}"
+          FASTMCP_LOG_LEVEL: ERROR
+          UV_SYSTEM_CERTS: "true"
+      terraform:
+        type: stdio
+        command: npx
+        args: ["-y", "terraform-mcp-server"]
+        env: {}
+      github:
+        type: stdio
+        command: npx
+        args: ["-y", "@modelcontextprotocol/server-github"]
+        env:
+          GITHUB_PERSONAL_ACCESS_TOKEN: "{{ ai_cli_claude_code_github_token }}"
+      renovate:
+        type: stdio
+        command: npx
+        args: ["-y", "renovate-mcp"]
+        env: {}
+    # Merge onto (not replace) any existing mcpServers entries — a server
+    # registered outside this role (e.g. via `claude mcp add`, or `aws
+    # configure agent-toolkit`'s `aws-mcp`) survives a re-run instead of
+    # being silently wiped. Role-managed keys above still win on conflict
+    # (combine() defaults to the second/right-hand dict), so this role
+    # remains authoritative for its own servers' config.
+    _ai_cli_claude_code_merged_mcp_servers: >-
+      {{ (_ai_cli_claude_code_current_global.mcpServers | default({}))
+         | combine(_ai_cli_claude_code_desired_mcp_servers) }}
+  ansible.builtin.copy:
+    content: "{{ _ai_cli_claude_code_current_global | combine({'mcpServers': _ai_cli_claude_code_merged_mcp_servers}) | to_nice_json }}\n"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.claude.json"
+    mode: "0600"
+  become: false
+  # The rendered content embeds ai_cli_claude_code_github_token — keep
+  # it out of -v/-vvv output the same way cloud_cli's vault github_token
+  # credential file write does.
+  no_log: true
+  when: >-
+    not ansible_check_mode and
+    ai_cli_claude_code_enabled and
+    (_ai_cli_claude_code_current_global.mcpServers | default({})) != _ai_cli_claude_code_merged_mcp_servers
+  tags: [claude-code, ai_cli]

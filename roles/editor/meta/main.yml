@@ -1,0 +1,9 @@
+---
+galaxy_info:
+  role_name: editor
+  namespace: pmuellerch
+  author: Philipp Müller
+  license: MIT
+  description: Install neovim with LazyVim, presenterm and mermaid-cli
+  min_ansible_version: "2.17"
+dependencies: []

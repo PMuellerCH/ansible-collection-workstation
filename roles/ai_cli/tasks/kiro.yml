@@ -1,0 +1,183 @@
+---
+# ---- kiro-cli (Kiro CLI, AI coding agent) ----
+# kiro-cli is a per-user, self-updating binary that lives in ~/.local/bin, so
+# every task here runs as the target user (become: false), never root, and
+# calls the binary by its full path ai_cli_kiro_bin (~/.local/bin is not
+# on PATH for a non-interactive Ansible run — same reason ansible_dev calls
+# ansible-galaxy by full path). Bundled in this role with Claude Code and
+# OpenCode: all three are CLI-first AI coding agents (see README).
+- name: Detect whether kiro-cli is already installed
+  ansible.builtin.stat:
+    path: "{{ ai_cli_kiro_bin }}"
+  register: ai_cli_kiro_stat
+  become: false
+  when: ai_cli_kiro_enabled
+  tags: [kiro, ai_cli]
+
+- name: Download the official kiro-cli install script
+  # Unpinned remote source by necessity (see defaults/main.yml and README):
+  # upstream ships no versioned asset to pin and checksum. Fetched to a file
+  # under the user's cache (mode 0700, removed afterwards) rather than piped
+  # straight into a shell, so the install step can be guarded against check
+  # mode.
+  ansible.builtin.get_url:
+    url: "{{ ai_cli_kiro_install_url }}"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.cache/kiro-cli-install.sh"
+    mode: "0700"
+    force: true
+  become: false
+  when:
+    - ai_cli_kiro_enabled
+    - not ansible_check_mode
+    - not ai_cli_kiro_stat.stat.exists
+  tags: [kiro, ai_cli]
+
+- name: Install kiro-cli via the official script
+  # --force makes the installer non-interactive: without it the script prompts
+  # on /dev/tty when a binary is already present (confirmed by reading the
+  # upstream script). This task only runs when the binary is absent, but --force
+  # keeps it safe against a stale/partial install and avoids any tty prompt on a
+  # headless run.
+  ansible.builtin.command:
+    cmd: "bash {{ ansible_facts['env']['HOME'] }}/.cache/kiro-cli-install.sh --force"
+  become: false
+  register: ai_cli_kiro_install
+  changed_when: true
+  when:
+    - ai_cli_kiro_enabled
+    - not ansible_check_mode
+    - not ai_cli_kiro_stat.stat.exists
+  tags: [kiro, ai_cli]
+
+- name: Remove the downloaded kiro-cli install script
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.cache/kiro-cli-install.sh"
+    state: absent
+  become: false
+  when:
+    - ai_cli_kiro_enabled
+    - not ansible_check_mode
+    - not ai_cli_kiro_stat.stat.exists
+  tags: [kiro, ai_cli]
+
+- name: Re-detect kiro-cli after install
+  # The settings tasks below need a working binary; confirm the installer
+  # actually produced one rather than assuming it did.
+  ansible.builtin.stat:
+    path: "{{ ai_cli_kiro_bin }}"
+  register: ai_cli_kiro_stat_post
+  become: false
+  when:
+    - ai_cli_kiro_enabled
+    - not ansible_check_mode
+  tags: [kiro, ai_cli]
+
+- name: Assert kiro-cli is present after install
+  ansible.builtin.assert:
+    that: ai_cli_kiro_stat_post.stat.exists
+    fail_msg: "kiro-cli was not found at {{ ai_cli_kiro_bin }} after the install step."
+  become: false
+  when:
+    - ai_cli_kiro_enabled
+    - not ansible_check_mode
+  tags: [kiro, ai_cli]
+
+- name: Update kiro-cli to the latest release
+  # Only when it was already present (a fresh install is latest by definition)
+  # and the consumer opted in. A self-update is not configuration convergence,
+  # so this never reports changed — it would otherwise flap Molecule idempotence
+  # on whatever the update command prints.
+  ansible.builtin.command:
+    cmd: "{{ ai_cli_kiro_bin }} update --non-interactive"
+  become: false
+  register: ai_cli_kiro_update_run
+  changed_when: false
+  when:
+    - ai_cli_kiro_enabled
+    - ai_cli_kiro_update
+    - not ansible_check_mode
+    - ai_cli_kiro_stat.stat.exists
+  tags: [kiro, ai_cli]
+
+# kiro-cli default behaviour settings — read each setting as JSON first and
+# write only when the current value differs, so the role is idempotent.
+# `kiro-cli settings <key> -f json` prints the value as JSON (e.g. "v3", true)
+# and exits 0, or exits non-zero when the key is unset.
+- name: Read current kiro-cli settings
+  ansible.builtin.command: "{{ ai_cli_kiro_bin }} settings {{ item.key }} -f json"
+  loop:
+    - { key: "chat.agentEngine", want: "{{ ai_cli_kiro_agent_engine }}" }
+    - { key: "toolSearch.enabled", want: "{{ ai_cli_kiro_tool_search_enabled }}" }
+    - { key: "chat.disableTrustAllConfirmation", want: "{{ ai_cli_kiro_disable_trust_all_confirmation }}" }
+  loop_control:
+    label: "{{ item.key }}"
+    loop_var: item
+  register: ai_cli_kiro_settings_read
+  changed_when: false
+  failed_when: false
+  become: false
+  when:
+    - ai_cli_kiro_enabled
+    - not ansible_check_mode
+  tags: [kiro, ai_cli]
+
+- name: Apply kiro-cli settings that differ from the desired value
+  # A write runs only when the key is unset (read rc != 0) or its parsed JSON
+  # value does not equal the desired value — an exact, type-aware comparison,
+  # not a substring match on the human-readable "v3 (global)" output.
+  ansible.builtin.command:
+    cmd: "{{ ai_cli_kiro_bin }} settings {{ item.item.key }} {{ item.item.want | string | lower if (item.item.want is boolean) else item.item.want }}"
+  become: false
+  changed_when: true
+  loop: "{{ ai_cli_kiro_settings_read.results | default([]) }}"
+  loop_control:
+    label: "{{ item.item.key }}"
+  when:
+    - ai_cli_kiro_enabled
+    - not ansible_check_mode
+    - item.rc != 0 or (item.stdout | from_json) != item.item.want
+  tags: [kiro, ai_cli]
+
+- name: Create zsh conf.d directory (kiro-cli aliases)
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d"
+    state: directory
+    mode: "0755"
+  become: false
+  when:
+    - ai_cli_kiro_enabled
+    - ai_cli_kiro_deploy_shell_aliases
+  tags: [kiro, ai_cli]
+
+- name: Remove legacy kiro_cli.zsh alias snippet from the standalone role
+  # Older versions of this collection shipped Kiro CLI as a standalone
+  # kiro_cli role that deployed ~/.config/zsh/conf.d/kiro_cli.zsh. This role
+  # now deploys kiro.zsh instead. Both files are auto-sourced from conf.d, so
+  # a leftover kiro_cli.zsh would keep defining ki/kil in parallel with this
+  # role's kiro.zsh; depending on the locale's glob collation it may even be
+  # sourced last and override a customized alias. Remove the orphan on
+  # upgrade. Unconditional (no content guard, unlike base's vault.zsh cleanup):
+  # that filename was owned exclusively by the removed kiro_cli role — no other
+  # role ever wrote it and a hand-written file at this exact path is not a
+  # supported configuration — so there is nothing of another role's to
+  # preserve. Gated on ai_cli_kiro_enabled only (not the alias sub-toggle),
+  # so a user who sets ai_cli_kiro_deploy_shell_aliases: false to supply
+  # their own ki/kil still gets the stale snippet cleared, and matches the
+  # feature-toggle-only gating of the claude-code legacy cleanups above.
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/kiro_cli.zsh"
+    state: absent
+  become: false
+  when: ai_cli_kiro_enabled
+  tags: [kiro, ai_cli]
+
+- name: Deploy kiro-cli shell alias snippet
+  ansible.builtin.template:
+    src: kiro.zsh.j2
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/kiro.zsh"
+    mode: "0644"
+  become: false
+  when:
+    - ai_cli_kiro_enabled
+    - ai_cli_kiro_deploy_shell_aliases
+  tags: [kiro, ai_cli]

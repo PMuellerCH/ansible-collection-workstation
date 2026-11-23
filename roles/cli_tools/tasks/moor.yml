@@ -1,0 +1,82 @@
+---
+# moor (github release, bare binary; walles/moar publishes no checksum file, so
+# the checksum is derived at run time from GitHub's own per-asset digest for the
+# pinned version — see the digest-checksum note in README. Upstream renamed the
+# tool itself from "moar" to "moor", see the version var comment in
+# defaults/main.yml.)
+- name: Get installed moor version
+  ansible.builtin.command: moor --version
+  register: cli_tools_moor_current_version
+  changed_when: false
+  failed_when: false
+  when: cli_tools_moor_enabled
+  tags: [moor, cli_tools]
+
+- name: Fetch moor release metadata for the GitHub asset digest
+  ansible.builtin.get_url:
+    url: "https://api.github.com/repos/walles/moar/releases/tags/v{{ cli_tools_moor_version }}"
+    dest: "/tmp/moor-v{{ cli_tools_moor_version }}_release.json"
+    force: true
+    headers: >-
+      {{ {'Accept': 'application/vnd.github+json'}
+         | combine({'Authorization': 'Bearer ' + cli_tools_github_api_token}
+                   if cli_tools_github_api_token else {}) }}
+    mode: "0644"
+  no_log: "{{ cli_tools_github_api_token | length > 0 }}"
+  when: >-
+    not ansible_check_mode and
+    cli_tools_moor_enabled and
+    (cli_tools_moor_current_version.rc != 0 or
+     cli_tools_moor_version not in cli_tools_moor_current_version.stdout)
+  tags: [moor, cli_tools]
+
+- name: Read moor release metadata
+  ansible.builtin.slurp:
+    path: "/tmp/moor-v{{ cli_tools_moor_version }}_release.json"
+  register: cli_tools_moor_release_raw
+  when: >-
+    not ansible_check_mode and
+    cli_tools_moor_enabled and
+    (cli_tools_moor_current_version.rc != 0 or
+     cli_tools_moor_version not in cli_tools_moor_current_version.stdout)
+  tags: [moor, cli_tools]
+
+- name: Resolve moor binary checksum from the release metadata
+  ansible.builtin.set_fact:
+    cli_tools_moor_checksum: >-
+      {{ (cli_tools_moor_release_raw.content | b64decode | from_json).assets
+         | selectattr('name', 'equalto', 'moor-v' + cli_tools_moor_version + '-linux-amd64')
+         | map(attribute='digest') | select('string') | first | default('') }}
+  when: >-
+    not ansible_check_mode and
+    cli_tools_moor_enabled and
+    (cli_tools_moor_current_version.rc != 0 or
+     cli_tools_moor_version not in cli_tools_moor_current_version.stdout)
+  tags: [moor, cli_tools]
+
+- name: Assert GitHub published a sha256 digest for the moor binary
+  ansible.builtin.assert:
+    that: cli_tools_moor_checksum.startswith('sha256:')
+    fail_msg: >-
+      GitHub published no sha256 digest for moor-v{{ cli_tools_moor_version }}-linux-amd64;
+      cannot verify the download.
+  when: >-
+    not ansible_check_mode and
+    cli_tools_moor_enabled and
+    (cli_tools_moor_current_version.rc != 0 or
+     cli_tools_moor_version not in cli_tools_moor_current_version.stdout)
+  tags: [moor, cli_tools]
+
+- name: Install moor binary to /usr/local/bin
+  ansible.builtin.get_url:
+    url: "https://github.com/walles/moar/releases/download/v{{ cli_tools_moor_version }}/moor-v{{ cli_tools_moor_version }}-linux-amd64"
+    dest: /usr/local/bin/moor
+    checksum: "{{ cli_tools_moor_checksum }}"
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and
+    cli_tools_moor_enabled and
+    (cli_tools_moor_current_version.rc != 0 or
+     cli_tools_moor_version not in cli_tools_moor_current_version.stdout)
+  tags: [moor, cli_tools]

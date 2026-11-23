@@ -1,0 +1,189 @@
+---
+argument_specs:
+  main:
+    short_description: Install modern CLI tool replacements (bat, btop, eza, fd, fzf, ripgrep, zoxide and more) — each independently toggleable, with Catppuccin
+      Mocha theming where the tool has a themeable config.
+    options:
+      cli_tools_bat_enabled:
+        default: true
+        description: Whether to install bat.
+        required: false
+        type: bool
+      cli_tools_btop_enabled:
+        default: true
+        description: Whether to install btop.
+        required: false
+        type: bool
+      cli_tools_emoji_fzf_enabled:
+        default: true
+        description: Whether to install emoji-fzf via pipx (also gates the pipx bootstrap). Requires fzf and wl-copy (this collection's clipboard_tools
+          role, clipboard_tools_wl_clipboard_enabled) at runtime for the deployed `emoji` shell function.
+        required: false
+        type: bool
+      cli_tools_eza_enabled:
+        default: true
+        description: Whether to install eza.
+        required: false
+        type: bool
+      cli_tools_fd_enabled:
+        default: true
+        description: Whether to install fd-find (and symlink it to fd).
+        required: false
+        type: bool
+      cli_tools_fzf_enabled:
+        default: true
+        description: Whether to install fzf.
+        required: false
+        type: bool
+      cli_tools_htop_enabled:
+        default: true
+        description: Whether to install htop.
+        required: false
+        type: bool
+      cli_tools_ripgrep_enabled:
+        default: true
+        description: Whether to install ripgrep.
+        required: false
+        type: bool
+      cli_tools_zoxide_enabled:
+        default: true
+        description: Whether to install zoxide.
+        required: false
+        type: bool
+      cli_tools_sd_enabled:
+        default: true
+        description: Whether to install sd.
+        required: false
+        type: bool
+      cli_tools_duf_enabled:
+        default: true
+        description: Whether to install duf.
+        required: false
+        type: bool
+      cli_tools_gping_enabled:
+        default: true
+        description: Whether to install gping.
+        required: false
+        type: bool
+      cli_tools_hexyl_enabled:
+        default: true
+        description: Whether to install hexyl.
+        required: false
+        type: bool
+      cli_tools_procs_enabled:
+        default: true
+        description: Whether to install procs.
+        required: false
+        type: bool
+      cli_tools_dust_enabled:
+        default: true
+        description: Whether to install dust (from a GitHub-released .deb).
+        required: false
+        type: bool
+      cli_tools_viddy_enabled:
+        default: true
+        description: Whether to install viddy.
+        required: false
+        type: bool
+      cli_tools_xcp_enabled:
+        default: true
+        description: Whether to install xcp.
+        required: false
+        type: bool
+      cli_tools_doggo_enabled:
+        default: true
+        description: Whether to install doggo.
+        required: false
+        type: bool
+      cli_tools_jaq_enabled:
+        default: true
+        description: Whether to install jaq.
+        required: false
+        type: bool
+      cli_tools_moor_enabled:
+        default: true
+        description: Whether to install moor (the tool formerly known as "moar" — upstream renamed it; the GitHub repo path is unchanged).
+        required: false
+        type: bool
+      cli_tools_yazi_enabled:
+        default: true
+        description: Whether to install yazi (from a GitHub-released .deb).
+        required: false
+        type: bool
+      cli_tools_bat_theme_ref:
+        default: "6810349b28055dce54076712fc05fc68da4b8ec0"  # pragma: allowlist secret
+        description: Pinned commit of catppuccin/bat the theme file is downloaded from (immutable, unlike the "main" branch).
+        required: false
+        type: str
+      cli_tools_bat_theme_checksum:
+        default: "sha256:395566f08ceb301b936b91c077690ef94f7aeb651b121553f201c99c2bd4aa77"  # pragma: allowlist secret
+        description: Checksum of the bat theme file at cli_tools_bat_theme_ref, verified by get_url.
+        required: false
+        type: str
+      cli_tools_btop_catppuccin_version:
+        description: Release tag of catppuccin/btop to download the Mocha theme archive from.
+        required: false
+        type: str
+      cli_tools_btop_catppuccin_checksum:
+        default: "sha256:5331e055f239d2b42a15496905c6f357493940e1213cc91acfcba67b3fd7a281"  # pragma: allowlist secret
+        description: Checksum of the themes.tar.gz archive at cli_tools_btop_catppuccin_version, verified by get_url.
+        required: false
+        type: str
+      cli_tools_fzf_version:
+        description: fzf version (github-releases junegunn/fzf), installed from a checksum-verified binary tarball.
+        required: false
+        type: str
+      cli_tools_emoji_fzf_version:
+        description: emoji-fzf version (pypi), installed via pipx.
+        required: false
+        type: str
+      cli_tools_pipx_min_version:
+        description: pipx version (pypi) installed via pip --user to satisfy community.general.pipx's >= 1.7.0 requirement, since Ubuntu 24.04's apt-provided
+          pipx is only 1.4.3. Only used when cli_tools_emoji_fzf_enabled.
+        required: false
+        type: str
+      cli_tools_procs_version:
+        description: procs version (github-releases dalance/procs), installed from a checksum-verified zip.
+        required: false
+        type: str
+      cli_tools_dust_version:
+        description: dust version (github-releases bootandy/dust), installed from a checksum-verified .deb.
+        required: false
+        type: str
+      cli_tools_viddy_version:
+        description: viddy version (github-releases sachaos/viddy), installed from a checksum-verified binary tarball.
+        required: false
+        type: str
+      cli_tools_xcp_version:
+        description: xcp version (github-releases tarka/xcp), installed from a checksum-verified binary tarball.
+        required: false
+        type: str
+      cli_tools_doggo_version:
+        description: doggo version (github-releases mr-karan/doggo), installed from a checksum-verified binary tarball.
+        required: false
+        type: str
+      cli_tools_jaq_version:
+        description: jaq version (github-releases 01mf02/jaq), installed from a checksum-verified bare binary.
+        required: false
+        type: str
+      cli_tools_moor_version:
+        description: moor version (github-releases walles/moar), installed from a checksum-verified bare binary.
+        required: false
+        type: str
+      cli_tools_yazi_version:
+        description: yazi version (github-releases sxyazi/yazi), installed from a checksum-verified .deb.
+        required: false
+        type: str
+      cli_tools_yazi_theme_ref:
+        description: Pinned commit of catppuccin/yazi the theme file is downloaded from (no releases/tags published upstream).
+        required: false
+        type: str
+      cli_tools_yazi_theme_checksum:
+        description: Checksum of the yazi theme file at cli_tools_yazi_theme_ref, verified by get_url.
+        required: false
+        type: str
+      cli_tools_deploy_shell_aliases:
+        default: true
+        description: Whether to deploy a zsh conf.d snippet (~/.config/zsh/conf.d/cli_tools.zsh) with aliases for each enabled tool.
+        required: false
+        type: bool

@@ -1,0 +1,79 @@
+---
+# jaq (github release bare binary; 01mf02/jaq publishes no checksum file, so the
+# checksum is derived at run time from GitHub's per-asset digest — see README)
+- name: Get installed jaq version
+  ansible.builtin.command: jaq --version
+  register: cli_tools_jaq_current_version
+  changed_when: false
+  failed_when: false
+  when: cli_tools_jaq_enabled
+  tags: [jaq, cli_tools]
+
+- name: Fetch jaq release metadata for the GitHub asset digest
+  ansible.builtin.get_url:
+    url: "https://api.github.com/repos/01mf02/jaq/releases/tags/v{{ cli_tools_jaq_version }}"
+    dest: "/tmp/jaq-{{ cli_tools_jaq_version }}_release.json"
+    force: true
+    headers: >-
+      {{ {'Accept': 'application/vnd.github+json'}
+         | combine({'Authorization': 'Bearer ' + cli_tools_github_api_token}
+                   if cli_tools_github_api_token else {}) }}
+    mode: "0644"
+  no_log: "{{ cli_tools_github_api_token | length > 0 }}"
+  when: >-
+    not ansible_check_mode and
+    cli_tools_jaq_enabled and
+    (cli_tools_jaq_current_version.rc != 0 or
+     cli_tools_jaq_version not in cli_tools_jaq_current_version.stdout)
+  tags: [jaq, cli_tools]
+
+- name: Read jaq release metadata
+  ansible.builtin.slurp:
+    path: "/tmp/jaq-{{ cli_tools_jaq_version }}_release.json"
+  register: cli_tools_jaq_release_raw
+  when: >-
+    not ansible_check_mode and
+    cli_tools_jaq_enabled and
+    (cli_tools_jaq_current_version.rc != 0 or
+     cli_tools_jaq_version not in cli_tools_jaq_current_version.stdout)
+  tags: [jaq, cli_tools]
+
+- name: Resolve jaq binary checksum from the release metadata
+  ansible.builtin.set_fact:
+    cli_tools_jaq_checksum: >-
+      {{ (cli_tools_jaq_release_raw.content | b64decode | from_json).assets
+         | selectattr('name', 'equalto', 'jaq-x86_64-unknown-linux-gnu')
+         | map(attribute='digest') | select('string') | first | default('') }}
+  when: >-
+    not ansible_check_mode and
+    cli_tools_jaq_enabled and
+    (cli_tools_jaq_current_version.rc != 0 or
+     cli_tools_jaq_version not in cli_tools_jaq_current_version.stdout)
+  tags: [jaq, cli_tools]
+
+- name: Assert GitHub published a sha256 digest for the jaq binary
+  ansible.builtin.assert:
+    that: cli_tools_jaq_checksum.startswith('sha256:')
+    fail_msg: >-
+      GitHub published no sha256 digest for jaq-x86_64-unknown-linux-gnu
+      ({{ cli_tools_jaq_version }}); cannot verify the download.
+  when: >-
+    not ansible_check_mode and
+    cli_tools_jaq_enabled and
+    (cli_tools_jaq_current_version.rc != 0 or
+     cli_tools_jaq_version not in cli_tools_jaq_current_version.stdout)
+  tags: [jaq, cli_tools]
+
+- name: Install jaq binary to /usr/local/bin
+  ansible.builtin.get_url:
+    url: "https://github.com/01mf02/jaq/releases/download/v{{ cli_tools_jaq_version }}/jaq-x86_64-unknown-linux-gnu"
+    dest: /usr/local/bin/jaq
+    checksum: "{{ cli_tools_jaq_checksum }}"
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and
+    cli_tools_jaq_enabled and
+    (cli_tools_jaq_current_version.rc != 0 or
+     cli_tools_jaq_version not in cli_tools_jaq_current_version.stdout)
+  tags: [jaq, cli_tools]

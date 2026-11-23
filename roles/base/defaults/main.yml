@@ -18,16 +18,6 @@ base_vault_addr: ""
 # Desktop environment: gnome or cosmic. Shared across roles that touch DE settings.
 base_desktop_environment: gnome
 
-# ---- git ----
-# base_git_user_name and base_git_user_email have no default — required, see meta/argument_specs.yml
-
-base_git_default_branch: main
-base_git_pull_rebase: true
-base_git_push_default: simple
-base_git_editor: vim
-base_git_signing_enabled: true
-base_git_signing_key: "{{ ansible_facts['env']['HOME'] }}/.ssh/id_ed25519.pub"
-
 # ---- ssh ----
 base_ssh_extra_hosts: []
 
@@ -38,3 +28,12 @@ base_python_uv_version: "0.13.9"
 # ---- fonts ----
 # renovate: datasource=github-releases depName=ryanoasis/nerd-fonts extractVersion=^v(?<version>.*)$
 base_fonts_nerd_font_version: "3.5.1"
+
+# ---- nodejs ----
+# Whether to install Node.js (NodeSource apt repository). The ai_cli and editor roles
+# need a working node/npm; disable only if another source provides it.
+base_nodejs_enabled: true
+# Selects which NodeSource major-version apt repo to add
+# (deb.nodesource.com/node_{{ major }}.x) — nodejs/build-essential
+# themselves are installed unpinned, see the root README.
+base_nodejs_major_version: "24"

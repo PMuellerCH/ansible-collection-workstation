@@ -1,0 +1,115 @@
+---
+# yazi (github release .deb; sxyazi/yazi publishes no checksum file, so the
+# checksum is derived at run time from GitHub's own per-asset digest for the
+# pinned version — see the digest-checksum note in README. Installs both `yazi`
+# and its companion `ya` CLI, apt-held like any other installed .deb, same
+# pattern as trivy in code_quality_tools and dust above.)
+- name: Get installed yazi version
+  ansible.builtin.command: yazi --version
+  register: cli_tools_yazi_current_version
+  changed_when: false
+  failed_when: false
+  when: cli_tools_yazi_enabled
+  tags: [yazi, cli_tools]
+
+- name: Fetch yazi release metadata for the GitHub asset digest
+  ansible.builtin.get_url:
+    url: "https://api.github.com/repos/sxyazi/yazi/releases/tags/v{{ cli_tools_yazi_version }}"
+    dest: "/tmp/yazi_{{ cli_tools_yazi_version }}_release.json"
+    force: true
+    headers: >-
+      {{ {'Accept': 'application/vnd.github+json'}
+         | combine({'Authorization': 'Bearer ' + cli_tools_github_api_token}
+                   if cli_tools_github_api_token else {}) }}
+    mode: "0644"
+  no_log: "{{ cli_tools_github_api_token | length > 0 }}"
+  when: >-
+    not ansible_check_mode and
+    cli_tools_yazi_enabled and
+    (cli_tools_yazi_current_version.rc != 0 or
+     cli_tools_yazi_version not in cli_tools_yazi_current_version.stdout)
+  tags: [yazi, cli_tools]
+
+- name: Read yazi release metadata
+  ansible.builtin.slurp:
+    path: "/tmp/yazi_{{ cli_tools_yazi_version }}_release.json"
+  register: cli_tools_yazi_release_raw
+  when: >-
+    not ansible_check_mode and
+    cli_tools_yazi_enabled and
+    (cli_tools_yazi_current_version.rc != 0 or
+     cli_tools_yazi_version not in cli_tools_yazi_current_version.stdout)
+  tags: [yazi, cli_tools]
+
+- name: Resolve yazi .deb checksum from the release metadata
+  ansible.builtin.set_fact:
+    cli_tools_yazi_checksum: >-
+      {{ (cli_tools_yazi_release_raw.content | b64decode | from_json).assets
+         | selectattr('name', 'equalto', 'yazi-x86_64-unknown-linux-gnu.deb')
+         | map(attribute='digest') | select('string') | first | default('') }}
+  when: >-
+    not ansible_check_mode and
+    cli_tools_yazi_enabled and
+    (cli_tools_yazi_current_version.rc != 0 or
+     cli_tools_yazi_version not in cli_tools_yazi_current_version.stdout)
+  tags: [yazi, cli_tools]
+
+- name: Assert GitHub published a sha256 digest for the yazi .deb
+  ansible.builtin.assert:
+    that: cli_tools_yazi_checksum.startswith('sha256:')
+    fail_msg: >-
+      GitHub published no sha256 digest for yazi-x86_64-unknown-linux-gnu.deb
+      ({{ cli_tools_yazi_version }}); cannot verify the download.
+  when: >-
+    not ansible_check_mode and
+    cli_tools_yazi_enabled and
+    (cli_tools_yazi_current_version.rc != 0 or
+     cli_tools_yazi_version not in cli_tools_yazi_current_version.stdout)
+  tags: [yazi, cli_tools]
+
+- name: Download yazi .deb
+  ansible.builtin.get_url:
+    url: "https://github.com/sxyazi/yazi/releases/download/v{{ cli_tools_yazi_version }}/yazi-x86_64-unknown-linux-gnu.deb"
+    dest: "/tmp/yazi_{{ cli_tools_yazi_version }}_amd64.deb"
+    checksum: "{{ cli_tools_yazi_checksum }}"
+    mode: "0644"
+  when: >-
+    not ansible_check_mode and
+    cli_tools_yazi_enabled and
+    (cli_tools_yazi_current_version.rc != 0 or
+     cli_tools_yazi_version not in cli_tools_yazi_current_version.stdout)
+  tags: [yazi, cli_tools]
+
+- name: Install yazi
+  ansible.builtin.apt:
+    deb: "/tmp/yazi_{{ cli_tools_yazi_version }}_amd64.deb"
+    # A machine provisioned by an older version of this role may still have
+    # yazi dpkg-held from before the hold task was removed — without this,
+    # apt refuses to install a newer pinned .deb over a held package.
+    allow_change_held_packages: true
+  become: true
+  when: >-
+    not ansible_check_mode and
+    cli_tools_yazi_enabled and
+    (cli_tools_yazi_current_version.rc != 0 or
+     cli_tools_yazi_version not in cli_tools_yazi_current_version.stdout)
+  tags: [yazi, cli_tools]
+
+- name: Create yazi config directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/yazi"
+    state: directory
+    mode: "0755"
+  become: false
+  when: cli_tools_yazi_enabled
+  tags: [yazi, cli_tools]
+
+- name: Deploy Catppuccin Mocha theme for yazi
+  ansible.builtin.get_url:
+    url: "https://raw.githubusercontent.com/catppuccin/yazi/{{ cli_tools_yazi_theme_ref }}/themes/mocha/catppuccin-mocha-mauve.toml"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/yazi/theme.toml"
+    checksum: "{{ cli_tools_yazi_theme_checksum }}"
+    mode: "0644"
+  become: false
+  when: cli_tools_yazi_enabled
+  tags: [yazi, cli_tools]

@@ -1,0 +1,150 @@
+---
+argument_specs:
+  main:
+    short_description: 'Install the AI coding agent CLIs: Claude Code (npm, needs Node.js from the base role), Kiro CLI and OpenCode — each independently
+      toggleable.'
+    options:
+      ai_cli_claude_code_enabled:
+        default: true
+        description: Whether to install the Claude Code CLI, its NodeSource-sourced Node.js dependency, and configure its MCP servers.
+        required: false
+        type: bool
+      ai_cli_kiro_enabled:
+        default: true
+        description: Whether to install the Kiro CLI (kiro-cli), set its default behaviour (v3 agent engine, tool auto-search, autonomous mode), and deploy
+          its shell aliases.
+        required: false
+        type: bool
+      ai_cli_claude_code_version:
+        description: '@anthropic-ai/claude-code npm package version (npm datasource).'
+        required: false
+        type: str
+      ai_cli_claude_code_aws_profile:
+        default: default
+        description: AWS_PROFILE passed to the awslabs.core MCP server.
+        required: false
+        type: str
+      ai_cli_claude_code_aws_region:
+        default: eu-central-1
+        description: AWS_REGION passed to the awslabs.core MCP server.
+        required: false
+        type: str
+      ai_cli_claude_code_github_token:
+        default: ''
+        description: GitHub PAT passed as GITHUB_PERSONAL_ACCESS_TOKEN to the github MCP server (from the consumer's own secret store, e.g. Ansible Vault).
+          Empty by default.
+        required: false
+        type: str
+      ai_cli_kiro_bin:
+        default: '{{ ansible_facts[''env''][''HOME''] }}/.local/bin/kiro-cli'
+        description: Absolute path to the kiro-cli binary. Used to detect an existing install and to invoke the binary by full path, since ~/.local/bin
+          is not guaranteed to be on $PATH for a non-interactive Ansible run.
+        required: false
+        type: str
+      ai_cli_kiro_install_url:
+        default: https://cli.kiro.dev/install
+        description: URL of the official kiro-cli install script, downloaded and run when the binary is absent. Unpinned by necessity — kiro-cli is a
+          self-updating binary with no versioned release asset to pin; see README.
+        required: false
+        type: str
+      ai_cli_kiro_update:
+        default: true
+        description: When the binary is already present, run `kiro-cli update --non-interactive` to converge to the latest release. Set false to leave an
+          existing install untouched.
+        required: false
+        type: bool
+      ai_cli_kiro_agent_engine:
+        default: v3
+        description: Value for the global `chat.agentEngine` setting ("v3 cli"). Applied via `kiro-cli settings`.
+        required: false
+        type: str
+      ai_cli_kiro_tool_search_enabled:
+        default: true
+        description: Value for the global `toolSearch.enabled` setting ("autosearch for tools"). Applied via `kiro-cli settings`.
+        required: false
+        type: bool
+      ai_cli_kiro_disable_trust_all_confirmation:
+        default: true
+        description: Value for the global `chat.disableTrustAllConfirmation` setting. When true, the `ki` alias (which passes `--trust-all-tools`) starts
+          autonomous chat without a per-launch confirmation prompt.
+        required: false
+        type: bool
+      ai_cli_kiro_deploy_shell_aliases:
+        default: true
+        description: Whether to deploy ~/.config/zsh/conf.d/kiro.zsh with the chat and login aliases.
+        required: false
+        type: bool
+      ai_cli_kiro_alias_chat:
+        default: ki
+        description: Alias name for `kiro-cli chat --trust-all-tools` (autonomous mode).
+        required: false
+        type: str
+      ai_cli_kiro_alias_login:
+        default: kil
+        description: Alias name for `kiro-cli login`.
+        required: false
+        type: str
+      ai_cli_opencode_enabled:
+        default: true
+        description: Whether to install OpenCode (model-agnostic AI coding agent), deploy its default-model config, and deploy its shell aliases.
+        required: false
+        type: bool
+      ai_cli_opencode_bin:
+        default: '{{ ansible_facts[''env''][''HOME''] }}/.local/bin/opencode'
+        description: Absolute path to the opencode binary. Used to detect an existing install, read the installed version, and invoke the binary by full
+          path, since ~/.local/bin is not guaranteed to be on $PATH for a non-interactive Ansible run.
+        required: false
+        type: str
+      ai_cli_opencode_version:
+        description: OpenCode version (github-releases anomalyco/opencode), installed from a release tarball verified against GitHub's per-asset digest.
+        required: false
+        type: str
+      ai_cli_opencode_download_base:
+        default: https://github.com/anomalyco/opencode/releases/download/v{{ ai_cli_opencode_version }}
+        description: Base URL the opencode release asset is downloaded from, before the filename.
+        required: false
+        type: str
+      ai_cli_opencode_asset:
+        default: opencode-linux-x64.tar.gz
+        description: Linux x64 release asset filename. Contains a single flat `opencode` binary and is verified against GitHub's per-asset sha256 digest
+          (OpenCode publishes no checksum file).
+        required: false
+        type: str
+      ai_cli_opencode_github_api_token:
+        default: '{{ ai_cli_github_api_token }}'
+        description: Optional GitHub API token used only to raise the rate limit when resolving the opencode release-asset digest. Defaults to the same
+          GH_TOKEN/GITHUB_TOKEN env lookup as ai_cli_github_api_token.
+        required: false
+        type: str
+      ai_cli_opencode_model:
+        default: mistral/devstral-medium-2507
+        description: Default model OpenCode talks to ("provider/model-id"), written into the deployed opencode.json. Defaults to Mistral AI's agentic coding
+          model; mistral/codestral-2508 is a completion-focused alternative. The MISTRAL_API_KEY and `opencode` login are left to the user.
+        required: false
+        type: str
+      ai_cli_opencode_deploy_config:
+        default: true
+        description: Whether to deploy ~/.config/opencode/opencode.json. The role owns only the top-level `model` key, rewriting the file only when it differs
+          (user-added keys are preserved).
+        required: false
+        type: bool
+      ai_cli_opencode_deploy_shell_aliases:
+        default: true
+        description: Whether to deploy ~/.config/zsh/conf.d/opencode.zsh with the TUI and headless-run aliases.
+        required: false
+        type: bool
+      ai_cli_opencode_alias_tui:
+        default: oc
+        description: Alias name for `opencode` (interactive TUI).
+        required: false
+        type: str
+      ai_cli_opencode_alias_run:
+        default: ocr
+        description: Alias name for `opencode run` (headless prompt, no TUI).
+        required: false
+        type: str
+      ai_cli_github_api_token:
+        default: '{{ lookup(''ansible.builtin.env'', ''GH_TOKEN'') or lookup(''ansible.builtin.env'', ''GITHUB_TOKEN'') }}'
+        description: Optional GitHub API token, used only to raise the rate limit when resolving the opencode release-asset digest.
+        required: false
+        type: str

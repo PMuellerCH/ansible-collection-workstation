@@ -1,0 +1,124 @@
+---
+# ai_cli: Claude Code, Kiro CLI and OpenCode
+
+ai_cli_claude_code_enabled: true
+ai_cli_kiro_enabled: true
+ai_cli_opencode_enabled: true
+
+# renovate: datasource=npm depName=@anthropic-ai/claude-code
+ai_cli_claude_code_version: "2.1.330"
+ai_cli_claude_code_aws_profile: "default"
+ai_cli_claude_code_aws_region: "eu-central-1"
+ai_cli_claude_code_github_token: ""
+
+# ---- kiro-cli (Kiro CLI, AI coding agent) ----
+# Grouped here with Claude Code and OpenCode: all three are CLI-first AI coding
+# agents a developer reaches for directly in the terminal, the same
+# core-workflow rationale that bundles lazygit/neovim/Claude Code in this role.
+
+# Absolute path to the kiro-cli binary. kiro-cli installs into the user's
+# ~/.local/bin, which is not guaranteed to be on $PATH for a non-interactive
+# Ansible run (no shell profile is sourced) — so every task calls the binary by
+# full path, the same way ansible_dev calls ansible-galaxy. Also used to detect an
+# existing install.
+ai_cli_kiro_bin: "{{ ansible_facts['env']['HOME'] }}/.local/bin/kiro-cli"
+
+# Official installer. kiro-cli is a self-updating single binary published only
+# through this script (https://cli.kiro.dev/install) into ~/.local/bin; upstream
+# ships no versioned, individually downloadable release asset to pin and
+# checksum the way cliphist/clipse do. The install URL is therefore an
+# unpinned remote source — a deliberate, documented deviation from this
+# collection's "pin everything" convention (see README "kiro-cli is installed
+# via the official script"). The role only runs the installer when the binary
+# is absent; keeping it current afterwards is left to `kiro-cli update`
+# (exposed through ai_cli_kiro_update below), the tool's own supported
+# mechanism.
+ai_cli_kiro_install_url: "https://cli.kiro.dev/install"
+
+# Run `kiro-cli update --non-interactive` when the binary is already present,
+# so a provisioned machine converges to the latest release. Set false to leave
+# an existing install untouched (only ever install when missing).
+ai_cli_kiro_update: true
+
+# ---- kiro-cli default behaviour settings (persisted via `kiro-cli settings`) ----
+# v3 agent engine ("v3 cli").
+ai_cli_kiro_agent_engine: v3
+
+# Tool auto-search ("autosearch for tools").
+ai_cli_kiro_tool_search_enabled: true
+
+# Autonomous mode is not a persistent setting — it is the `--trust-all-tools`
+# chat flag, baked into the `ki` alias below. This setting only stops kiro-cli
+# from prompting for confirmation each time trust-all is used, so the alias
+# runs non-interactively.
+ai_cli_kiro_disable_trust_all_confirmation: true
+
+# ---- kiro-cli shell aliases ----
+ai_cli_kiro_deploy_shell_aliases: true
+
+# `ki`  -> kiro-cli chat in autonomous mode (trust-all-tools).
+# `kil` -> kiro-cli login.
+ai_cli_kiro_alias_chat: ki
+ai_cli_kiro_alias_login: kil
+
+# ---- opencode (OpenCode, model-agnostic AI coding agent) ----
+# Grouped here with Claude Code and the Kiro CLI: all three are CLI-first AI
+# coding agents a developer reaches for directly in the terminal, the same
+# core-workflow rationale that bundles lazygit/neovim/Claude Code/kiro-cli in
+# this role. Backend is Mistral AI (see ai_cli_opencode_model); the
+# MISTRAL_API_KEY and the user's `opencode` login are left to the user, exactly
+# as Claude Code's `claude login` and kiro-cli's `kiro-cli login` are.
+
+# Absolute path to the opencode binary. OpenCode installs as a single flat
+# binary into the user's ~/.local/bin, which is not guaranteed to be on $PATH
+# for a non-interactive Ansible run (no shell profile is sourced) — so every
+# task calls the binary by full path, the same way the kiro-cli tasks do. Also
+# used to detect an existing install and read the installed version.
+ai_cli_opencode_bin: "{{ ansible_facts['env']['HOME'] }}/.local/bin/opencode"
+
+# renovate: datasource=github-releases depName=anomalyco/opencode extractVersion=^v(?<version>.*)$
+ai_cli_opencode_version: "1.19.6"
+ai_cli_opencode_download_base: "https://github.com/anomalyco/opencode/releases/download/v{{ ai_cli_opencode_version }}"
+
+# The Linux x64 release asset. The tarball contains a single flat `opencode`
+# binary (no top-level directory), so it is unarchived straight into
+# ~/.local/bin. anomalyco/opencode publishes NO checksum file of any kind with
+# its releases (confirmed against v1.19.5's asset list), so — exactly like
+# neovim above — the archive is verified against GitHub's own per-asset sha256
+# digest, fetched from the release API for the pinned version at run time.
+# Nothing to keep in sync by hand when Renovate bumps the version.
+ai_cli_opencode_asset: "opencode-linux-x64.tar.gz"
+
+# Optional GitHub API token used only to raise the rate limit when resolving
+# the opencode release-asset digest (same mechanism and default as the neovim
+# digest fetch above). Unauthenticated still works, subject to GitHub's 60
+# requests/hour per-IP limit.
+ai_cli_opencode_github_api_token: "{{ ai_cli_github_api_token }}"
+
+# Default model OpenCode talks to, written into the deployed opencode.json as
+# the top-level `model` ("provider/model-id"). devstral-medium-2507 is Mistral
+# AI's agentic/tool-use coding model (from the models.dev catalog OpenCode
+# ships), the sensible default for an agentic terminal tool. The Mistral
+# completion-focused alternative is mistral/codestral-2508. Mistral is a
+# built-in catalog provider, so no custom-provider config is needed — only the
+# MISTRAL_API_KEY in the user's own environment, which this role never writes.
+ai_cli_opencode_model: "mistral/devstral-medium-2507"
+
+# Deploy ~/.config/opencode/opencode.json. The role owns only the top-level
+# `model` key: it reads any existing file, merges the desired model onto it,
+# and rewrites only when `model` differs — so a changed model takes effect on
+# re-run while any keys a user added by hand are preserved.
+ai_cli_opencode_deploy_config: true
+
+# ---- opencode shell aliases ----
+ai_cli_opencode_deploy_shell_aliases: true
+
+# `oc`  -> opencode (interactive TUI).
+# `ocr` -> opencode run (headless: send a prompt, print the reply, no TUI).
+ai_cli_opencode_alias_tui: oc
+ai_cli_opencode_alias_run: ocr
+
+# Optional GitHub API token used only to raise the rate limit when resolving the opencode
+# release-asset digest. Defaults to GH_TOKEN/GITHUB_TOKEN from the environment; unauthenticated
+# (empty) still works but is subject to GitHub's 60 requests/hour per-IP limit.
+ai_cli_github_api_token: "{{ lookup('ansible.builtin.env', 'GH_TOKEN') or lookup('ansible.builtin.env', 'GITHUB_TOKEN') }}"

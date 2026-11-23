@@ -1,0 +1,187 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: true
+  # Load the role's own defaults so pinned-version assertions track
+  # defaults/main.yml as their single source of truth, rather than a second
+  # hardcoded literal that would silently go stale whenever Renovate bumps it.
+  vars_files:
+    - ../../defaults/main.yml
+  tasks:
+    # neovim
+
+    - name: Check neovim runs
+      ansible.builtin.command: nvim --version
+      register: _editor_neovim_version
+      changed_when: false
+
+
+    - name: Assert neovim reports the pinned version
+      ansible.builtin.assert:
+        that: "'NVIM v' + editor_neovim_version in _editor_neovim_version.stdout"
+
+
+    - name: Stat neovim symlink
+      ansible.builtin.stat:
+        path: /usr/local/bin/nvim
+      register: _editor_neovim_symlink
+
+
+    - name: Assert neovim symlink exists and is a symlink
+      ansible.builtin.assert:
+        that:
+          - _editor_neovim_symlink.stat.exists
+          - _editor_neovim_symlink.stat.islnk
+
+
+    - name: Stat LazyVim init.lua
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/init.lua"
+      register: _editor_lazyvim_init
+
+
+    - name: Assert LazyVim starter was cloned
+      ansible.builtin.assert:
+        that: _editor_lazyvim_init.stat.exists
+
+
+    - name: Stat LazyVim starter .git directory
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/.git"
+      register: _editor_lazyvim_git
+
+
+    - name: Assert LazyVim starter .git directory was removed
+      ansible.builtin.assert:
+        that: not _editor_lazyvim_git.stat.exists
+
+
+    - name: Stat lazyvim.json extras config
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lazyvim.json"
+      register: _editor_lazyvim_json
+
+
+    - name: Assert lazyvim.json was deployed
+      ansible.builtin.assert:
+        that: _editor_lazyvim_json.stat.exists
+
+
+    - name: Stat catppuccin colorscheme plugin config
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lua/plugins/colorscheme.lua"
+      register: _editor_colorscheme
+
+
+    - name: Assert colorscheme plugin config was deployed
+      ansible.builtin.assert:
+        that: _editor_colorscheme.stat.exists
+
+
+    - name: Stat vim-tmux-navigator plugin config
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lua/plugins/tmux-navigator.lua"
+      register: _editor_tmux_navigator
+
+
+    - name: Assert tmux-navigator plugin config was deployed
+      ansible.builtin.assert:
+        that: _editor_tmux_navigator.stat.exists
+
+
+    - name: Stat keymaps config
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lua/config/keymaps.lua"
+      register: _editor_keymaps
+
+
+    - name: Assert keymaps config was deployed
+      ansible.builtin.assert:
+        that: _editor_keymaps.stat.exists
+
+
+    - name: Stat neovim zsh snippet
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/neovim.zsh"
+      register: _editor_zsh_snippet
+
+
+    - name: Assert neovim zsh snippet was deployed
+      ansible.builtin.assert:
+        that: _editor_zsh_snippet.stat.exists
+
+
+    # presenterm.nvim plugin config (toggle default-enabled in this scenario)
+
+    - name: Stat presenterm.nvim plugin config
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lua/plugins/presenterm.lua"
+      register: _editor_presenterm_plugin
+
+
+    - name: Assert presenterm.nvim plugin config was deployed
+      ansible.builtin.assert:
+        that: _editor_presenterm_plugin.stat.exists
+
+
+    - name: Stat lazy-lock.json
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lazy-lock.json"
+      register: _editor_lazylock
+
+
+    - name: Assert the headless lazy.nvim sync ran and produced a lock file
+      ansible.builtin.assert:
+        that: _editor_lazylock.stat.exists
+
+
+    - name: Stat plugin install directories synced by lazy.nvim
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.local/share/nvim/lazy/{{ item }}"
+      register: _editor_lazy_plugin_dirs
+      loop:
+        - vim-tmux-navigator
+        - presenterm.nvim
+      loop_control:
+        label: "{{ item }}"
+
+
+    - name: Assert declared plugins were actually installed by the headless sync
+      ansible.builtin.assert:
+        that: item.stat.exists and item.stat.isdir
+      loop: "{{ _editor_lazy_plugin_dirs.results }}"
+      loop_control:
+        label: "{{ item.item }}"
+
+
+    - name: Check presenterm runs
+      ansible.builtin.command: presenterm --version
+      register: _editor_presenterm_version
+      changed_when: false
+
+
+    - name: Assert presenterm reports the pinned version
+      ansible.builtin.assert:
+        that: "editor_presenterm_version in _editor_presenterm_version.stdout"
+
+
+    - name: Check mermaid-cli (mmdc) runs
+      ansible.builtin.command: mmdc --version
+      register: _editor_mmdc_version
+      changed_when: false
+
+
+    - name: Assert mermaid-cli reports the pinned version
+      ansible.builtin.assert:
+        that: "editor_presenterm_mermaid_cli_version in _editor_mmdc_version.stdout"
+
+
+    - name: Stat puppeteer config for mermaid-cli
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/mermaid/puppeteer-config.json"
+      register: _editor_puppeteer_config
+
+
+    - name: Assert puppeteer config was deployed
+      ansible.builtin.assert:
+        that: _editor_puppeteer_config.stat.exists

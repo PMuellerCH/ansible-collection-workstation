@@ -1,0 +1,307 @@
+---
+# ---- opencode (OpenCode, model-agnostic AI coding agent; Mistral backend) ----
+# Like kiro-cli, opencode is a per-user binary in ~/.local/bin, so every task
+# here runs as the target user (become: false), never root, and calls the
+# binary by its full path ai_cli_opencode_bin (~/.local/bin is not on PATH
+# for a non-interactive Ansible run). Unlike kiro-cli — whose upstream ships no
+# versioned asset, forcing an unpinned installer — OpenCode publishes versioned
+# release tarballs, so it is exact-pinned and checksum-verified here, the same
+# as lazygit/neovim. OpenCode publishes no checksum file, so the archive is
+# verified against GitHub's per-asset sha256 digest (the neovim tier-2 pattern).
+- name: Get installed opencode version
+  ansible.builtin.command: "{{ ai_cli_opencode_bin }} --version"
+  register: ai_cli_opencode_current_version
+  changed_when: false
+  failed_when: false
+  become: false
+  when: ai_cli_opencode_enabled
+  tags: [opencode, ai_cli]
+
+- name: Ensure the opencode download cache directory exists
+  # The metadata JSON and the release tarball are fetched here as the target
+  # user, so they go under the user's own cache rather than shared /tmp (the
+  # neovim block writes to /tmp as root; this is a per-user install). A role-
+  # owned ~/.cache/opencode subdirectory, not ~/.cache itself: creating it with
+  # an explicit mode cannot widen the permissions of the user's shared cache
+  # (and satisfies ansible-lint's risky-file-permissions, which requires an
+  # explicit mode on a created directory).
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.cache/opencode"
+    state: directory
+    mode: "0755"
+  become: false
+  when: >-
+    not ansible_check_mode and
+    ai_cli_opencode_enabled and
+    (ai_cli_opencode_current_version.rc != 0 or
+     ai_cli_opencode_version not in ai_cli_opencode_current_version.stdout)
+  tags: [opencode, ai_cli]
+
+- name: Fetch opencode release metadata for the GitHub asset digest
+  ansible.builtin.get_url:
+    url: "https://api.github.com/repos/anomalyco/opencode/releases/tags/v{{ ai_cli_opencode_version }}"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.cache/opencode/opencode-{{ ai_cli_opencode_version }}_release.json"
+    force: true
+    headers: >-
+      {{ {'Accept': 'application/vnd.github+json'}
+         | combine({'Authorization': 'Bearer ' + ai_cli_opencode_github_api_token}
+                   if ai_cli_opencode_github_api_token else {}) }}
+    mode: "0644"
+  # Suppress output only when a token is in use, so the Bearer header cannot
+  # leak into invocation.module_args under -v or on failure — identical posture
+  # to the neovim digest fetch above. Unauthenticated runs keep full logging.
+  no_log: "{{ ai_cli_opencode_github_api_token | length > 0 }}"
+  become: false
+  when: >-
+    not ansible_check_mode and
+    ai_cli_opencode_enabled and
+    (ai_cli_opencode_current_version.rc != 0 or
+     ai_cli_opencode_version not in ai_cli_opencode_current_version.stdout)
+  tags: [opencode, ai_cli]
+
+- name: Read opencode release metadata
+  ansible.builtin.slurp:
+    path: "{{ ansible_facts['env']['HOME'] }}/.cache/opencode/opencode-{{ ai_cli_opencode_version }}_release.json"
+  register: ai_cli_opencode_release_raw
+  become: false
+  when: >-
+    not ansible_check_mode and
+    ai_cli_opencode_enabled and
+    (ai_cli_opencode_current_version.rc != 0 or
+     ai_cli_opencode_version not in ai_cli_opencode_current_version.stdout)
+  tags: [opencode, ai_cli]
+
+- name: Resolve opencode archive checksum from the release metadata
+  ansible.builtin.set_fact:
+    ai_cli_opencode_checksum: >-
+      {{ (ai_cli_opencode_release_raw.content | b64decode | from_json).assets
+         | selectattr('name', 'equalto', ai_cli_opencode_asset)
+         | map(attribute='digest') | select('string') | first | default('') }}
+  when: >-
+    not ansible_check_mode and
+    ai_cli_opencode_enabled and
+    (ai_cli_opencode_current_version.rc != 0 or
+     ai_cli_opencode_version not in ai_cli_opencode_current_version.stdout)
+  tags: [opencode, ai_cli]
+
+- name: Assert GitHub published a sha256 digest for the opencode archive
+  ansible.builtin.assert:
+    that: ai_cli_opencode_checksum.startswith('sha256:')
+    fail_msg: >-
+      GitHub published no sha256 digest for {{ ai_cli_opencode_asset }}
+      ({{ ai_cli_opencode_version }}); cannot verify the download.
+  when: >-
+    not ansible_check_mode and
+    ai_cli_opencode_enabled and
+    (ai_cli_opencode_current_version.rc != 0 or
+     ai_cli_opencode_version not in ai_cli_opencode_current_version.stdout)
+  tags: [opencode, ai_cli]
+
+- name: Remove the opencode release metadata file
+  # The digest has been read into a fact; the metadata JSON is no longer
+  # needed, so it is not left behind in the user's cache — the same
+  # clean-up-after-use posture as the kiro-cli install script removal above.
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.cache/opencode/opencode-{{ ai_cli_opencode_version }}_release.json"
+    state: absent
+  become: false
+  when: >-
+    not ansible_check_mode and
+    ai_cli_opencode_enabled and
+    (ai_cli_opencode_current_version.rc != 0 or
+     ai_cli_opencode_version not in ai_cli_opencode_current_version.stdout)
+  tags: [opencode, ai_cli]
+
+- name: Download opencode archive
+  ansible.builtin.get_url:
+    url: "{{ ai_cli_opencode_download_base }}/{{ ai_cli_opencode_asset }}"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.cache/opencode/opencode-{{ ai_cli_opencode_version }}.tar.gz"
+    checksum: "{{ ai_cli_opencode_checksum }}"
+    mode: "0644"
+  become: false
+  when: >-
+    not ansible_check_mode and
+    ai_cli_opencode_enabled and
+    (ai_cli_opencode_current_version.rc != 0 or
+     ai_cli_opencode_version not in ai_cli_opencode_current_version.stdout)
+  tags: [opencode, ai_cli]
+
+- name: Ensure ~/.local/bin exists (opencode)
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.local/bin"
+    state: directory
+    mode: "0755"
+  become: false
+  when: >-
+    not ansible_check_mode and
+    ai_cli_opencode_enabled and
+    (ai_cli_opencode_current_version.rc != 0 or
+     ai_cli_opencode_version not in ai_cli_opencode_current_version.stdout)
+  tags: [opencode, ai_cli]
+
+- name: Install opencode binary to ~/.local/bin
+  # The tarball holds a single flat `opencode` binary (no top-level directory),
+  # so it extracts straight into ~/.local/bin. become: false — a per-user
+  # install under the user's home, same posture as kiro-cli and the Claude Code
+  # user-context npm install.
+  ansible.builtin.unarchive:
+    src: "{{ ansible_facts['env']['HOME'] }}/.cache/opencode/opencode-{{ ai_cli_opencode_version }}.tar.gz"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.local/bin/"
+    include:
+      - opencode
+    remote_src: true
+    mode: "0755"
+  become: false
+  when: >-
+    not ansible_check_mode and
+    ai_cli_opencode_enabled and
+    (ai_cli_opencode_current_version.rc != 0 or
+     ai_cli_opencode_version not in ai_cli_opencode_current_version.stdout)
+  tags: [opencode, ai_cli]
+
+- name: Remove the opencode release tarball
+  # The binary has been extracted; the tarball is no longer needed and would
+  # otherwise accumulate in ~/.cache across version bumps. Removed to match the
+  # metadata clean-up above (and unlike /tmp, ~/.cache survives reboots, so a
+  # leftover would persist indefinitely).
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.cache/opencode/opencode-{{ ai_cli_opencode_version }}.tar.gz"
+    state: absent
+  become: false
+  when: >-
+    not ansible_check_mode and
+    ai_cli_opencode_enabled and
+    (ai_cli_opencode_current_version.rc != 0 or
+     ai_cli_opencode_version not in ai_cli_opencode_current_version.stdout)
+  tags: [opencode, ai_cli]
+
+- name: Create opencode config directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/opencode"
+    state: directory
+    mode: "0755"
+  become: false
+  when:
+    - ai_cli_opencode_enabled
+    - ai_cli_opencode_deploy_config
+  tags: [opencode, ai_cli]
+
+- name: Stat the currently-deployed opencode config
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/opencode/opencode.json"
+  register: ai_cli_opencode_config_stat
+  become: false
+  when:
+    - ai_cli_opencode_enabled
+    - ai_cli_opencode_deploy_config
+  tags: [opencode, ai_cli]
+
+- name: Read currently-deployed opencode config
+  # Read the existing config (if any) so the deploy below can converge only
+  # the role-owned `model` key without clobbering any other keys the user
+  # added by hand — the same read-compare-then-write posture the lazyvim.json
+  # extras task uses, not a blind force: false (which would silently ignore a
+  # changed ai_cli_opencode_model on an already-provisioned machine) nor a
+  # blind overwrite (which would wipe user-added keys). Gated on the stat (not
+  # failed_when: false), so a genuine read error on an existing file surfaces
+  # instead of being swallowed as "file absent".
+  ansible.builtin.slurp:
+    src: "{{ ansible_facts['env']['HOME'] }}/.config/opencode/opencode.json"
+  register: ai_cli_opencode_config_current
+  become: false
+  when:
+    - ai_cli_opencode_enabled
+    - ai_cli_opencode_deploy_config
+    - ai_cli_opencode_config_stat.stat.exists
+  tags: [opencode, ai_cli]
+
+- name: Parse the current opencode config, tolerating a broken file
+  # Defensive parse so a hand-broken or truncated opencode.json cannot abort
+  # the whole role. A block/rescue is required, not failed_when: false: a
+  # from_json error on malformed content happens during task-arg finalization
+  # (template resolution), which failed_when never sees — only rescue catches
+  # it. A well-formed object is kept as-is so its extra keys survive the merge;
+  # anything else (unparseable, or valid JSON that is not an object) falls back
+  # in the rescue to a minimal config carrying just the $schema, so the deploy
+  # below rewrites a clean file.
+  when:
+    - ai_cli_opencode_enabled
+    - ai_cli_opencode_deploy_config
+    - ai_cli_opencode_config_stat.stat.exists
+  tags: [opencode, ai_cli]
+  block:
+    - name: Parse opencode config as JSON
+      ansible.builtin.set_fact:
+        ai_cli_opencode_config_parsed: >-
+          {{ (ai_cli_opencode_config_current.content | b64decode | from_json)
+             if ((ai_cli_opencode_config_current.content | b64decode | from_json) is mapping)
+             else {'$schema': 'https://opencode.ai/config.json'} }}
+      become: false
+  rescue:
+    - name: Fall back to a minimal opencode config on an unparseable file
+      ansible.builtin.set_fact:
+        ai_cli_opencode_config_parsed:
+          $schema: https://opencode.ai/config.json
+      become: false
+
+- name: Default the opencode config base when no file was present
+  # Fresh-install case: no file on disk, so the parse block above was skipped.
+  # Keyed on the stat (not `...parsed is not defined`) so that applying the
+  # role twice to the same host in one run cannot carry the first pass's parsed
+  # fact into a second pass where the file is gone. The deploy_config condition
+  # short-circuits before the stat is dereferenced when the stat was skipped.
+  ansible.builtin.set_fact:
+    ai_cli_opencode_config_parsed:
+      $schema: https://opencode.ai/config.json
+  become: false
+  when:
+    - ai_cli_opencode_enabled
+    - ai_cli_opencode_deploy_config
+    - not ai_cli_opencode_config_stat.stat.exists
+  tags: [opencode, ai_cli]
+
+- name: Deploy opencode config pinning the default model
+  # Merge the desired model onto whatever the file already holds, so user-added
+  # keys survive and the role stays authoritative for `model`. Writes only when
+  # the current `model` differs from the desired value, so a re-run with an
+  # unchanged model reports no change (idempotent), while a changed
+  # ai_cli_opencode_model actually takes effect.
+  ansible.builtin.copy:
+    content: "{{ ai_cli_opencode_config_parsed | combine({'model': ai_cli_opencode_model}) | to_nice_json }}\n"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/opencode/opencode.json"
+    mode: "0644"
+    # Keep a timestamped .bak when this rewrites an existing file. The rescue
+    # path above reduces an unparseable config to a minimal base, so without a
+    # backup a hand-broken file (a large one with providers/keybinds and a
+    # stray comma) would be lost on the heal. backup only triggers on an actual
+    # change, so it does not affect idempotence.
+    backup: true
+  become: false
+  when:
+    - not ansible_check_mode
+    - ai_cli_opencode_enabled
+    - ai_cli_opencode_deploy_config
+    - (ai_cli_opencode_config_parsed.model | default(none)) != ai_cli_opencode_model
+  tags: [opencode, ai_cli]
+
+- name: Create zsh conf.d directory (opencode aliases)
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d"
+    state: directory
+    mode: "0755"
+  become: false
+  when:
+    - ai_cli_opencode_enabled
+    - ai_cli_opencode_deploy_shell_aliases
+  tags: [opencode, ai_cli]
+
+- name: Deploy opencode shell alias snippet
+  ansible.builtin.template:
+    src: opencode.zsh.j2
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/opencode.zsh"
+    mode: "0644"
+  become: false
+  when:
+    - ai_cli_opencode_enabled
+    - ai_cli_opencode_deploy_shell_aliases
+  tags: [opencode, ai_cli]

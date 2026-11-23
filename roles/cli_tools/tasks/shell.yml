@@ -1,0 +1,29 @@
+---
+# shell integration
+- name: Create zsh conf.d directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d"
+    state: directory
+    mode: "0755"
+  become: false
+  when: cli_tools_deploy_shell_aliases
+  tags: [bat, btop, htop, eza, fd, ripgrep, zoxide, fzf, emoji_fzf, sd, duf, gping, hexyl, procs, dust, viddy, xcp, doggo, jaq, moor, yazi, cli_tools]
+
+- name: Deploy cli_tools shell aliases
+  ansible.builtin.template:
+    src: cli_tools.zsh.j2
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/cli_tools.zsh"
+    mode: "0644"
+  become: false
+  when: cli_tools_deploy_shell_aliases
+  tags: [bat, btop, htop, eza, fd, ripgrep, zoxide, fzf, emoji_fzf, sd, duf, gping, hexyl, procs, dust, viddy, xcp, doggo, jaq, moor, yazi, cli_tools]
+
+- name: Remove the pre-split modern_cli.zsh snippet
+  # Renamed from modern_cli.zsh when the modern_cli role was split. The old file
+  # also carried the delta alias and the mmdc wrapper, which now live in git.zsh
+  # and presenterm.zsh; left in place it would keep defining them a second time.
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/modern_cli.zsh"
+    state: absent
+  become: false
+  tags: [bat, btop, htop, eza, fd, ripgrep, zoxide, fzf, emoji_fzf, sd, duf, gping, hexyl, procs, dust, viddy, xcp, doggo, jaq, moor, yazi, cli_tools]

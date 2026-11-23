@@ -11,7 +11,7 @@ that the desktop-customization tasks create — a real ordering dependency,
 not just topical overlap. The emoji picker is added here because it is GUI
 desktop tooling of the same shape as Flameshot (a single small desktop
 utility), not because it shares any file or state with the other two. The
-CLI half of emoji picking (`emoji-fzf`) lives in the `modern_cli` role
+CLI half of emoji picking (`emoji-fzf`) lives in the `cli_tools` role
 instead.
 
 ## What it does
@@ -138,4 +138,4 @@ own to keep `--tags flameshot` self-sufficient.
   `desktop_customization_smile_enabled`.
 - Only the GUI half of emoji picking. The CLI half (`emoji-fzf`, pipx
   install + zsh `emoji` function) is out of scope here and lives in the
-  `modern_cli` role instead.
+  `cli_tools` role instead.

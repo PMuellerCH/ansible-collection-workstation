@@ -11,8 +11,6 @@
     - role: pmuellerch.workstation.base
       vars:
         base_hostname: molecule-base-proxy
-        base_git_user_name: Molecule Test
-        base_git_user_email: molecule@example.com
         # Deliberately the real host proxy (this CI/dev host already sits
         # behind it) so the role's own corporate-proxy path — CA install,
         # /etc/environment, npmrc, Flatpak override, GNOME dconf — is

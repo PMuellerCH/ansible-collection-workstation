@@ -1,0 +1,102 @@
+# Modern CLI tool aliases — managed by Ansible (cli_tools role)
+{% if cli_tools_bat_enabled %}
+command -v batcat  &>/dev/null && alias cat='batcat --paging=never'
+{% endif %}
+{% if cli_tools_btop_enabled %}
+command -v btop    &>/dev/null && alias top='btop'
+{% endif %}
+{% if cli_tools_ripgrep_enabled %}
+command -v rg      &>/dev/null && alias grep='rg'
+{% endif %}
+{% if cli_tools_fd_enabled %}
+command -v fd      &>/dev/null && alias find='fd'
+{% endif %}
+{% if cli_tools_sd_enabled %}
+command -v sd      &>/dev/null && alias sed='sd'
+{% endif %}
+{% if cli_tools_procs_enabled %}
+command -v procs   &>/dev/null && alias ps='procs'
+{% endif %}
+{% if cli_tools_dust_enabled %}
+command -v dust    &>/dev/null && alias du='dust'
+{% endif %}
+{% if cli_tools_duf_enabled %}
+command -v duf     &>/dev/null && alias df='duf'
+{% endif %}
+{% if cli_tools_gping_enabled %}
+command -v gping   &>/dev/null && alias ping='gping'
+{% endif %}
+{% if cli_tools_viddy_enabled %}
+command -v viddy   &>/dev/null && alias watch='viddy'
+{% endif %}
+{% if cli_tools_moor_enabled %}
+command -v moor    &>/dev/null && alias less='moor'
+{% endif %}
+{% if cli_tools_xcp_enabled %}
+command -v xcp     &>/dev/null && alias cp='xcp'
+{% endif %}
+{% if cli_tools_doggo_enabled %}
+command -v doggo   &>/dev/null && alias dig='doggo'
+{% endif %}
+{% if cli_tools_jaq_enabled %}
+command -v jaq     &>/dev/null && alias jq='jaq'
+{% endif %}
+{% if cli_tools_hexyl_enabled %}
+command -v hexyl   &>/dev/null && alias hexdump='hexyl'
+{% endif %}
+{% if cli_tools_eza_enabled %}
+
+# eza — modern ls replacement
+if command -v eza &>/dev/null; then
+  alias ls='eza --icons'
+  alias l='eza --icons'
+  alias ll='eza -l --icons'
+  alias la='eza -lah --icons'
+  alias lt='eza --tree --icons'
+fi
+{% endif %}
+{% if cli_tools_zoxide_enabled %}
+
+# zoxide — smarter cd
+if command -v zoxide &>/dev/null; then
+  eval "$(zoxide init zsh)"
+  alias cd='z'
+fi
+{% endif %}
+{% if cli_tools_fzf_enabled %}
+
+# fzf — Catppuccin Mocha theme
+export FZF_DEFAULT_OPTS=" \
+--color=bg+:#313244,bg:#1E1E2E,spinner:#F5E0DC,hl:#F38BA8 \
+--color=fg:#CDD6F4,header:#F38BA8,info:#CBA6F7,pointer:#F5E0DC \
+--color=marker:#B4BEFE,fg+:#CDD6F4,prompt:#CBA6F7,hl+:#F38BA8 \
+--color=selected-bg:#45475A \
+--color=border:#6C7086,label:#CDD6F4"
+command -v fzf &>/dev/null && eval "$(fzf --zsh)"
+{% endif %}
+{% if cli_tools_emoji_fzf_enabled %}
+
+# emoji-fzf — requires fzf (cli_tools_fzf) and wl-copy (clipboard_tools role, external dependency)
+if command -v emoji-fzf &>/dev/null && command -v fzf &>/dev/null && command -v wl-copy &>/dev/null; then
+  emoji() {
+    emoji-fzf preview | fzf --preview "emoji-fzf get --name {1}" \
+      | cut -d " " -f 1 | emoji-fzf get | tr -d '\n' | wl-copy
+  }
+fi
+{% endif %}
+{% if cli_tools_yazi_enabled %}
+
+# yazi — cd to the directory yazi was in on exit
+y() {
+  local tmp cwd status
+  tmp="$(mktemp -t "yazi-cwd.XXXXXX")"
+  command yazi --cwd-file="$tmp" "$@"
+  status=$?
+  cwd="$(cat -- "$tmp")"
+  rm -f -- "$tmp"
+  if [ -n "$cwd" ] && [ "$cwd" != "$PWD" ]; then
+    cd -- "$cwd" || return
+  fi
+  return "$status"
+}
+{% endif %}

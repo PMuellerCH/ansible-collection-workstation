@@ -1,0 +1,39 @@
+---
+# fzf
+- name: Get installed fzf version
+  ansible.builtin.command: fzf --version
+  register: cli_tools_fzf_current_version
+  changed_when: false
+  failed_when: false
+  when: cli_tools_fzf_enabled
+  tags: [fzf, cli_tools]
+
+- name: Download fzf archive
+  ansible.builtin.get_url:
+    url: "https://github.com/junegunn/fzf/releases/download/v{{ cli_tools_fzf_version }}/fzf-{{ cli_tools_fzf_version }}-linux_amd64.tar.gz"
+    dest: "/tmp/fzf-{{ cli_tools_fzf_version }}-linux_amd64.tar.gz"
+    # junegunn/fzf publishes a plain sha256sum-format checksums file per
+    # release; get_url fetches and matches against it by the source URL's
+    # basename, so there's no static checksum to keep in sync by hand when
+    # Renovate bumps cli_tools_fzf_version.
+    checksum: "sha256:https://github.com/junegunn/fzf/releases/download/v{{ cli_tools_fzf_version }}/fzf_{{ cli_tools_fzf_version }}_checksums.txt"
+    mode: "0644"
+  when: >-
+    cli_tools_fzf_enabled and
+    (cli_tools_fzf_current_version.rc != 0 or cli_tools_fzf_version not in cli_tools_fzf_current_version.stdout)
+  tags: [fzf, cli_tools]
+
+- name: Install fzf binary to /usr/local/bin
+  ansible.builtin.unarchive:
+    src: "/tmp/fzf-{{ cli_tools_fzf_version }}-linux_amd64.tar.gz"
+    dest: /usr/local/bin/
+    include:
+      - fzf
+    remote_src: true
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and
+    cli_tools_fzf_enabled and
+    (cli_tools_fzf_current_version.rc != 0 or cli_tools_fzf_version not in cli_tools_fzf_current_version.stdout)
+  tags: [fzf, cli_tools]

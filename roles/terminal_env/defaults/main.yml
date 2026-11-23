@@ -3,7 +3,7 @@
 # oh-my-zsh publishes no tags/releases (rolling project by design) — pinned
 # to an immutable commit SHA instead of tracking the mutable "master"
 # branch. Not Renovate-tracked (no versioned datasource exists for this);
-# same pattern as modern_cli_bat_theme_ref. Bump manually by fetching the
+# same pattern as cli_tools_bat_theme_ref. Bump manually by fetching the
 # latest master SHA when a refresh is wanted.
 terminal_env_zsh_omz_commit: "0912e05c0589d26ea20d79555487900880aad4d5"  # pragma: allowlist secret
 

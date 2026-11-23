@@ -1,0 +1,26 @@
+---
+# Thin dispatcher: one task file per component, each behind its own switch.
+# Tags use include_tasks' `apply:` so they reach the tasks inside the file.
+- name: Install Claude Code
+  ansible.builtin.include_tasks:
+    file: claude_code.yml
+    apply:
+      tags: [claude-code, ai_cli]
+  when: ai_cli_claude_code_enabled
+  tags: [claude-code, ai_cli]
+
+- name: Install Kiro CLI
+  ansible.builtin.include_tasks:
+    file: kiro.yml
+    apply:
+      tags: [kiro, ai_cli]
+  when: ai_cli_kiro_enabled
+  tags: [kiro, ai_cli]
+
+- name: Install OpenCode
+  ansible.builtin.include_tasks:
+    file: opencode.yml
+    apply:
+      tags: [opencode, ai_cli]
+  when: ai_cli_opencode_enabled
+  tags: [opencode, ai_cli]

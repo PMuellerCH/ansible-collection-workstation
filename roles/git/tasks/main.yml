@@ -1,0 +1,33 @@
+---
+# Thin dispatcher: one task file per component, each behind its own switch.
+# Tags use include_tasks' `apply:` so they reach the tasks inside the file.
+- name: Install git and configure the global git config
+  ansible.builtin.include_tasks:
+    file: config.yml
+    apply:
+      tags: [config, git]
+  tags: [config, git]
+
+- name: Install the GitHub CLI
+  ansible.builtin.include_tasks:
+    file: gh.yml
+    apply:
+      tags: [gh, git]
+  when: git_gh_enabled
+  tags: [gh, git]
+
+- name: Install lazygit
+  ansible.builtin.include_tasks:
+    file: lazygit.yml
+    apply:
+      tags: [lazygit, git]
+  when: git_lazygit_enabled
+  tags: [lazygit, git]
+
+- name: Install delta (git pager) with the Catppuccin Mocha theme
+  ansible.builtin.include_tasks:
+    file: delta.yml
+    apply:
+      tags: [delta, git]
+  when: git_delta_enabled
+  tags: [delta, git]

@@ -2,7 +2,7 @@
 {% if clipboard_tools_cliphist_enabled %}
 
 # Clipboard history — cliphist + fzf (Wayland). Requires wl-copy (from
-# clipboard_tools_wl_clipboard_enabled) and fzf (from the modern_cli role,
+# clipboard_tools_wl_clipboard_enabled) and fzf (from the cli_tools role,
 # not part of this role) — see README "Cross-role dependencies".
 if command -v cliphist &>/dev/null && command -v fzf &>/dev/null && command -v wl-copy &>/dev/null; then
   ch() {

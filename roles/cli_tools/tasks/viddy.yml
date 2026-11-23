@@ -1,0 +1,44 @@
+---
+# viddy (github release, per-asset .sha256 file — dynamic checksum)
+- name: Get installed viddy version
+  ansible.builtin.command: viddy --version
+  register: cli_tools_viddy_current_version
+  changed_when: false
+  failed_when: false
+  when: cli_tools_viddy_enabled
+  tags: [viddy, cli_tools]
+
+- name: Download viddy archive
+  ansible.builtin.get_url:
+    url: "{{ _cli_tools_viddy_release_base }}.tar.gz"
+    dest: "/tmp/viddy-{{ cli_tools_viddy_version }}.tar.gz"
+    # sachaos/viddy publishes a matching .sha256 file per release asset —
+    # get_url fetches and verifies against it directly, so there's no static
+    # checksum to keep in sync by hand when Renovate bumps
+    # cli_tools_viddy_version.
+    checksum: "sha256:{{ _cli_tools_viddy_release_base }}.sha256"
+    mode: "0644"
+  vars:
+    _cli_tools_viddy_release_base: >-
+      https://github.com/sachaos/viddy/releases/download/v{{ cli_tools_viddy_version }}/viddy-v{{ cli_tools_viddy_version }}-linux-x86_64
+  when: >-
+    cli_tools_viddy_enabled and
+    (cli_tools_viddy_current_version.rc != 0 or
+     cli_tools_viddy_version not in cli_tools_viddy_current_version.stdout)
+  tags: [viddy, cli_tools]
+
+- name: Install viddy binary to /usr/local/bin
+  ansible.builtin.unarchive:
+    src: "/tmp/viddy-{{ cli_tools_viddy_version }}.tar.gz"
+    dest: /usr/local/bin/
+    include:
+      - viddy
+    remote_src: true
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and
+    cli_tools_viddy_enabled and
+    (cli_tools_viddy_current_version.rc != 0 or
+     cli_tools_viddy_version not in cli_tools_viddy_current_version.stdout)
+  tags: [viddy, cli_tools]

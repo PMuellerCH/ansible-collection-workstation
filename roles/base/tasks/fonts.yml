@@ -1,0 +1,78 @@
+---
+# ---- fonts ----
+- name: Install font dependencies
+  ansible.builtin.apt:
+    name:
+      - fontconfig
+      - unzip
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  tags: [fonts, base]
+
+- name: Create user fonts directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.local/share/fonts"
+    state: directory
+    mode: "0755"
+  become: false
+  tags: [fonts, base]
+
+- name: Check nerd fonts version stamp
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.local/share/fonts/.nerd-fonts-version"
+  register: base_fonts_version_stat
+  become: false
+  tags: [fonts, base]
+
+- name: Read nerd fonts version stamp
+  ansible.builtin.slurp:
+    src: "{{ ansible_facts['env']['HOME'] }}/.local/share/fonts/.nerd-fonts-version"
+  register: base_fonts_installed_version
+  become: false
+  when: base_fonts_version_stat.stat.exists
+  tags: [fonts, base]
+
+- name: Download JetBrainsMono Nerd Font
+  ansible.builtin.get_url:
+    url: "https://github.com/ryanoasis/nerd-fonts/releases/download/v{{ base_fonts_nerd_font_version }}/JetBrainsMono.zip"
+    dest: "/tmp/JetBrainsMono.zip"
+    # nerd-fonts publishes an aggregate SHA-256.txt per release — get_url
+    # fetches it and matches the JetBrainsMono.zip entry directly, so there's
+    # no static checksum to keep in sync by hand when Renovate bumps
+    # base_fonts_nerd_font_version.
+    checksum: "sha256:https://github.com/ryanoasis/nerd-fonts/releases/download/v{{ base_fonts_nerd_font_version }}/SHA-256.txt"
+    mode: "0644"
+  when: not base_fonts_version_stat.stat.exists or (base_fonts_installed_version.content | b64decode | trim) != base_fonts_nerd_font_version
+  tags: [fonts, base]
+
+- name: Unarchive JetBrainsMono Nerd Font
+  ansible.builtin.unarchive:
+    src: "/tmp/JetBrainsMono.zip"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.local/share/fonts/"
+    remote_src: true
+  become: false
+  when: >-
+    not ansible_check_mode and
+    (not base_fonts_version_stat.stat.exists or (base_fonts_installed_version.content | b64decode | trim) != base_fonts_nerd_font_version)
+  tags: [fonts, base]
+
+- name: Write nerd fonts version stamp
+  ansible.builtin.copy:
+    content: "{{ base_fonts_nerd_font_version }}"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.local/share/fonts/.nerd-fonts-version"
+    mode: "0644"
+  become: false
+  when: >-
+    not ansible_check_mode and
+    (not base_fonts_version_stat.stat.exists or (base_fonts_installed_version.content | b64decode | trim) != base_fonts_nerd_font_version)
+  tags: [fonts, base]
+
+- name: Refresh font cache
+  ansible.builtin.command: fc-cache -fv
+  changed_when: true
+  when: >-
+    not ansible_check_mode and
+    (not base_fonts_version_stat.stat.exists or (base_fonts_installed_version.content | b64decode | trim) != base_fonts_nerd_font_version)
+  tags: [fonts, base]

@@ -94,7 +94,7 @@ tag cascades to every task in the role and defeats this per-tool filtering.
   verified against its own aggregate `actionlint_<version>_checksums.txt`,
   and extracted straight to `/usr/local/bin/actionlint` (the release tar.gz
   is flat, no subdirectory to strip — same shape as lazygit's archive in
-  `cli_dev_env`).
+  the `git` role's lazygit).
 - `pre-commit` is a plain apt package (Ubuntu ships one), installed unpinned
   — see the [root README](../../README.md#apt-package-versions-are-unpinned)
   for why. `trivy` stays exact-pinned (it determines which GitHub release

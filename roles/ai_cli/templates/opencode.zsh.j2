@@ -1,0 +1,8 @@
+# OpenCode aliases — managed by Ansible (ai_cli role)
+if command -v opencode &>/dev/null; then
+  # Interactive terminal UI.
+  alias {{ ai_cli_opencode_alias_tui }}='opencode'
+  # Headless run: send a prompt, print the reply, no interactive UI — the
+  # mode to reach for in scripts and non-interactive automation.
+  alias {{ ai_cli_opencode_alias_run }}='opencode run'
+fi

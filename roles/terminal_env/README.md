@@ -133,7 +133,7 @@ tag cascades to every task in the role and defeats this per-tool filtering.
   `Alt+1–9` for windows, `Ctrl+hjkl` for panes — smart: passes through to
   nvim splits when neovim is focused, detected via `#{pane_current_command}`.
   This pairs with the `christoomey/vim-tmux-navigator` plugin that lives in
-  the `cli_dev_env` role's neovim config — a soft coupling via keybinding
+  the `editor` role's neovim config — a soft coupling via keybinding
   convention only (not a file-write dependency), so no task ordering or
   gating is needed between the two roles.
 - A zsh snippet (`~/.config/zsh/conf.d/tmux.zsh`) auto-starts tmux on
