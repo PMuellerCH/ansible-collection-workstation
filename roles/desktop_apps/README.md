@@ -88,8 +88,8 @@ locale, not something meant to be parameterized per machine).
   `changed` under `ansible-playbook --check` without doing anything for
   real, so every task downstream of them is skipped under check mode
   (`when: ... and not ansible_check_mode`) rather than tolerated via
-  `ignore_errors` — see "Check-mode guards for chained download→consume
-  tasks" in this collection's conventions.
+  `ignore_errors` — the collection's `when: not ansible_check_mode`
+  convention (see CLAUDE.md, "Idempotency").
 
 ## Firefox
 

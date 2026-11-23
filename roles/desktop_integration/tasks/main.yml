@@ -13,9 +13,9 @@
   ansible.builtin.include_tasks:
     file: flameshot.yml
     apply:
-      tags: [flameshot, desktop_integration]
+      tags: [flameshot, gui-customization, desktop_integration]
   when: desktop_integration_flameshot_enabled
-  tags: [flameshot, desktop_integration]
+  tags: [flameshot, gui-customization, desktop_integration]
 
 - name: Install the smile emoji picker (Flatpak)
   ansible.builtin.include_tasks:

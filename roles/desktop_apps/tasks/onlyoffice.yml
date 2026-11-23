@@ -64,7 +64,7 @@
   # actually happened for real — neither does under --check (get_url
   # reports changed without writing; deb822_repository is skipped outright
   # above) — so this must be skipped too, not merely tolerated via
-  # ignore_errors. See "Check-mode guards for chained download→consume
-  # tasks" in this collection's conventions.
+  # ignore_errors (the collection's `when: not ansible_check_mode`
+  # convention, see CLAUDE.md).
   when: desktop_apps_onlyoffice_enabled and not ansible_check_mode
   tags: [onlyoffice, desktop_apps]

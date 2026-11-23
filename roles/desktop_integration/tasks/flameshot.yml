@@ -1,11 +1,11 @@
 ---
-# --- gui-customization: COSMIC ---
+# --- COSMIC custom shortcuts file ---
 # Must run before the flameshot COSMIC task below, which edits the file
-# created here. Also tagged `flameshot` (in addition to its own
-# `gui-customization` identity) so a consumer running with `--tags
-# flameshot` alone on COSMIC still gets this prerequisite — otherwise the
+# created here. It lives in this component (not in workspaces.yml) so a run with
+# `--tags flameshot` alone on COSMIC still gets this prerequisite — otherwise the
 # lineinfile task below would hard-fail on a fresh machine where the file
-# was never created.
+# was never created. The `gui-customization` tag is kept on the include for
+# backwards compatibility.
 - name: Create COSMIC custom shortcuts config directory
   ansible.builtin.file:
     path: "{{ ansible_facts['env']['HOME'] }}/.config/cosmic/com.system76.CosmicSettings.Shortcuts/v1"

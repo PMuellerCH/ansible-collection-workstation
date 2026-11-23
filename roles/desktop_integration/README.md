@@ -36,6 +36,7 @@ session. The `ch()` function needs `fzf` (the `cli_tools` role) and `wl-copy` (t
 | `desktop_integration_wl_clipboard_enabled` | `true` | Whether to install wl-clipboard (provides wl-copy/wl-paste). cliphist's autostart entry and the deployed `ch` shell function both depend on wl-copy/wl-paste at runtime — see README "Soft cross-tool dependencies" if disabling this while cliphist stays enabled. |
 | `desktop_integration_cliphist_enabled` | `true` | Whether to install cliphist and deploy its autostart entry (`wl-paste --watch cliphist store`). Requires wl-clipboard at runtime — not hard-gated, see README. |
 | `desktop_integration_clipse_enabled` | `true` | Whether to install clipse (clipboard history TUI). |
+| `desktop_integration_github_api_token` | see `defaults/main.yml` | Optional GitHub API token, only to raise the rate limit when resolving the cliphist release-asset digest. Defaults to `GH_TOKEN`/`GITHUB_TOKEN` |
 | `desktop_integration_cliphist_version` | see `defaults/main.yml` | cliphist version (github-releases sentriz/cliphist), installed from a checksum-verified binary. |
 | `desktop_integration_cliphist_download_base` | see `defaults/main.yml` | Base URL the cliphist release binary is downloaded from. |
 | `desktop_integration_clipse_version` | see `defaults/main.yml` | clipse version (github-releases savedra1/clipse), installed from a checksum-verified archive. |
@@ -109,9 +110,8 @@ session. The `ch()` function needs `fzf` (the `cli_tools` role) and `wl-copy` (t
   yet, and `copy` (like `get_url`) reports `changed` under check mode
   without actually writing the destination — so a later task that
   unconditionally depends on the file existing must be skipped, not just
-  have its failure swallowed. See the "Check-mode guards for chained
-  download→consume tasks" pattern in this collection's other roles for the
-  general shape of this issue.
+  have its failure swallowed. This is the collection's
+  `when: not ansible_check_mode` convention (see CLAUDE.md, "Idempotency").
 
 ## Flameshot
 
@@ -169,8 +169,8 @@ session. The `ch()` function needs `fzf` (the `cli_tools` role) and `wl-copy` (t
 - The deployed `ch` shell function (`cliphist list | fzf --with-nth 2 |
   cliphist decode | wl-copy`) requires **`fzf`**, which lives in the
   `cli_tools` role (`cli_tools_fzf_enabled`), not this one. Without it,
-  `cliphist`/`clipse` still work via their own CLIs, but the `ch` alias
-  itself won't run.
+  `cliphist`/`clipse` still work via their own CLIs, but the `ch` function
+  is not defined (it is wrapped in a `command -v` check).
 - This is a **two-way** soft coupling: `cli_tools`' own README documents
   its `emoji-fzf`-driven `emoji` shell function depending on **this role's**
   `wl-copy` (`desktop_integration_wl_clipboard_enabled`) to copy the selected
@@ -183,5 +183,4 @@ session. The `ch()` function needs `fzf` (the `cli_tools` role) and `wl-copy` (t
 ### Known limitation: download staging
 
 Release downloads land in a fixed `/tmp` path and their checksum is verified at download time; the root-level install
-follows. On a single-user workstation the window in between is accepted (tracked in #170). The OnlyOffice and Brave apt
-keys are fetched over TLS without a fingerprint pin (tracked in #171).
+follows. On a single-user workstation the window in between is accepted (tracked in #170).

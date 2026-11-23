@@ -127,7 +127,7 @@
     - name: Assert cliphist reports the pinned version
       ansible.builtin.assert:
         # cliphist writes its version output to stderr, not stdout (same as
-        # the current-version idempotency check in tasks/main.yml).
+        # the current-version idempotency check in cliphist.yml).
         that: "desktop_integration_cliphist_version in _desktop_integration_cliphist_version.stderr"
 
     - name: Check clipse runs
@@ -142,20 +142,20 @@
     - name: Check cliphist autostart entry was deployed
       ansible.builtin.stat:
         path: "{{ ansible_facts['env']['HOME'] }}/.config/autostart/cliphist.desktop"
-      register: _desktop_integration_autostart
+      register: _desktop_integration_cliphist_autostart
 
     - name: Assert cliphist autostart entry exists
       ansible.builtin.assert:
-        that: _desktop_integration_autostart.stat.exists
+        that: _desktop_integration_cliphist_autostart.stat.exists
 
     - name: Read cliphist autostart entry content
       ansible.builtin.slurp:
         src: "{{ ansible_facts['env']['HOME'] }}/.config/autostart/cliphist.desktop"
-      register: _desktop_integration_autostart_content
+      register: _desktop_integration_cliphist_autostart_content
 
     - name: Assert cliphist autostart entry shells out to wl-paste
       ansible.builtin.assert:
-        that: "'Exec=wl-paste --watch cliphist store' in (_desktop_integration_autostart_content.content | b64decode)"
+        that: "'Exec=wl-paste --watch cliphist store' in (_desktop_integration_cliphist_autostart_content.content | b64decode)"
 
     - name: Stat zsh alias snippet
       ansible.builtin.stat:

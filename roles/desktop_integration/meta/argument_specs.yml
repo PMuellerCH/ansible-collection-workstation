@@ -35,6 +35,14 @@ argument_specs:
         description: Whether to install clipse (clipboard history TUI).
         required: false
         type: bool
+      desktop_integration_github_api_token:
+        default: "{{ lookup('ansible.builtin.env', 'GH_TOKEN') or lookup('ansible.builtin.env', 'GITHUB_TOKEN') }}"
+        description: >-
+          Optional GitHub API token used only to raise the rate limit when resolving the cliphist release-asset digest.
+          Defaults to GH_TOKEN/GITHUB_TOKEN from the environment; unauthenticated still works within GitHub's
+          60 requests/hour per-IP limit.
+        required: false
+        type: str
       desktop_integration_cliphist_version:
         description: cliphist version (github-releases sentriz/cliphist), installed from a checksum-verified binary.
         required: false

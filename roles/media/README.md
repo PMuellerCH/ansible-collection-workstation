@@ -74,5 +74,4 @@ no Renovate datasource for them.
 ### Known limitation: download staging
 
 Release downloads land in a fixed `/tmp` path and their checksum is verified at download time; the root-level install
-follows. On a single-user workstation the window in between is accepted (tracked in #170). The OnlyOffice and Brave apt
-keys are fetched over TLS without a fingerprint pin (tracked in #171).
+follows. On a single-user workstation the window in between is accepted (tracked in #170).
