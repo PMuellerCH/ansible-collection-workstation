@@ -1,15 +1,16 @@
 # pmuellerch.workstation.base
 
 Foundational workstation setup: base system packages, hostname, locale, corporate
-proxy, git, SSH, the Python toolchain, and fonts. This role must run **first** —
+proxy, SSH, the Python toolchain, Node.js, and fonts. This role must run **first** —
 every other role in the collection assumes locale, proxy, and hostname are already
 configured.
 
-Base packages, git, SSH, Python, and fonts are one role because none of them carry
+Base packages, SSH, Python, Node.js, and fonts are one role because none of them carry
 consumer-specific data and all are foundational enough that a real workstation
-always wants all of them. Per-tool granularity is preserved via task tags
-(`base`, `git`, `ssh`, `python`, `fonts`) so `--tags <tool>` still runs only that
-slice — see [Tags](#tags).
+always wants all of them. The tasks are split into one file per component
+(`system`, `proxy`, `ssh`, `python`, `nodejs`, `fonts`) behind a thin `tasks/main.yml`, and each
+carries its own tag so `--tags <component>` runs only that slice — see [Tags](#tags). Git
+configuration moved to the `git` role.
 
 ## What it does
 
@@ -29,14 +30,15 @@ slice — see [Tags](#tags).
   Flatpak-accessible bundle; sets `NODE_EXTRA_CA_CERTS` and `UV_SYSTEM_CERTS`
   in `/etc/environment` so Node.js and `uv`/`uvx` (neither of which reads the
   OS trust store by default) trust the corporate CA too.
-- Installs git and configures global identity/editor/pull-push defaults, plus
-  optional SSH-based commit/tag signing.
 - Creates `~/.ssh/` and `~/.config/ssh/`, deploys a config that routes GitHub SSH
   over port 443 (works through restrictive firewalls), symlinks `~/.ssh/config`
   to it, fixes key permissions if present, and injects `base_ssh_extra_hosts`
   entries. Does **not** generate SSH keys — copy them from another machine first.
-- Installs `build-essential`, `python3-pip`, `python3-venv` via apt, and
+- Installs `python3-pip`, `python3-venv` via apt, and
   `uv`/`uvx` from the GitHub release tarball to `/usr/local/bin/`.
+- Installs Node.js LTS (`base_nodejs_major_version`) and `build-essential` from the
+  NodeSource apt repository. The `ai_cli` role (Claude Code) needs this and does not install Node.js itself;
+  the `editor` role's mermaid-cli prefers it. Disable with `base_nodejs_enabled: false`.
 - Installs JetBrains Mono Nerd Font to `~/.local/share/fonts/` and refreshes the
   font cache; a version stamp file skips re-download when already current.
 
@@ -62,21 +64,15 @@ consuming playbook runs.
 | `base_no_proxy` | `""` | Comma-separated list of hosts/CIDRs that bypass the proxy |
 | `base_vault_addr` | `""` | HashiCorp Vault address, exported as `VAULT_ADDR`; leave empty without Vault access |
 | `base_desktop_environment` | `gnome` | `gnome` or `cosmic`; controls which proxy integration path is applied |
-| `base_git_user_name` | *(required)* | Value for git's global `user.name` |
-| `base_git_user_email` | *(required)* | Value for git's global `user.email` |
-| `base_git_default_branch` | `main` | Value for git's global `init.defaultBranch` |
-| `base_git_pull_rebase` | `true` | Whether `git pull` rebases instead of merges |
-| `base_git_push_default` | `simple` | Value for git's global `push.default` |
-| `base_git_editor` | `vim` | Value for git's global `core.editor` |
-| `base_git_signing_enabled` | `true` | Configure SSH-based commit/tag signing |
-| `base_git_signing_key` | `{{ ansible_facts['env']['HOME'] }}/.ssh/id_ed25519.pub` | Path to the SSH public key used as git's `user.signingkey` |
+| `base_nodejs_enabled` | `true` | Install Node.js (NodeSource) and `build-essential` |
+| `base_nodejs_major_version` | `"24"` | Node.js LTS major version; selects the NodeSource apt repository |
 | `base_ssh_extra_hosts` | `[]` | Extra SSH host blocks (`name`, `hostname`, `user`, optional `identity_file`) |
 | `base_python_uv_version` | see `defaults/main.yml` | `uv` version (github-releases `astral-sh/uv`) |
 | `base_fonts_nerd_font_version` | see `defaults/main.yml` | Nerd Fonts release version (github-releases `ryanoasis/nerd-fonts`) |
 
 All other packages installed by this role (`curl`, `jq`, `yq`, `unzip`, `dnsutils`,
 `cifs-utils`, `pwgen`, `openssl`, `direnv`, `open-vm-tools`, `locales`,
-`hunspell-de-ch`, `hunspell-en-us`, `git`, `build-essential`, `python3-pip`,
+`hunspell-de-ch`, `hunspell-en-us`, `build-essential`, `python3-pip`,
 `python3-venv`, `fontconfig`) are installed unpinned from the Ubuntu apt
 archive — see [Notes](#notes) for why.
 
@@ -88,9 +84,6 @@ archive — see [Notes](#notes) for why.
     - role: pmuellerch.workstation.base
       vars:
         base_hostname: my-machine
-        base_git_user_name: Jane Doe
-        base_git_user_email: jane@example.com
-        base_git_editor: nvim
         base_http_proxy: "http://proxy.example.com:8080"
         base_https_proxy: "http://proxy.example.com:8080"
         base_no_proxy: "localhost,127.0.0.1,example.com"
@@ -109,10 +102,11 @@ consuming playbook can filter to a single tool slice:
 
 | Slice | Tags |
 | --- | --- |
-| Core packages, hostname, locale, proxy | `base` |
-| git | `git`, `base` |
+| Core packages, hostname, locale | `system`, `base` |
+| Corporate proxy, CA certificate | `proxy`, `base` |
 | SSH | `ssh`, `base` |
 | Python toolchain (`uv`) | `python`, `base` |
+| Node.js (NodeSource) | `nodejs`, `base` |
 | Fonts | `fonts`, `base` |
 
 **Do not** put an outer `tags:` on the role invocation in your play — that tag
@@ -149,3 +143,10 @@ cascades to every task in the role and defeats this per-tool filtering.
   remit; `uv`/`uvx` and Nerd Fonts stay pinned+checksummed since those are
   downloaded release artifacts, not apt-repo packages, and don't have this
   failure mode.
+
+### Known limitation: NodeSource signing key
+
+The NodeSource apt key is fetched over TLS from `deb.nodesource.com` (re-fetched on every run, so rotations are picked up)
+and is used as `signed_by` for the NodeSource repository only; there is no fingerprint pin yet. apt then verifies every
+package against the signed repository metadata. The same applies to the Docker and HashiCorp keys in `ansible_dev` and
+`cloud_cli`.

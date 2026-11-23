@@ -1,0 +1,353 @@
+---
+# ---- neovim ----
+# neovim publishes no checksum file for its release assets, so the checksum is
+# derived at run time from GitHub's own per-asset digest for the pinned version
+# (see the digest-checksum note in README). Nothing to keep in sync by hand when
+# Renovate bumps editor_neovim_version.
+- name: Get installed neovim version
+  ansible.builtin.command: nvim --version
+  register: editor_neovim_current_version
+  changed_when: false
+  failed_when: false
+  when: editor_neovim_enabled
+  tags: [neovim, editor]
+
+- name: Fetch neovim release metadata for the GitHub asset digest
+  ansible.builtin.get_url:
+    url: "https://api.github.com/repos/neovim/neovim/releases/tags/v{{ editor_neovim_version }}"
+    dest: "/tmp/nvim-linux-x86_64-{{ editor_neovim_version }}_release.json"
+    force: true
+    headers: >-
+      {{ {'Accept': 'application/vnd.github+json'}
+         | combine({'Authorization': 'Bearer ' + editor_github_api_token}
+                   if editor_github_api_token else {}) }}
+    mode: "0644"
+  # Suppress output only when a token is in use, so the Bearer header cannot
+  # leak into invocation.module_args under -v or on failure. Unauthenticated
+  # runs keep full logging.
+  no_log: "{{ editor_github_api_token | length > 0 }}"
+  when: >-
+    not ansible_check_mode and
+    editor_neovim_enabled and
+    (editor_neovim_current_version.rc != 0 or
+     editor_neovim_version not in editor_neovim_current_version.stdout)
+  tags: [neovim, editor]
+
+- name: Read neovim release metadata
+  ansible.builtin.slurp:
+    path: "/tmp/nvim-linux-x86_64-{{ editor_neovim_version }}_release.json"
+  register: editor_neovim_release_raw
+  when: >-
+    not ansible_check_mode and
+    editor_neovim_enabled and
+    (editor_neovim_current_version.rc != 0 or
+     editor_neovim_version not in editor_neovim_current_version.stdout)
+  tags: [neovim, editor]
+
+- name: Resolve neovim archive checksum from the release metadata
+  ansible.builtin.set_fact:
+    editor_neovim_checksum: >-
+      {{ (editor_neovim_release_raw.content | b64decode | from_json).assets
+         | selectattr('name', 'equalto', 'nvim-linux-x86_64.tar.gz')
+         | map(attribute='digest') | select('string') | first | default('') }}
+  when: >-
+    not ansible_check_mode and
+    editor_neovim_enabled and
+    (editor_neovim_current_version.rc != 0 or
+     editor_neovim_version not in editor_neovim_current_version.stdout)
+  tags: [neovim, editor]
+
+- name: Assert GitHub published a sha256 digest for the neovim archive
+  ansible.builtin.assert:
+    that: editor_neovim_checksum.startswith('sha256:')
+    fail_msg: >-
+      GitHub published no sha256 digest for nvim-linux-x86_64.tar.gz
+      ({{ editor_neovim_version }}); cannot verify the download.
+  when: >-
+    not ansible_check_mode and
+    editor_neovim_enabled and
+    (editor_neovim_current_version.rc != 0 or
+     editor_neovim_version not in editor_neovim_current_version.stdout)
+  tags: [neovim, editor]
+
+- name: Download neovim archive
+  ansible.builtin.get_url:
+    url: "https://github.com/neovim/neovim/releases/download/v{{ editor_neovim_version }}/nvim-linux-x86_64.tar.gz"
+    dest: "/tmp/nvim-linux-x86_64-{{ editor_neovim_version }}.tar.gz"
+    checksum: "{{ editor_neovim_checksum }}"
+    mode: "0644"
+  when: >-
+    not ansible_check_mode and
+    editor_neovim_enabled and
+    (editor_neovim_current_version.rc != 0 or
+     editor_neovim_version not in editor_neovim_current_version.stdout)
+  tags: [neovim, editor]
+
+- name: Extract neovim to /opt
+  ansible.builtin.unarchive:
+    src: "/tmp/nvim-linux-x86_64-{{ editor_neovim_version }}.tar.gz"
+    dest: /opt/
+    remote_src: true
+  become: true
+  when: >-
+    not ansible_check_mode and
+    editor_neovim_enabled and
+    (editor_neovim_current_version.rc != 0 or
+     editor_neovim_version not in editor_neovim_current_version.stdout)
+  tags: [neovim, editor]
+
+- name: Create neovim symlink
+  ansible.builtin.file:
+    src: /opt/nvim-linux-x86_64/bin/nvim
+    dest: /usr/local/bin/nvim
+    state: link
+  become: true
+  when: >-
+    not ansible_check_mode and
+    editor_neovim_enabled and
+    (editor_neovim_current_version.rc != 0 or
+     editor_neovim_version not in editor_neovim_current_version.stdout)
+  tags: [neovim, editor]
+
+- name: Check if LazyVim config is already present
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/init.lua"
+  register: editor_neovim_lazyvim_stat
+  become: false
+  when: editor_neovim_enabled
+  tags: [neovim, editor]
+
+- name: Clone LazyVim starter
+  # LazyVim/starter has no release tags — it is a template meant to be
+  # cloned once and immediately customized/committed by the user, not a
+  # versioned artifact tracked for updates, so cloning the default branch is
+  # deliberate here (unlike get_url downloads elsewhere in this collection,
+  # which always pin to an immutable ref). This only ever runs once per
+  # machine, guarded by the init.lua stat check above.
+  ansible.builtin.git:
+    repo: https://github.com/LazyVim/starter.git
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/nvim"
+    version: main
+    update: false
+  become: false
+  when: >-
+    editor_neovim_enabled and
+    not editor_neovim_lazyvim_stat.stat.exists
+  tags: [neovim, editor]
+
+- name: Remove LazyVim starter .git directory (fresh config)
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/.git"
+    state: absent
+  become: false
+  when: >-
+    not ansible_check_mode and
+    editor_neovim_enabled and
+    not editor_neovim_lazyvim_stat.stat.exists
+  tags: [neovim, editor]
+
+- name: Ensure plugins directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lua/plugins"
+    state: directory
+    mode: "0755"
+  become: false
+  when: >-
+    not ansible_check_mode and
+    editor_neovim_enabled
+  tags: [neovim, editor]
+
+- name: Check currently-deployed lazyvim.json extras
+  # LazyVim rewrites this file at runtime — expands each short extra name
+  # (e.g. "lang.yaml") to its fully-qualified module path
+  # ("lazyvim.plugins.extras.lang.yaml") and adds "news"/"version"
+  # bookkeeping fields — the moment nvim actually loads the config (which
+  # the headless sync task below now does on every apply). A plain
+  # force-overwriting copy would therefore never be idempotent: it resets
+  # the file to short-name form, the sync task immediately expands it
+  # again, forever. Comparing the *set of extras* (after stripping the
+  # module-path prefix LazyVim adds) against the role's own desired list
+  # lets the deploy task below skip when nothing meaningful changed, while
+  # still redeploying — and self-healing the expansion again on the next
+  # sync — when roles/editor/files/lazyvim.json itself gains or loses
+  # an extra.
+  ansible.builtin.slurp:
+    src: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lazyvim.json"
+  register: editor_neovim_lazyvim_json_current
+  become: false
+  failed_when: false
+  when: editor_neovim_enabled
+  tags: [neovim, editor]
+
+- name: Deploy lazyvim.json extras config
+  ansible.builtin.copy:
+    src: lazyvim.json
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lazyvim.json"
+    mode: "0644"
+  become: false
+  vars:
+    _editor_lazyvim_desired_extras: "{{ (lookup('file', role_path + '/files/lazyvim.json') | from_json).extras }}"
+    _editor_lazyvim_current_extras: >-
+      {{
+        (editor_neovim_lazyvim_json_current.content | b64decode | from_json).extras | default([])
+        | map('regex_replace', '^lazyvim\.plugins\.extras\.', '')
+        | list
+        if editor_neovim_lazyvim_json_current.content is defined
+        else []
+      }}
+  when: >-
+    not ansible_check_mode and
+    editor_neovim_enabled and
+    (_editor_lazyvim_desired_extras | sort) != (_editor_lazyvim_current_extras | sort)
+  tags: [neovim, editor]
+
+- name: Deploy catppuccin colorscheme plugin config
+  ansible.builtin.copy:
+    src: plugins/colorscheme.lua
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lua/plugins/colorscheme.lua"
+    mode: "0644"
+  become: false
+  when: >-
+    not ansible_check_mode and
+    editor_neovim_enabled
+  tags: [neovim, editor]
+
+- name: Deploy vim-tmux-navigator plugin config
+  ansible.builtin.copy:
+    src: plugins/tmux-navigator.lua
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lua/plugins/tmux-navigator.lua"
+    mode: "0644"
+  become: false
+  when: >-
+    not ansible_check_mode and
+    editor_neovim_enabled
+  tags: [neovim, editor]
+
+- name: Ensure nvim config directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lua/config"
+    state: directory
+    mode: "0755"
+  become: false
+  when: >-
+    not ansible_check_mode and
+    editor_neovim_enabled
+  tags: [neovim, editor]
+
+- name: Deploy keymaps config (jk escape, buffer navigation)
+  ansible.builtin.copy:
+    src: config/keymaps.lua
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lua/config/keymaps.lua"
+    mode: "0644"
+  become: false
+  when: >-
+    not ansible_check_mode and
+    editor_neovim_enabled
+  tags: [neovim, editor]
+
+- name: Create zsh conf.d directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d"
+    state: directory
+    mode: "0755"
+  become: false
+  when: >-
+    not ansible_check_mode and
+    editor_neovim_enabled
+  tags: [neovim, editor]
+
+- name: Deploy neovim shell integration snippet
+  ansible.builtin.copy:
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/neovim.zsh"
+    mode: "0644"
+    content: |
+      # Preferred editor
+      export EDITOR='nvim'
+      export VISUAL='nvim'
+      alias vi='nvim'
+      alias vim='nvim'
+  become: false
+  when: >-
+    not ansible_check_mode and
+    editor_neovim_enabled
+  tags: [neovim, editor]
+
+# ---- presenterm.nvim plugin config (the presenterm binary and mermaid-cli are
+# installed by presenterm.yml; the plugin config stays here because the headless
+# LazyVim sync below must run after it is deployed) ----
+- name: Ensure nvim plugins directory exists (presenterm.nvim)
+  # Duplicates the neovim "Ensure plugins directory exists" task above so this
+  # block does not depend on that task's position. Tagged `neovim` (not
+  # `presenterm`): this file is only included under the neovim tag, and the
+  # plugin config must be deployed before the headless sync below.
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lua/plugins"
+    state: directory
+    mode: "0755"
+  become: false
+  when: >-
+    not ansible_check_mode and
+    editor_neovim_enabled and
+    editor_presenterm_plugin_enabled
+  tags: [neovim, editor]
+
+- name: Deploy presenterm.nvim plugin config
+  # Gated on editor_presenterm_plugin_enabled, independently of the presenterm
+  # binary (editor_presenterm_enabled). See README for why both toggles exist.
+  ansible.builtin.copy:
+    src: plugins/presenterm.lua
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lua/plugins/presenterm.lua"
+    mode: "0644"
+  become: false
+  when: >-
+    not ansible_check_mode and
+    editor_neovim_enabled and
+    editor_presenterm_plugin_enabled
+  tags: [neovim, editor]
+
+# ---- LazyVim headless plugin sync (runs after every plugin config file
+# above is deployed, so a single apply on a fresh machine both configures
+# and installs everything in one pass) ----
+- name: Check lazy-lock.json checksum before sync
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lazy-lock.json"
+  register: editor_neovim_lazylock_before
+  become: false
+  when: editor_neovim_enabled and editor_neovim_lazy_sync_enabled
+  tags: [neovim, editor]
+
+- name: Sync LazyVim plugins headlessly
+  # "Lazy! sync" (bang = non-interactive) installs missing plugins, updates
+  # existing ones, and removes ones no longer declared — the documented
+  # lazy.nvim headless-CI command; it blocks until the sync fully completes
+  # before +qa quits, unlike a bare (non-bang) :Lazy sync. Individual plugin
+  # versions aren't Renovate-tracked (see README) — this always syncs to
+  # whatever each plugin's default branch currently resolves to, recorded
+  # in lazy-lock.json.
+  ansible.builtin.command: nvim --headless "+Lazy! sync" +qa
+  become: false
+  changed_when: false
+  when: >-
+    not ansible_check_mode and
+    editor_neovim_enabled and
+    editor_neovim_lazy_sync_enabled
+  tags: [neovim, editor]
+
+- name: Check lazy-lock.json checksum after sync
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lazy-lock.json"
+  register: editor_neovim_lazylock_after
+  become: false
+  when: >-
+    not ansible_check_mode and
+    editor_neovim_enabled and
+    editor_neovim_lazy_sync_enabled
+  # Reports changed only when the sync actually installed/updated/removed a
+  # plugin (lock file content differs), not on every run — required for
+  # this task to behave correctly in Molecule's idempotence check, since
+  # (unlike most tasks in this role) it must run on every apply rather than
+  # being gated behind a one-time "already installed" stat check.
+  changed_when: >-
+    editor_neovim_lazylock_before.stat.checksum | default('') !=
+    editor_neovim_lazylock_after.stat.checksum | default('')
+  tags: [neovim, editor]

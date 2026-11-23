@@ -1,0 +1,9 @@
+---
+galaxy_info:
+  role_name: git
+  namespace: pmuellerch
+  author: Philipp Müller
+  license: MIT
+  description: Configure git and install the GitHub CLI, lazygit and delta
+  min_ansible_version: "2.17"
+dependencies: []

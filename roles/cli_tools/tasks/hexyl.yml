@@ -1,0 +1,11 @@
+---
+# hexyl
+- name: Install hexyl
+  ansible.builtin.apt:
+    name: hexyl
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: cli_tools_hexyl_enabled
+  tags: [hexyl, cli_tools]

@@ -12,24 +12,25 @@ desktop environment. It merges the former `swisstopo.workstation`
 No role declares an Ansible role dependency on another (`meta/main.yml` is
 empty everywhere), so every role can run standalone — this is what Molecule
 tests. On a real workstation, run `base` first anyway: it sets up locale,
-proxy, hostname, git, and fonts that other roles are written to assume are
+proxy, hostname, and fonts that other roles are written to assume are
 already in place.
 
 | Role | What it installs |
 | --- | --- |
-| [base](roles/base/README.md) | Base system packages, hostname, locale, corporate proxy, git, SSH, Python toolchain, fonts — run first |
-| [cli_dev_env](roles/cli_dev_env/README.md) | lazygit, neovim (LazyVim), Claude Code CLI, Kiro CLI, OpenCode |
+| [base](roles/base/README.md) | Base system packages, hostname, locale, corporate proxy, SSH, Python toolchain, Node.js, fonts — run first |
+| [git](roles/git/README.md) | git config (identity, SSH signing), GitHub CLI, lazygit, delta |
+| [editor](roles/editor/README.md) | neovim (LazyVim), presenterm + mermaid-cli |
+| [ai_cli](roles/ai_cli/README.md) | Claude Code CLI, Kiro CLI, OpenCode |
+| [cli_tools](roles/cli_tools/README.md) | bat, btop, eza, fd, fzf, htop, ripgrep, zoxide, emoji-fzf, sd, duf, gping, hexyl, procs, dust, viddy, xcp, doggo, jaq, moor, yazi |
 | [chat_clients](roles/chat_clients/README.md) | Slack, Microsoft Teams |
 | [clipboard_tools](roles/clipboard_tools/README.md) | Wayland clipboard tooling: wl-clipboard, cliphist, clipse |
 | [code_quality_tools](roles/code_quality_tools/README.md) | trivy, pre-commit, detect-secrets, yamllint, checkov, ansible-lint |
 | [desktop_apps](roles/desktop_apps/README.md) | OnlyOffice Desktop Editors, Firefox policies |
 | [desktop_customization](roles/desktop_customization/README.md) | GNOME/COSMIC workspace settings, Flameshot, emoji picker (GUI) |
-| [gh](roles/gh/README.md) | GitHub CLI |
 | [ansible_dev](roles/ansible_dev/README.md) | ansible-core (pipx) + molecule, Docker CE, act |
 | [cloud_cli](roles/cloud_cli/README.md) | AWS CLI + session-manager-plugin, Terraform/Vault, tfswitch, tflint, terraform-docs, floci |
 | [k8s_tools](roles/k8s_tools/README.md) | kubectl, k9s, helm, kubectx/kubens, stern, krew, kubeconform, kube-linter |
 | [maintenance](roles/maintenance/README.md) | apt update/safe-upgrade, autoremove/autoclean, journal vacuum, Docker prune, Flatpak cleanup — for a separate maintenance playbook, not `site.yml` |
-| [modern_cli](roles/modern_cli/README.md) | bat, btop, eza, fd, fzf, htop, presenterm, ripgrep, zoxide, emoji-fzf |
 | [terminal_env](roles/terminal_env/README.md) | zsh, tmux, kitty |
 | [bitwarden](roles/bitwarden/README.md) | Bitwarden password manager desktop app |
 | [synology](roles/synology/README.md) | Synology Drive and Chat clients |
@@ -45,9 +46,9 @@ Every role uses per-tool Ansible tags (in addition to an umbrella
 
 Copy-paste starting point for bringing up a fresh Ubuntu 24.04
 IaC developer workstation. Install the collection, then run a playbook that
-applies the roles in the recommended order (`base` first; `cli_dev_env`
-before `modern_cli` so the NodeSource Node.js is in place before
-`modern_cli`'s mermaid-cli check — see the `cli_dev_env` README).
+applies the roles in the recommended order (`base` first: it installs the
+NodeSource Node.js that `ai_cli` (Claude Code) needs and `editor`'s mermaid-cli
+prefers).
 
 Install the collection from this repository (it is distributed via git tags,
 not published to Ansible Galaxy). Pin the tag in a `requirements.yml` — use the
@@ -88,10 +89,10 @@ fresh proxied machine:
     HTTP_PROXY: "{{ base_http_proxy }}"
     HTTPS_PROXY: "{{ base_http_proxy }}"
   vars:
-    # --- required (base has no defaults for these) ---
+    # --- required (these roles have no defaults for them) ---
     base_hostname: my-workstation
-    base_git_user_name: "Jane Doe"
-    base_git_user_email: jane.doe@example.com
+    git_user_name: "Jane Doe"
+    git_user_email: jane.doe@example.com
     # --- corporate network (leave "" off-network) ---
     base_http_proxy: "http://proxy.example.com:8080"
     ansible_dev_http_proxy: "{{ base_http_proxy }}"
@@ -102,23 +103,24 @@ fresh proxied machine:
     # vault-login also needs a GitHub token written to ~/.config/vault/github_token:
     cloud_cli_terraform_vault_github_token: "{{ lookup('ansible.builtin.env', 'VAULT_GITHUB_PAT') }}"
     # --- Claude Code github MCP server token (from your own secret store) ---
-    cli_dev_env_claude_code_github_token: "{{ lookup('ansible.builtin.env', 'GITHUB_PAT') }}"
+    ai_cli_claude_code_github_token: "{{ lookup('ansible.builtin.env', 'GITHUB_PAT') }}"
   roles:
-    # 1. base first: locale, corporate proxy, hostname, git, SSH, Python, fonts.
+    # 1. base first: locale, corporate proxy, hostname, SSH, Python, Node.js, fonts.
     - role: pmuellerch.workstation.base
-    # 2. terminal shell + multiplexer + terminal emulator.
+    # 2. git config, GitHub CLI, lazygit, delta.
+    - role: pmuellerch.workstation.git
+    # 3. terminal shell + multiplexer + terminal emulator.
     - role: pmuellerch.workstation.terminal_env
-    # 3. CLI dev environment: lazygit, neovim/LazyVim, Claude Code, Kiro CLI,
-    #    OpenCode. Runs before modern_cli so its NodeSource Node.js wins on PATH.
-    - role: pmuellerch.workstation.cli_dev_env
-    # 4. modern CLI replacements (bat, eza, fd, fzf, ripgrep, zoxide, ...).
-    - role: pmuellerch.workstation.modern_cli
-    # 5. clipboard tooling (Wayland), GitHub CLI, then the infra toolchain.
+    # 4. editor (neovim/LazyVim, presenterm), AI coding agents (needs base's Node.js
+    #    for Claude Code) and the modern CLI replacements.
+    - role: pmuellerch.workstation.editor
+    - role: pmuellerch.workstation.ai_cli
+    - role: pmuellerch.workstation.cli_tools
+    # 5. clipboard tooling (Wayland), then the infra toolchain.
     #    ansible_dev must come before cloud_cli and k8s_tools: it creates the
     #    ansible-core pipx venv they inject boto3 / the Python Kubernetes
     #    libraries into (they skip the inject if it doesn't exist yet).
     - role: pmuellerch.workstation.clipboard_tools
-    - role: pmuellerch.workstation.gh
     - role: pmuellerch.workstation.ansible_dev
     - role: pmuellerch.workstation.cloud_cli
     - role: pmuellerch.workstation.k8s_tools
@@ -173,63 +175,88 @@ Tags: `kubernetes_tools` is replaced by `kubectl`, `k9s`, `helm`, `kube_utils`, 
 tags are `ansible_dev`, `cloud_cli` and `k8s_tools` instead of `iac_tools`. The AWS CLI and session-manager-plugin are now
 GPG-verified (see the `cloud_cli` README).
 
+## Migrating from `cli_dev_env`, `modern_cli` and `gh`
+
+`cli_dev_env`, `modern_cli` and `gh` were split into `git`, `editor`, `ai_cli` and `cli_tools`, and `base` lost its git
+part and gained Node.js (a breaking change; variables were renamed with no aliases).
+
+| Old | New |
+| --- | --- |
+| `base_git_*` | `git_*` (`git_user_name`, `git_user_email`, `git_default_branch`, `git_pull_rebase`, `git_push_default`, `git_editor`, `git_signing_enabled`, `git_signing_key`) |
+| `cli_dev_env_lazygit_*` | `git_lazygit_*` |
+| `modern_cli_delta_*` | `git_delta_*` |
+| the `gh` role | `git` (`git_gh_enabled`) |
+| `cli_dev_env_neovim_*`, `cli_dev_env_github_api_token` | `editor_neovim_*`, `editor_github_api_token` |
+| `cli_dev_env_neovim_presenterm_plugin_enabled` | `editor_presenterm_plugin_enabled` |
+| `modern_cli_presenterm_*` | `editor_presenterm_*` |
+| `cli_dev_env_claude_code_*`, `_kiro_*`, `_opencode_*` | `ai_cli_claude_code_*`, `ai_cli_kiro_*`, `ai_cli_opencode_*` |
+| `cli_dev_env_claude_code_nodejs_major_version` | `base_nodejs_major_version` (plus `base_nodejs_enabled`) |
+| `modern_cli_<tool>_*` (all other tools) | `cli_tools_<tool>_*` |
+
+Run `base` before `ai_cli`: Node.js moved into `base`, and Claude Code now fails with a clear message instead of
+installing Node.js itself when npm is missing. Tags: the umbrella tags are `git`, `editor`, `ai_cli` and `cli_tools`;
+`claude-code`, `kiro`, `opencode`, `neovim`, `presenterm`, `lazygit` and `delta` are unchanged, the `cli-tools` tag is
+gone (each tool has its own), and `base` has new component tags (`system`, `proxy`, `nodejs`, plus the existing `ssh`,
+`python`, `fonts`). The zsh snippet `modern_cli.zsh` is replaced by `cli_tools.zsh`, `git.zsh` (delta alias) and
+`presenterm.zsh` (mmdc wrapper); the old file is removed.
+
 ## Shell aliases
 
 Several roles deploy zsh snippets to `~/.config/zsh/conf.d/*.zsh`. They take
 effect only in an interactive zsh that sources that directory —
-`terminal_env`'s `.zshrc` does this. Most `modern_cli` and `clipboard_tools`
-entries, and the `cli_dev_env` Kiro (`ki`/`kil`) and OpenCode (`oc`/`ocr`)
+`terminal_env`'s `.zshrc` does this. Most `cli_tools` and `clipboard_tools`
+entries, and the `ai_cli` Kiro (`ki`/`kil`) and OpenCode (`oc`/`ocr`)
 aliases, are additionally
 guarded by a `command -v` check so they are defined only when the tool is
-actually installed; the `cli_dev_env` `vi`/`vim` and the `cloud_cli` entries
+actually installed; the `editor` `vi`/`vim` and the `cloud_cli` entries
 are plain aliases gated only by the role variable in the last column.
 Items written as `name()` are shell functions rather than plain aliases.
 
 | Alias / function | Runs | Role | Enabled by |
 | --- | --- | --- | --- |
-| `cat` | `batcat --paging=never` | modern_cli | `modern_cli_bat_enabled` |
-| `top` | `btop` | modern_cli | `modern_cli_btop_enabled` |
-| `grep` | `rg` | modern_cli | `modern_cli_ripgrep_enabled` |
-| `find` | `fd` | modern_cli | `modern_cli_fd_enabled` |
-| `sed` | `sd` | modern_cli | `modern_cli_sd_enabled` |
-| `ps` | `procs` | modern_cli | `modern_cli_procs_enabled` |
-| `du` | `dust` | modern_cli | `modern_cli_dust_enabled` |
-| `df` | `duf` | modern_cli | `modern_cli_duf_enabled` |
-| `diff` | `delta` | modern_cli | `modern_cli_delta_enabled` |
-| `ping` | `gping` | modern_cli | `modern_cli_gping_enabled` |
-| `watch` | `viddy` | modern_cli | `modern_cli_viddy_enabled` |
-| `less` | `moor` | modern_cli | `modern_cli_moor_enabled` |
-| `cp` | `xcp` | modern_cli | `modern_cli_xcp_enabled` |
-| `dig` | `doggo` | modern_cli | `modern_cli_doggo_enabled` |
-| `jq` | `jaq` | modern_cli | `modern_cli_jaq_enabled` |
-| `hexdump` | `hexyl` | modern_cli | `modern_cli_hexyl_enabled` |
-| `ls`, `l` | `eza --icons` | modern_cli | `modern_cli_eza_enabled` |
-| `ll` | `eza -l --icons` | modern_cli | `modern_cli_eza_enabled` |
-| `la` | `eza -lah --icons` | modern_cli | `modern_cli_eza_enabled` |
-| `lt` | `eza --tree --icons` | modern_cli | `modern_cli_eza_enabled` |
-| `cd` | `z` (zoxide) | modern_cli | `modern_cli_zoxide_enabled` |
-| `emoji()` | fzf emoji picker → `wl-copy` | modern_cli | `modern_cli_emoji_fzf_enabled` (needs fzf + wl-copy) |
-| `mmdc()` | mermaid-cli via system Chrome | modern_cli | `modern_cli_presenterm_enabled` |
-| `y()` | yazi, then `cd` to its exit directory | modern_cli | `modern_cli_yazi_enabled` |
+| `cat` | `batcat --paging=never` | cli_tools | `cli_tools_bat_enabled` |
+| `top` | `btop` | cli_tools | `cli_tools_btop_enabled` |
+| `grep` | `rg` | cli_tools | `cli_tools_ripgrep_enabled` |
+| `find` | `fd` | cli_tools | `cli_tools_fd_enabled` |
+| `sed` | `sd` | cli_tools | `cli_tools_sd_enabled` |
+| `ps` | `procs` | cli_tools | `cli_tools_procs_enabled` |
+| `du` | `dust` | cli_tools | `cli_tools_dust_enabled` |
+| `df` | `duf` | cli_tools | `cli_tools_duf_enabled` |
+| `diff` | `delta` | git | `git_delta_enabled` + `git_deploy_shell_aliases` |
+| `ping` | `gping` | cli_tools | `cli_tools_gping_enabled` |
+| `watch` | `viddy` | cli_tools | `cli_tools_viddy_enabled` |
+| `less` | `moor` | cli_tools | `cli_tools_moor_enabled` |
+| `cp` | `xcp` | cli_tools | `cli_tools_xcp_enabled` |
+| `dig` | `doggo` | cli_tools | `cli_tools_doggo_enabled` |
+| `jq` | `jaq` | cli_tools | `cli_tools_jaq_enabled` |
+| `hexdump` | `hexyl` | cli_tools | `cli_tools_hexyl_enabled` |
+| `ls`, `l` | `eza --icons` | cli_tools | `cli_tools_eza_enabled` |
+| `ll` | `eza -l --icons` | cli_tools | `cli_tools_eza_enabled` |
+| `la` | `eza -lah --icons` | cli_tools | `cli_tools_eza_enabled` |
+| `lt` | `eza --tree --icons` | cli_tools | `cli_tools_eza_enabled` |
+| `cd` | `z` (zoxide) | cli_tools | `cli_tools_zoxide_enabled` |
+| `emoji()` | fzf emoji picker → `wl-copy` | cli_tools | `cli_tools_emoji_fzf_enabled` (needs fzf + wl-copy) |
+| `mmdc()` | mermaid-cli via system Chrome | editor | `editor_presenterm_enabled` |
+| `y()` | yazi, then `cd` to its exit directory | cli_tools | `cli_tools_yazi_enabled` |
 | `ch()` | `cliphist` history → fzf → `wl-copy` | clipboard_tools | `clipboard_tools_cliphist_enabled` (needs fzf + wl-copy) |
 | `clipboard` | `clipse` | clipboard_tools | `clipboard_tools_clipse_enabled` |
-| `vi`, `vim` | `nvim` | cli_dev_env | `cli_dev_env_neovim_enabled` |
-| `ki` | `kiro-cli chat --trust-all-tools` (autonomous) | cli_dev_env | `cli_dev_env_kiro_enabled` + `cli_dev_env_kiro_deploy_shell_aliases` |
-| `kil` | `kiro-cli login` | cli_dev_env | `cli_dev_env_kiro_enabled` + `cli_dev_env_kiro_deploy_shell_aliases` |
-| `oc` | `opencode` (interactive TUI) | cli_dev_env | `cli_dev_env_opencode_enabled` + `cli_dev_env_opencode_deploy_shell_aliases` |
-| `ocr` | `opencode run` (headless prompt) | cli_dev_env | `cli_dev_env_opencode_enabled` + `cli_dev_env_opencode_deploy_shell_aliases` |
+| `vi`, `vim` | `nvim` | editor | `editor_neovim_enabled` |
+| `ki` | `kiro-cli chat --trust-all-tools` (autonomous) | ai_cli | `ai_cli_kiro_enabled` + `ai_cli_kiro_deploy_shell_aliases` |
+| `kil` | `kiro-cli login` | ai_cli | `ai_cli_kiro_enabled` + `ai_cli_kiro_deploy_shell_aliases` |
+| `oc` | `opencode` (interactive TUI) | ai_cli | `ai_cli_opencode_enabled` + `ai_cli_opencode_deploy_shell_aliases` |
+| `ocr` | `opencode run` (headless prompt) | ai_cli | `ai_cli_opencode_enabled` + `ai_cli_opencode_deploy_shell_aliases` |
 | `asl` | `aws sso login` | cloud_cli | `cloud_cli_aws_enabled` |
 | `tfaa` | `terraform apply -auto-approve` | cloud_cli | `cloud_cli_terraform_enabled` |
 | `tfsl` | `terraform state list` | cloud_cli | `cloud_cli_terraform_enabled` |
 | `tfss` | `terraform state show` | cloud_cli | `cloud_cli_terraform_enabled` |
 | `vault-login()` | `vault login --method=github` (token from `~/.config/vault/github_token`) | cloud_cli | `cloud_cli_terraform_enabled` + `cloud_cli_vault_addr` set |
 
-The `cli_dev_env` role also sets `EDITOR=nvim`/`VISUAL=nvim`, `base` and
-`cloud_cli` set Vault/AWS/Terraform environment variables, and `modern_cli`
+The `editor` role also sets `EDITOR=nvim`/`VISUAL=nvim`, `base` and
+`cloud_cli` set Vault/AWS/Terraform environment variables, and `cli_tools`
 sets an `FZF_DEFAULT_OPTS` theme; the `ki`/`kil` alias names are configurable
-(`cli_dev_env_kiro_alias_chat` / `cli_dev_env_kiro_alias_login`) as are the
-`oc`/`ocr` alias names (`cli_dev_env_opencode_alias_tui` /
-`cli_dev_env_opencode_alias_run`). See each
+(`ai_cli_kiro_alias_chat` / `ai_cli_kiro_alias_login`) as are the
+`oc`/`ocr` alias names (`ai_cli_opencode_alias_tui` /
+`ai_cli_opencode_alias_run`). See each
 role's README for the authoritative list.
 
 ## apt package versions are unpinned

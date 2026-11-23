@@ -1,0 +1,41 @@
+---
+# doggo (github release, aggregate checksums.txt — dynamic checksum)
+- name: Get installed doggo version
+  ansible.builtin.command: doggo --version
+  register: cli_tools_doggo_current_version
+  changed_when: false
+  failed_when: false
+  when: cli_tools_doggo_enabled
+  tags: [doggo, cli_tools]
+
+- name: Download doggo archive
+  ansible.builtin.get_url:
+    url: "https://github.com/mr-karan/doggo/releases/download/v{{ cli_tools_doggo_version }}/doggo-linux-x86_64.tar.gz"
+    dest: "/tmp/doggo-{{ cli_tools_doggo_version }}.tar.gz"
+    # mr-karan/doggo publishes an aggregate, version-named checksums.txt per
+    # release — get_url fetches it and matches the entry by the source URL's
+    # basename, so there's no static checksum to keep in sync by hand when
+    # Renovate bumps cli_tools_doggo_version.
+    checksum: "sha256:https://github.com/mr-karan/doggo/releases/download/v{{ cli_tools_doggo_version }}/doggo_{{ cli_tools_doggo_version }}_checksums.txt"
+    mode: "0644"
+  when: >-
+    cli_tools_doggo_enabled and
+    (cli_tools_doggo_current_version.rc != 0 or
+     cli_tools_doggo_version not in cli_tools_doggo_current_version.stdout)
+  tags: [doggo, cli_tools]
+
+- name: Install doggo binary to /usr/local/bin
+  ansible.builtin.unarchive:
+    src: "/tmp/doggo-{{ cli_tools_doggo_version }}.tar.gz"
+    dest: /usr/local/bin/
+    include:
+      - doggo
+    remote_src: true
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and
+    cli_tools_doggo_enabled and
+    (cli_tools_doggo_current_version.rc != 0 or
+     cli_tools_doggo_version not in cli_tools_doggo_current_version.stdout)
+  tags: [doggo, cli_tools]

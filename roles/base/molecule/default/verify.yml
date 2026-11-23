@@ -2,39 +2,20 @@
 - name: Verify
   hosts: all
   gather_facts: true
+  vars_files:
+    - ../../defaults/main.yml
   tasks:
     - name: Gather package facts
       ansible.builtin.package_facts:
         manager: apt
 
-    - name: Assert base, git, python, and font packages are installed
+    - name: Assert base, python, and font packages are installed
       ansible.builtin.assert:
         that:
           - "'curl' in ansible_facts.packages"
-          - "'git' in ansible_facts.packages"
           - "'build-essential' in ansible_facts.packages"
           - "'python3-pip' in ansible_facts.packages"
           - "'fontconfig' in ansible_facts.packages"
-
-    - name: Read global git config
-      community.general.git_config_info:
-        name: user.name
-        scope: global
-      register: _base_git_user_name
-
-    - name: Assert user.name was configured
-      ansible.builtin.assert:
-        that: _base_git_user_name.config_value == "Molecule Test"
-
-    - name: Read global signing key config
-      community.general.git_config_info:
-        name: user.signingkey
-        scope: global
-      register: _base_git_signing_key
-
-    - name: Assert signing key defaults to id_ed25519.pub
-      ansible.builtin.assert:
-        that: "_base_git_signing_key.config_value.endswith('/.ssh/id_ed25519.pub')"
 
     - name: Check uv is installed
       ansible.builtin.stat:
@@ -72,3 +53,16 @@
     - name: Assert Nerd Font files exist
       ansible.builtin.assert:
         that: _base_nerd_font_files.matched > 0
+
+    - name: Check Node.js version
+      ansible.builtin.command: node --version
+      register: _base_node_version
+      changed_when: false
+
+    - name: Assert Node.js major version matches the configured NodeSource LTS
+      ansible.builtin.assert:
+        that: _base_node_version.stdout.startswith('v' ~ base_nodejs_major_version ~ '.')
+
+    - name: Check npm is available
+      ansible.builtin.command: npm --version
+      changed_when: false

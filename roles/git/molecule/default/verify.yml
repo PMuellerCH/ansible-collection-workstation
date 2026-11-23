@@ -1,0 +1,117 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: true
+  # Load the role's own defaults so pinned-version assertions track
+  # defaults/main.yml as their single source of truth, rather than a second
+  # hardcoded literal that would silently go stale whenever Renovate bumps it.
+  vars_files:
+    - ../../defaults/main.yml
+  tasks:
+    - name: Gather package facts
+      ansible.builtin.package_facts:
+        manager: apt
+
+    - name: Assert git, gh and delta are installed
+      ansible.builtin.assert:
+        that:
+          - "'git' in ansible_facts.packages"
+          - "'gh' in ansible_facts.packages"
+          - "'git-delta' in ansible_facts.packages"
+
+    - name: Read global git config
+      community.general.git_config_info:
+        name: "{{ item.key }}"
+        scope: global
+      register: _git_config
+      loop:
+        - { key: user.name, value: Molecule Test }
+        - { key: user.email, value: molecule@example.com }
+        - { key: init.defaultBranch, value: "{{ git_default_branch }}" }
+      loop_control:
+        label: "{{ item.key }}"
+
+    - name: Assert the git identity and defaults were configured
+      ansible.builtin.assert:
+        that: item.config_value == item.item.value
+      loop: "{{ _git_config.results }}"
+      loop_control:
+        label: "{{ item.item.key }}"
+
+    - name: Read global signing key config
+      community.general.git_config_info:
+        name: user.signingkey
+        scope: global
+      register: _git_signing_key
+
+    - name: Assert signing key defaults to id_ed25519.pub
+      ansible.builtin.assert:
+        that: "_git_signing_key.config_value.endswith('/.ssh/id_ed25519.pub')"
+
+    - name: Stat git shell alias snippet
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/git.zsh"
+      register: _git_zsh_snippet
+
+    - name: Assert git shell alias snippet was deployed
+      ansible.builtin.assert:
+        that: _git_zsh_snippet.stat.exists
+
+
+    # lazygit
+
+    - name: Check lazygit runs
+      ansible.builtin.command: lazygit --version
+      register: _git_lazygit_version
+      changed_when: false
+
+
+    - name: Assert lazygit reports the pinned version
+      ansible.builtin.assert:
+        that: "git_lazygit_version in _git_lazygit_version.stdout"
+
+
+    - name: Stat lazygit config
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/lazygit/config.yml"
+      register: _git_lazygit_config
+
+
+    - name: Assert lazygit config was deployed
+      ansible.builtin.assert:
+        that: _git_lazygit_config.stat.exists
+
+
+    - name: Check delta's Catppuccin theme gitconfig was deployed
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/git/catppuccin-delta.gitconfig"
+      register: _git_delta_theme
+
+
+    - name: Assert delta's Catppuccin theme gitconfig was deployed
+      ansible.builtin.assert:
+        that: _git_delta_theme.stat.exists
+
+
+    - name: Check delta git config integration
+      # community.general.git_config requires value: whenever state: present
+      # applies (its default), even for a pure read — so a read-only lookup
+      # has no module alternative here.
+      ansible.builtin.command: "git config --global {{ item }}"
+      register: _git_delta_git_config
+      changed_when: false
+      loop:
+        - core.pager
+        - delta.features
+        - include.path
+      loop_control:
+        label: "{{ item }}"
+      # noqa: command-instead-of-module - community.general.git_config cannot perform a value-less read; no module alternative exists
+
+
+    - name: Assert delta is wired into git config
+      ansible.builtin.assert:
+        that:
+          - "'delta' in _git_delta_git_config.results[0].stdout"
+          - "'catppuccin-mocha' in _git_delta_git_config.results[1].stdout"
+          - "'catppuccin-delta.gitconfig' in _git_delta_git_config.results[2].stdout"

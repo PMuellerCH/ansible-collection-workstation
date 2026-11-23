@@ -1,0 +1,133 @@
+---
+# presenterm (binary + mermaid-cli only — the presenterm.nvim plugin config is
+# deployed by neovim.yml, before the headless LazyVim sync)
+- name: Get installed presenterm version
+  ansible.builtin.command: presenterm --version
+  register: editor_presenterm_current_version
+  changed_when: false
+  failed_when: false
+  when: editor_presenterm_enabled
+  tags: [presenterm, editor]
+
+- name: Download presenterm archive
+  ansible.builtin.get_url:
+    url: "{{ editor_presenterm_download_base }}/{{ editor_presenterm_archive }}"
+    dest: "/tmp/{{ editor_presenterm_archive }}"
+    # mfontanini/presenterm publishes a matching .sha512 file per release
+    # asset — get_url fetches and verifies against it directly (matched by
+    # the source URL's basename), so there's no static checksum to keep in
+    # sync by hand when Renovate bumps editor_presenterm_version.
+    checksum: "sha512:{{ editor_presenterm_download_base }}/{{ editor_presenterm_archive }}.sha512"
+    mode: "0644"
+  when: >-
+    editor_presenterm_enabled and
+    (editor_presenterm_current_version.rc != 0 or editor_presenterm_version not in editor_presenterm_current_version.stdout)
+  tags: [presenterm, editor]
+
+- name: Install presenterm binary to /usr/local/bin
+  ansible.builtin.unarchive:
+    src: "/tmp/{{ editor_presenterm_archive }}"
+    dest: /usr/local/bin/
+    include:
+      - "presenterm-{{ editor_presenterm_version }}/presenterm"
+    extra_opts:
+      - --strip-components=1
+    remote_src: true
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and
+    editor_presenterm_enabled and
+    (editor_presenterm_current_version.rc != 0 or editor_presenterm_version not in editor_presenterm_current_version.stdout)
+  tags: [presenterm, editor]
+
+- name: Check if a working npm is already available
+  # mermaid-cli only needs *some* working Node/npm, not this exact pinned
+  # version — if another role already provided one (e.g. a newer NodeSource
+  # install), pinning/holding our own older apt version below would force
+  # an unwanted downgrade of a shared system runtime other tools may
+  # depend on at a specific major version.
+  #
+  # become: true here matters: the later "Install mermaid-cli globally via
+  # npm" task also runs with become: true, and sudo does not preserve the
+  # invoking user's $PATH. Checking as the unprivileged user could find a
+  # user-local npm (e.g. via nvm) that root can't see, skip the apt
+  # install below, and then fail downstream once mermaid-cli's install
+  # runs as root. Checking with the same privilege keeps this guard
+  # consistent with what actually runs later.
+  ansible.builtin.command: npm --version
+  register: editor_npm_check
+  become: true
+  changed_when: false
+  failed_when: false
+  when: editor_presenterm_enabled
+  tags: [presenterm, editor]
+
+- name: Install nodejs and npm (required for mermaid-cli)
+  # Ubuntu's nodejs apt package does not depend on or provide npm — it's a
+  # separate package. Without it, community.general.npm below fails with
+  # "Failed to find required executable npm" on a host where no other role
+  # already installed npm (e.g. via NodeSource).
+  ansible.builtin.apt:
+    name:
+      - nodejs
+      - npm
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: editor_presenterm_enabled and editor_npm_check.rc != 0
+  tags: [presenterm, editor]
+
+- name: Install mermaid-cli globally via npm
+  community.general.npm:
+    name: "@mermaid-js/mermaid-cli"
+    version: "{{ editor_presenterm_mermaid_cli_version }}"
+    global: true
+    state: present
+  become: true
+  environment:
+    PUPPETEER_SKIP_DOWNLOAD: "true"
+  when: editor_presenterm_enabled
+  tags: [presenterm, editor]
+
+- name: Ensure mermaid config directory exists
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/mermaid"
+    state: directory
+    mode: "0755"
+  become: false
+  when: editor_presenterm_enabled
+  tags: [presenterm, editor]
+
+- name: Deploy puppeteer config for mermaid-cli
+  ansible.builtin.copy:
+    src: puppeteer-config.json
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/mermaid/puppeteer-config.json"
+    mode: "0644"
+    force: false
+  become: false
+  when: editor_presenterm_enabled
+  tags: [presenterm, editor]
+
+- name: Create zsh conf.d directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d"
+    state: directory
+    mode: "0755"
+  become: false
+  when: editor_presenterm_enabled
+  tags: [presenterm, editor]
+
+- name: Deploy mermaid-cli (mmdc) shell wrapper
+  ansible.builtin.copy:
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/presenterm.zsh"
+    mode: "0644"
+    content: |
+      # presenterm — wrap mmdc to use system Chrome via puppeteer config (no bundled chrome-headless-shell)
+      mmdc() {
+        command mmdc --puppeteerConfigFile "${HOME}/.config/mermaid/puppeteer-config.json" "$@"
+      }
+  become: false
+  when: editor_presenterm_enabled
+  tags: [presenterm, editor]

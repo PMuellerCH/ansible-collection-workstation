@@ -99,7 +99,7 @@
 - name: Create apt keyrings directory
   # Deliberately duplicates the onlyoffice section's copy of this task so
   # --tags brave alone is self-sufficient, same reasoning as presenterm.nvim's
-  # redundant directory task in the cli_dev_env role.
+  # redundant directory task in the editor role.
   ansible.builtin.file:
     path: /usr/share/keyrings
     state: directory

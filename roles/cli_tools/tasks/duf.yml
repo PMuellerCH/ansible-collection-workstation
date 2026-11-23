@@ -1,0 +1,11 @@
+---
+# duf
+- name: Install duf
+  ansible.builtin.apt:
+    name: duf
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: cli_tools_duf_enabled
+  tags: [duf, cli_tools]

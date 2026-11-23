@@ -1,0 +1,42 @@
+---
+# bat
+- name: Install bat
+  ansible.builtin.apt:
+    name: bat
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: cli_tools_bat_enabled
+  tags: [bat, cli_tools]
+
+- name: Create bat config and themes directories
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/bat/themes"
+    state: directory
+    mode: "0755"
+  become: false
+  when: cli_tools_bat_enabled
+  tags: [bat, cli_tools]
+
+- name: Deploy bat config
+  ansible.builtin.copy:
+    src: bat_config
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/bat/config"
+    mode: "0644"
+    force: false
+  become: false
+  when: cli_tools_bat_enabled
+  tags: [bat, cli_tools]
+
+- name: Download Catppuccin Mocha theme for bat
+  ansible.builtin.get_url:
+    url: "https://raw.githubusercontent.com/catppuccin/bat/{{ cli_tools_bat_theme_ref }}/themes/Catppuccin%20Mocha.tmTheme"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/bat/themes/Catppuccin Mocha.tmTheme"
+    checksum: "{{ cli_tools_bat_theme_checksum }}"
+    mode: "0644"
+  become: false
+  when: cli_tools_bat_enabled
+  notify: Rebuild bat cache
+  ignore_errors: "{{ ansible_check_mode }}"
+  tags: [bat, cli_tools]

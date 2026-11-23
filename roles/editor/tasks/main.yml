@@ -1,0 +1,18 @@
+---
+# Thin dispatcher: one task file per component, each behind its own switch.
+# Tags use include_tasks' `apply:` so they reach the tasks inside the file.
+- name: Install neovim with LazyVim
+  ansible.builtin.include_tasks:
+    file: neovim.yml
+    apply:
+      tags: [neovim, editor]
+  when: editor_neovim_enabled
+  tags: [neovim, editor]
+
+- name: Install presenterm and mermaid-cli
+  ansible.builtin.include_tasks:
+    file: presenterm.yml
+    apply:
+      tags: [presenterm, editor]
+  when: editor_presenterm_enabled
+  tags: [presenterm, editor]

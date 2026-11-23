@@ -1,0 +1,60 @@
+---
+# ---- lazygit ----
+- name: Create lazygit config directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/lazygit"
+    state: directory
+    mode: "0755"
+  become: false
+  when: git_lazygit_enabled
+  tags: [lazygit, git]
+
+- name: Deploy lazygit config with Catppuccin Mocha theme
+  ansible.builtin.copy:
+    src: config.yml
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/lazygit/config.yml"
+    mode: "0644"
+    force: false
+  become: false
+  when: git_lazygit_enabled
+  tags: [lazygit, git]
+
+- name: Get installed lazygit version
+  ansible.builtin.command: lazygit --version
+  register: git_lazygit_current_version
+  changed_when: false
+  failed_when: false
+  when: git_lazygit_enabled
+  tags: [lazygit, git]
+
+- name: Download lazygit archive
+  ansible.builtin.get_url:
+    url: "{{ git_lazygit_download_base }}/lazygit_{{ git_lazygit_version }}_linux_x86_64.tar.gz"
+    dest: "/tmp/lazygit_{{ git_lazygit_version }}_linux_x86_64.tar.gz"
+    # jesseduffield/lazygit publishes an aggregate checksums.txt per release —
+    # get_url fetches it and matches the entry by the destination's basename,
+    # so there's no static checksum to keep in sync by hand when Renovate
+    # bumps git_lazygit_version.
+    checksum: "sha256:{{ git_lazygit_download_base }}/checksums.txt"
+    mode: "0644"
+  when: >-
+    git_lazygit_enabled and
+    (git_lazygit_current_version.rc != 0 or
+     git_lazygit_version not in git_lazygit_current_version.stdout)
+  tags: [lazygit, git]
+
+- name: Install lazygit binary to /usr/local/bin
+  ansible.builtin.unarchive:
+    src: "/tmp/lazygit_{{ git_lazygit_version }}_linux_x86_64.tar.gz"
+    dest: /usr/local/bin/
+    include:
+      - lazygit
+    remote_src: true
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and
+    git_lazygit_enabled and
+    (git_lazygit_current_version.rc != 0 or
+     git_lazygit_version not in git_lazygit_current_version.stdout)
+  tags: [lazygit, git]

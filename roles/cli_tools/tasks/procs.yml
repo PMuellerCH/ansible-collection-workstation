@@ -1,0 +1,107 @@
+---
+# procs (github release zip; dalance/procs publishes no checksum file, so the
+# checksum is derived at run time from GitHub's per-asset digest — see README)
+- name: Install unzip (required to extract the procs zip archive)
+  ansible.builtin.apt:
+    name: unzip
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: cli_tools_procs_enabled
+  tags: [procs, cli_tools]
+
+- name: Get installed procs version
+  ansible.builtin.command: procs --version
+  register: cli_tools_procs_current_version
+  changed_when: false
+  failed_when: false
+  when: cli_tools_procs_enabled
+  tags: [procs, cli_tools]
+
+- name: Fetch procs release metadata for the GitHub asset digest
+  # dalance/procs publishes no checksum file, so the checksum is derived at run
+  # time from GitHub's own per-asset digest for the pinned version (see the
+  # "Checksum verification" note in README).
+  ansible.builtin.get_url:
+    url: "https://api.github.com/repos/dalance/procs/releases/tags/v{{ cli_tools_procs_version }}"
+    dest: "/tmp/procs-{{ cli_tools_procs_version }}_release.json"
+    force: true
+    headers: >-
+      {{ {'Accept': 'application/vnd.github+json'}
+         | combine({'Authorization': 'Bearer ' + cli_tools_github_api_token}
+                   if cli_tools_github_api_token else {}) }}
+    mode: "0644"
+  no_log: "{{ cli_tools_github_api_token | length > 0 }}"
+  when: >-
+    not ansible_check_mode and
+    cli_tools_procs_enabled and
+    (cli_tools_procs_current_version.rc != 0 or
+     cli_tools_procs_version not in cli_tools_procs_current_version.stdout)
+  tags: [procs, cli_tools]
+
+- name: Read procs release metadata
+  ansible.builtin.slurp:
+    path: "/tmp/procs-{{ cli_tools_procs_version }}_release.json"
+  register: cli_tools_procs_release_raw
+  when: >-
+    not ansible_check_mode and
+    cli_tools_procs_enabled and
+    (cli_tools_procs_current_version.rc != 0 or
+     cli_tools_procs_version not in cli_tools_procs_current_version.stdout)
+  tags: [procs, cli_tools]
+
+- name: Resolve procs archive checksum from the release metadata
+  ansible.builtin.set_fact:
+    cli_tools_procs_checksum: >-
+      {{ (cli_tools_procs_release_raw.content | b64decode | from_json).assets
+         | selectattr('name', 'equalto', 'procs-v' + cli_tools_procs_version + '-x86_64-linux.zip')
+         | map(attribute='digest') | select('string') | first | default('') }}
+  when: >-
+    not ansible_check_mode and
+    cli_tools_procs_enabled and
+    (cli_tools_procs_current_version.rc != 0 or
+     cli_tools_procs_version not in cli_tools_procs_current_version.stdout)
+  tags: [procs, cli_tools]
+
+- name: Assert GitHub published a sha256 digest for the procs archive
+  ansible.builtin.assert:
+    that: cli_tools_procs_checksum.startswith('sha256:')
+    fail_msg: >-
+      GitHub published no sha256 digest for procs-v{{ cli_tools_procs_version }}-x86_64-linux.zip;
+      cannot verify the download.
+  when: >-
+    not ansible_check_mode and
+    cli_tools_procs_enabled and
+    (cli_tools_procs_current_version.rc != 0 or
+     cli_tools_procs_version not in cli_tools_procs_current_version.stdout)
+  tags: [procs, cli_tools]
+
+- name: Download procs archive
+  ansible.builtin.get_url:
+    url: "https://github.com/dalance/procs/releases/download/v{{ cli_tools_procs_version }}/procs-v{{ cli_tools_procs_version }}-x86_64-linux.zip"
+    dest: "/tmp/procs-{{ cli_tools_procs_version }}.zip"
+    checksum: "{{ cli_tools_procs_checksum }}"
+    mode: "0644"
+  when: >-
+    not ansible_check_mode and
+    cli_tools_procs_enabled and
+    (cli_tools_procs_current_version.rc != 0 or
+     cli_tools_procs_version not in cli_tools_procs_current_version.stdout)
+  tags: [procs, cli_tools]
+
+- name: Install procs binary to /usr/local/bin
+  ansible.builtin.unarchive:
+    src: "/tmp/procs-{{ cli_tools_procs_version }}.zip"
+    dest: /usr/local/bin/
+    include:
+      - procs
+    remote_src: true
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and
+    cli_tools_procs_enabled and
+    (cli_tools_procs_current_version.rc != 0 or
+     cli_tools_procs_version not in cli_tools_procs_current_version.stdout)
+  tags: [procs, cli_tools]

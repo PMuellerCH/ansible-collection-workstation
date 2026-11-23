@@ -44,7 +44,7 @@ no-op-if-exists safety net, in case the task order is ever changed.
 
 | Variable | Default | Description |
 | --- | --- | --- |
-| `terminal_env_zsh_omz_commit` | see `defaults/main.yml` | Pinned commit SHA of `ohmyzsh/ohmyzsh` used to fetch `install.sh` (no tags/releases published upstream; not Renovate-tracked, same posture as `modern_cli_bat_theme_ref`) |
+| `terminal_env_zsh_omz_commit` | see `defaults/main.yml` | Pinned commit SHA of `ohmyzsh/ohmyzsh` used to fetch `install.sh` (no tags/releases published upstream; not Renovate-tracked, same posture as `cli_tools_bat_theme_ref`) |
 | `terminal_env_zsh_powerlevel10k_version` | see `defaults/main.yml` | powerlevel10k theme version (github-tags: `romkatv/powerlevel10k`) |
 | `terminal_env_zsh_fzf_tab_version` | see `defaults/main.yml` | fzf-tab plugin version (github-tags: `Aloxaf/fzf-tab`) |
 | `terminal_env_zsh_autosuggestions_version` | see `defaults/main.yml` | zsh-autosuggestions plugin version (github-tags: `zsh-users/zsh-autosuggestions`) |
@@ -133,7 +133,7 @@ tag cascades to every task in the role and defeats this per-tool filtering.
   `Alt+1–9` for windows, `Ctrl+hjkl` for panes — smart: passes through to
   nvim splits when neovim is focused, detected via `#{pane_current_command}`.
   This pairs with the `christoomey/vim-tmux-navigator` plugin that lives in
-  the `cli_dev_env` role's neovim config — a soft coupling via keybinding
+  the `editor` role's neovim config — a soft coupling via keybinding
   convention only (not a file-write dependency), so no task ordering or
   gating is needed between the two roles.
 - A zsh snippet (`~/.config/zsh/conf.d/tmux.zsh`) auto-starts tmux on

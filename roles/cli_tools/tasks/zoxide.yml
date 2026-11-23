@@ -1,0 +1,11 @@
+---
+# zoxide
+- name: Install zoxide
+  ansible.builtin.apt:
+    name: zoxide
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: cli_tools_zoxide_enabled
+  tags: [zoxide, cli_tools]

@@ -1,0 +1,199 @@
+---
+# ---- Corporate proxy ----
+# Deploys proxy env vars to the systemd user session (picked up by all GUI apps,
+# including Electron apps like Slack) and to the Flatpak sandbox global override
+# (picked up by Flatpak-sandboxed apps like Spotify).
+# Only runs when base_http_proxy is set for the machine.
+
+- name: Deploy proxy environment.d config (for all GNOME session apps)
+  ansible.builtin.copy:
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/environment.d/proxy.conf"
+    mode: "0644"
+    content: |
+      http_proxy={{ base_http_proxy }}
+      https_proxy={{ base_https_proxy }}
+      HTTP_PROXY={{ base_http_proxy }}
+      HTTPS_PROXY={{ base_https_proxy }}
+      no_proxy={{ base_no_proxy }}
+      NO_PROXY={{ base_no_proxy }}
+  become: false
+  when: base_http_proxy != ''
+  tags: [proxy, base]
+
+- name: Deploy proxy vars to /etc/environment (system-wide, PAM sessions)
+  ansible.builtin.blockinfile:
+    path: /etc/environment
+    create: true
+    mode: "0644"
+    block: |
+      http_proxy={{ base_http_proxy }}
+      https_proxy={{ base_https_proxy }}
+      HTTP_PROXY={{ base_http_proxy }}
+      HTTPS_PROXY={{ base_https_proxy }}
+      no_proxy={{ base_no_proxy }}
+      NO_PROXY={{ base_no_proxy }}
+  become: true
+  when: base_http_proxy != ''
+  tags: [proxy, base]
+
+# ---- Corporate CA certificate ----
+# The corporate proxy (BIT Proxy) performs TLS inspection and re-signs all
+# HTTPS traffic with its own CA. Without the CA in the trust store, all HTTPS
+# connections fail with "self-signed certificate" errors.
+# The PEM certificate is supplied by the consumer via
+# base_proxy_ca_cert_content (it is organisation-specific and rotates, so it
+# is deliberately not shipped with this public collection).
+
+- name: Install corporate proxy CA certificate
+  ansible.builtin.copy:
+    content: "{{ base_proxy_ca_cert_content }}"
+    dest: /usr/local/share/ca-certificates/base-proxy-ca.crt
+    mode: "0644"
+  become: true
+  when: base_http_proxy != '' and base_proxy_ca_cert_content != ''
+  notify: Update CA certificates
+  tags: [proxy, base]
+
+- name: Flush handlers (rebuild CA bundle before syncing to Flatpak path)
+  ansible.builtin.meta: flush_handlers
+  tags: [proxy, base]
+
+- name: Create Flatpak CA bundle directory
+  ansible.builtin.file:
+    path: /var/lib/ca-certificates
+    state: directory
+    mode: "0755"
+  become: true
+  when: base_http_proxy != ''
+  tags: [proxy, base]
+
+- name: Stat system CA bundle
+  ansible.builtin.stat:
+    path: /etc/ssl/certs/ca-certificates.crt
+    checksum_algorithm: sha256
+  register: base_ca_bundle_source_stat
+  when: base_http_proxy != ''
+  tags: [proxy, base]
+
+- name: Stat Flatpak-accessible CA bundle
+  ansible.builtin.stat:
+    path: /var/lib/ca-certificates/ca-bundle.crt
+    checksum_algorithm: sha256
+  register: base_ca_bundle_flatpak_stat
+  when: base_http_proxy != ''
+  tags: [proxy, base]
+
+- name: Sync system CA bundle to Flatpak-accessible location
+  ansible.builtin.command:
+    cmd: install -m 0644 /etc/ssl/certs/ca-certificates.crt /var/lib/ca-certificates/ca-bundle.crt
+  become: true
+  when: >-
+    base_http_proxy != '' and
+    (not base_ca_bundle_flatpak_stat.stat.exists or
+     base_ca_bundle_flatpak_stat.stat.checksum != base_ca_bundle_source_stat.stat.checksum)
+  changed_when: true
+  # noqa: command-instead-of-module - copy remote_src=true triggers ansible-core _ansible_inject_invocation bug
+  tags: [proxy, base]
+
+- name: Set NODE_EXTRA_CA_CERTS to Flatpak-accessible CA bundle
+  ansible.builtin.lineinfile:
+    path: /etc/environment
+    regexp: '^NODE_EXTRA_CA_CERTS='
+    line: "NODE_EXTRA_CA_CERTS=/var/lib/ca-certificates/ca-bundle.crt"
+    create: true
+    mode: "0644"
+  become: true
+  when: base_http_proxy != ''
+  tags: [proxy, base]
+
+- name: Set UV_SYSTEM_CERTS so uv/uvx trust the OS CA store
+  # uv/uvx use their own vendored CA bundle (via rustls) by default, not the
+  # OS trust store this role installs the corporate CA into above — same
+  # class of problem as Node.js above (NODE_EXTRA_CA_CERTS), just a
+  # different opt-in mechanism. Without this, any uv/uvx invocation that
+  # needs to fetch a package (e.g. `uvx <pypi-package>`, or a uvx-launched
+  # MCP server) fails with "invalid peer certificate: UnknownIssuer".
+  ansible.builtin.lineinfile:
+    path: /etc/environment
+    regexp: '^UV_SYSTEM_CERTS='
+    line: "UV_SYSTEM_CERTS=1"
+    create: true
+    mode: "0644"
+  become: true
+  when: base_http_proxy != ''
+  tags: [proxy, base]
+
+- name: Create Flatpak system overrides directory
+  ansible.builtin.file:
+    path: /var/lib/flatpak/overrides
+    state: directory
+    mode: "0755"
+  become: true
+  when: base_http_proxy != ''
+  tags: [proxy, base]
+
+- name: Deploy Flatpak system proxy override (for Flatpak-sandboxed apps)
+  ansible.builtin.copy:
+    dest: /var/lib/flatpak/overrides/global
+    mode: "0644"
+    content: |
+      [Context]
+      filesystems=/var/lib/ca-certificates:ro
+
+      [Environment]
+      http_proxy={{ base_http_proxy }}
+      https_proxy={{ base_https_proxy }}
+      HTTP_PROXY={{ base_http_proxy }}
+      HTTPS_PROXY={{ base_https_proxy }}
+      no_proxy={{ base_no_proxy }}
+      NO_PROXY={{ base_no_proxy }}
+      SSL_CERT_FILE=/var/lib/ca-certificates/ca-bundle.crt
+      NODE_EXTRA_CA_CERTS=/var/lib/ca-certificates/ca-bundle.crt
+  become: true
+  when: base_http_proxy != ''
+  tags: [proxy, base]
+
+- name: Deploy npm proxy configuration (~/.npmrc)
+  ansible.builtin.copy:
+    dest: "{{ ansible_facts['env']['HOME'] }}/.npmrc"
+    mode: "0600"
+    content: |
+      proxy={{ base_http_proxy }}
+      https-proxy={{ base_https_proxy }}
+      fetch-retries=3
+      fetch-retry-mintimeout=5000
+      fetch-retry-maxtimeout=15000
+  become: false
+  when: base_http_proxy != ''
+  tags: [proxy, base]
+
+- name: Configure GNOME system proxy via dconf
+  community.general.dconf:
+    key: "{{ item.key }}"
+    value: "{{ item.value }}"
+  become: false
+  vars:
+    base_proxy_ignore_hosts_list: "{{ base_no_proxy.split(',') | map('trim') | reject('equalto', '') | list }}"
+  loop:
+    - key: /org/gnome/system/proxy/mode
+      value: "'manual'"
+    - key: /org/gnome/system/proxy/http/enabled
+      value: "true"
+    - key: /org/gnome/system/proxy/http/host
+      value: "'{{ base_http_proxy | urlsplit('hostname') }}'"
+    - key: /org/gnome/system/proxy/http/port
+      value: "{{ base_http_proxy | urlsplit('port') }}"
+    - key: /org/gnome/system/proxy/https/host
+      value: "'{{ base_https_proxy | urlsplit('hostname') }}'"
+    - key: /org/gnome/system/proxy/https/port
+      value: "{{ base_https_proxy | urlsplit('port') }}"
+    - key: /org/gnome/system/proxy/ignore-hosts
+      # GVariant can't infer a type for a bare empty array literal ("[]") —
+      # it needs the "@as" (array-of-strings) type annotation. Only matters
+      # when base_no_proxy is empty, which is the common single-proxy case.
+      value: >-
+        {{ '@as ' ~ (base_proxy_ignore_hosts_list | to_json)
+           if base_proxy_ignore_hosts_list | length == 0
+           else base_proxy_ignore_hosts_list | to_json }}
+  when: base_http_proxy != '' and base_desktop_environment == 'gnome'
+  tags: [proxy, base]

@@ -1,0 +1,99 @@
+---
+# dust (github release .deb; bootandy/dust publishes no checksum file, so the
+# checksum is derived at run time from GitHub's own per-asset digest for the
+# pinned version — see the digest-checksum note in README. Nothing to keep in
+# sync by hand when Renovate bumps the version. Installed .deb is apt-held like
+# any other, same pattern as trivy in code_quality_tools.)
+- name: Get installed dust version
+  ansible.builtin.command: dust --version
+  register: cli_tools_dust_current_version
+  changed_when: false
+  failed_when: false
+  when: cli_tools_dust_enabled
+  tags: [dust, cli_tools]
+
+- name: Fetch dust release metadata for the GitHub asset digest
+  ansible.builtin.get_url:
+    url: "https://api.github.com/repos/bootandy/dust/releases/tags/v{{ cli_tools_dust_version }}"
+    dest: "/tmp/du-dust_{{ cli_tools_dust_version }}_release.json"
+    force: true
+    headers: >-
+      {{ {'Accept': 'application/vnd.github+json'}
+         | combine({'Authorization': 'Bearer ' + cli_tools_github_api_token}
+                   if cli_tools_github_api_token else {}) }}
+    mode: "0644"
+  # Suppress output only when a token is in use, so the Bearer header cannot
+  # leak into invocation.module_args under -v or on failure. Unauthenticated
+  # runs keep full logging.
+  no_log: "{{ cli_tools_github_api_token | length > 0 }}"
+  when: >-
+    not ansible_check_mode and
+    cli_tools_dust_enabled and
+    (cli_tools_dust_current_version.rc != 0 or
+     cli_tools_dust_version not in cli_tools_dust_current_version.stdout)
+  tags: [dust, cli_tools]
+
+- name: Read dust release metadata
+  ansible.builtin.slurp:
+    path: "/tmp/du-dust_{{ cli_tools_dust_version }}_release.json"
+  register: cli_tools_dust_release_raw
+  when: >-
+    not ansible_check_mode and
+    cli_tools_dust_enabled and
+    (cli_tools_dust_current_version.rc != 0 or
+     cli_tools_dust_version not in cli_tools_dust_current_version.stdout)
+  tags: [dust, cli_tools]
+
+- name: Resolve dust .deb checksum from the release metadata
+  ansible.builtin.set_fact:
+    cli_tools_dust_checksum: >-
+      {{ (cli_tools_dust_release_raw.content | b64decode | from_json).assets
+         | selectattr('name', 'equalto', 'du-dust_' + cli_tools_dust_version + '-1_amd64.deb')
+         | map(attribute='digest') | select('string') | first | default('') }}
+  when: >-
+    not ansible_check_mode and
+    cli_tools_dust_enabled and
+    (cli_tools_dust_current_version.rc != 0 or
+     cli_tools_dust_version not in cli_tools_dust_current_version.stdout)
+  tags: [dust, cli_tools]
+
+- name: Assert GitHub published a sha256 digest for the dust .deb
+  ansible.builtin.assert:
+    that: cli_tools_dust_checksum.startswith('sha256:')
+    fail_msg: >-
+      GitHub published no sha256 digest for du-dust_{{ cli_tools_dust_version }}-1_amd64.deb;
+      cannot verify the download.
+  when: >-
+    not ansible_check_mode and
+    cli_tools_dust_enabled and
+    (cli_tools_dust_current_version.rc != 0 or
+     cli_tools_dust_version not in cli_tools_dust_current_version.stdout)
+  tags: [dust, cli_tools]
+
+- name: Download dust .deb
+  ansible.builtin.get_url:
+    url: "https://github.com/bootandy/dust/releases/download/v{{ cli_tools_dust_version }}/du-dust_{{ cli_tools_dust_version }}-1_amd64.deb"
+    dest: "/tmp/du-dust_{{ cli_tools_dust_version }}_amd64.deb"
+    checksum: "{{ cli_tools_dust_checksum }}"
+    mode: "0644"
+  when: >-
+    not ansible_check_mode and
+    cli_tools_dust_enabled and
+    (cli_tools_dust_current_version.rc != 0 or
+     cli_tools_dust_version not in cli_tools_dust_current_version.stdout)
+  tags: [dust, cli_tools]
+
+- name: Install dust
+  ansible.builtin.apt:
+    deb: "/tmp/du-dust_{{ cli_tools_dust_version }}_amd64.deb"
+    # A machine provisioned by an older version of this role may still have
+    # du-dust dpkg-held from before the hold task was removed — without
+    # this, apt refuses to install a newer pinned .deb over a held package.
+    allow_change_held_packages: true
+  become: true
+  when: >-
+    not ansible_check_mode and
+    cli_tools_dust_enabled and
+    (cli_tools_dust_current_version.rc != 0 or
+     cli_tools_dust_version not in cli_tools_dust_current_version.stdout)
+  tags: [dust, cli_tools]

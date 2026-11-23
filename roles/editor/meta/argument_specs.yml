@@ -1,0 +1,55 @@
+---
+argument_specs:
+  main:
+    short_description: Install neovim with a LazyVim configuration (headless plugin sync), presenterm and mermaid-cli — each independently toggleable.
+    options:
+      editor_neovim_enabled:
+        default: true
+        description: Whether to install neovim and bootstrap the LazyVim configuration. Also gates the presenterm.nvim plugin config below.
+        required: false
+        type: bool
+      editor_presenterm_plugin_enabled:
+        default: true
+        description: Whether to deploy the presenterm.nvim plugin config (~/.config/nvim/lua/plugins/presenterm.lua). The presenterm binary this plugin
+          needs is installed by editor_presenterm_enabled — keep the two in sync. Only applies when editor_neovim_enabled is true.
+        required: false
+        type: bool
+      editor_neovim_lazy_sync_enabled:
+        default: true
+        description: Whether to run a headless `lazy.nvim` sync (install + update + clean) on every apply, instead of relying on a human running :Lazy sync
+          manually. Only applies when editor_neovim_enabled is true.
+        required: false
+        type: bool
+      editor_neovim_version:
+        description: Neovim version (github-releases neovim/neovim), installed from a checksum-verified archive.
+        required: false
+        type: str
+      editor_github_api_token:
+        default: '{{ lookup(''ansible.builtin.env'', ''GH_TOKEN'') or lookup(''ansible.builtin.env'', ''GITHUB_TOKEN'') }}'
+        description: Optional GitHub API token used only to raise the rate limit when resolving the neovim release-asset digest. Defaults
+          to GH_TOKEN/GITHUB_TOKEN from the environment; unauthenticated (empty) still works but is subject to GitHub's 60 requests/hour per-IP limit.
+        required: false
+        type: str
+      editor_presenterm_enabled:
+        default: true
+        description: Whether to install presenterm (binary + mermaid-cli; the presenterm.nvim plugin config is controlled by editor_presenterm_plugin_enabled).
+        required: false
+        type: bool
+      editor_presenterm_version:
+        description: presenterm version (github-releases mfontanini/presenterm), installed from a checksum-verified binary tarball.
+        required: false
+        type: str
+      editor_presenterm_download_base:
+        default: https://github.com/mfontanini/presenterm/releases/download/v{{ editor_presenterm_version }}
+        description: Base URL the presenterm archive and its .sha512 checksum file are downloaded from, before the filename.
+        required: false
+        type: str
+      editor_presenterm_archive:
+        default: presenterm-{{ editor_presenterm_version }}-x86_64-unknown-linux-gnu.tar.gz
+        description: Filename of the presenterm release archive to download.
+        required: false
+        type: str
+      editor_presenterm_mermaid_cli_version:
+        description: '@mermaid-js/mermaid-cli npm version, installed globally for presenterm''s mermaid diagram rendering.'
+        required: false
+        type: str

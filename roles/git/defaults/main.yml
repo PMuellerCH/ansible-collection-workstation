@@ -1,0 +1,27 @@
+---
+# git: user config, GitHub CLI, lazygit and delta
+# git_user_name and git_user_email have no default — required, see meta/argument_specs.yml
+
+git_default_branch: main
+git_pull_rebase: true
+git_push_default: simple
+git_editor: vim
+git_signing_enabled: true
+git_signing_key: "{{ ansible_facts['env']['HOME'] }}/.ssh/id_ed25519.pub"
+
+# Install the GitHub CLI (gh) from the Ubuntu archive
+git_gh_enabled: true
+
+# Deploy the zsh snippet that aliases diff to delta (needs git_delta_enabled)
+git_deploy_shell_aliases: true
+git_lazygit_enabled: true
+
+# renovate: datasource=github-releases depName=jesseduffield/lazygit extractVersion=^v(?<version>.*)$
+git_lazygit_version: "0.66.3"
+git_lazygit_download_base: "https://github.com/jesseduffield/lazygit/releases/download/v{{ git_lazygit_version }}"
+git_delta_enabled: true
+
+# Pinned commit of catppuccin/delta (no releases/tags published — theme is
+# fetched from an immutable ref, not the mutable "main" branch).
+git_delta_catppuccin_ref: "011516f5d14f66b771b3e716f29c77231e008c74"  # pragma: allowlist secret
+git_delta_catppuccin_checksum: "sha256:f0580ada6b1e3767b718b25116a2ababec314474a12d1a796c917ef93d63b455"

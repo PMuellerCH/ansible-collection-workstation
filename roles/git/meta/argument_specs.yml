@@ -1,0 +1,82 @@
+---
+argument_specs:
+  main:
+    short_description: Configure git (identity, defaults, SSH signing) and install the GitHub CLI, lazygit and delta (Catppuccin Mocha) — each tool
+      independently toggleable.
+    options:
+      git_lazygit_enabled:
+        default: true
+        description: Whether to install lazygit.
+        required: false
+        type: bool
+      git_lazygit_version:
+        description: lazygit version (github-releases jesseduffield/lazygit), installed from a checksum-verified archive.
+        required: false
+        type: str
+      git_lazygit_download_base:
+        default: https://github.com/jesseduffield/lazygit/releases/download/v{{ git_lazygit_version }}
+        description: Base URL the lazygit archive and its checksums.txt are downloaded from, before the filename.
+        required: false
+        type: str
+      git_delta_enabled:
+        default: true
+        description: Whether to install delta (apt package git-delta), with Catppuccin Mocha theming wired into git config.
+        required: false
+        type: bool
+      git_delta_catppuccin_ref:
+        description: Pinned commit of catppuccin/delta the theme gitconfig is downloaded from (no releases/tags published upstream).
+        required: false
+        type: str
+      git_delta_catppuccin_checksum:
+        description: Checksum of the catppuccin.gitconfig file at git_delta_catppuccin_ref, verified by get_url.
+        required: false
+        type: str
+      git_user_name:
+        description: Value for git's global user.name. No sensible generic default exists — must be supplied by the consumer.
+        required: true
+        type: str
+      git_user_email:
+        description: Value for git's global user.email. No sensible generic default exists — must be supplied by the consumer.
+        required: true
+        type: str
+      git_default_branch:
+        default: main
+        description: Value for git's global init.defaultBranch.
+        required: false
+        type: str
+      git_pull_rebase:
+        default: true
+        description: Whether git pull rebases instead of merges (pull.rebase).
+        required: false
+        type: bool
+      git_push_default:
+        default: simple
+        description: Value for git's global push.default.
+        required: false
+        type: str
+      git_editor:
+        default: vim
+        description: Value for git's global core.editor. Defaults to vim (always present on Debian/Ubuntu); override to your preferred editor.
+        required: false
+        type: str
+      git_signing_enabled:
+        default: true
+        description: Whether to configure SSH-based commit/tag signing (gpg.format=ssh, user.signingkey, commit.gpgsign, tag.gpgSign). Disable if you don't
+          sign commits.
+        required: false
+        type: bool
+      git_signing_key:
+        default: '{{ ansible_facts[''env''][''HOME''] }}/.ssh/id_ed25519.pub'
+        description: Path to the SSH public key used as git's user.signingkey. Only applied when git_signing_enabled is true.
+        required: false
+        type: str
+      git_gh_enabled:
+        default: true
+        description: Whether to install the GitHub CLI (gh).
+        required: false
+        type: bool
+      git_deploy_shell_aliases:
+        default: true
+        description: Whether to deploy the zsh snippet aliasing diff to delta (requires git_delta_enabled).
+        required: false
+        type: bool

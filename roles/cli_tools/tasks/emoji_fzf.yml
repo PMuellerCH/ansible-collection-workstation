@@ -1,0 +1,34 @@
+---
+# emoji-fzf (CLI half of emoji-picker; the GUI half, smile, belongs to
+# desktop_customization). Installed via pipx — the only pipx-based tool in this
+# role, so it bootstraps its own adequate pipx, self-contained,
+# same pattern as the code_quality_tools role: community.general.pipx
+# requires pipx >= 1.7.0, but Ubuntu 24.04's apt-provided pipx is only 1.4.3.
+- name: Install python3-pip and python3-venv (required to bootstrap a newer pipx and its managed venvs)
+  ansible.builtin.apt:
+    name:
+      - python3-pip
+      - python3-venv
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: cli_tools_emoji_fzf_enabled
+  tags: [emoji_fzf, cli_tools]
+
+- name: Ensure pipx >= minimum version is importable via `python -m pipx`
+  ansible.builtin.pip:
+    name: "pipx=={{ cli_tools_pipx_min_version }}"
+    extra_args: "--user --break-system-packages"
+    executable: pip3
+  become: false
+  when: cli_tools_emoji_fzf_enabled
+  tags: [emoji_fzf, cli_tools]
+
+- name: Install emoji-fzf via pipx
+  community.general.pipx:
+    name: "emoji-fzf=={{ cli_tools_emoji_fzf_version }}"
+    state: present
+  become: false
+  when: not ansible_check_mode and cli_tools_emoji_fzf_enabled
+  tags: [emoji_fzf, cli_tools]

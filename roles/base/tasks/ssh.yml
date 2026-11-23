@@ -1,0 +1,89 @@
+---
+# ---- ssh ----
+- name: Create ~/.ssh directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.ssh"
+    state: directory
+    mode: "0700"
+  become: false
+  tags: [ssh, base]
+
+- name: Create ~/.config/ssh directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/ssh"
+    state: directory
+    mode: "0755"
+  become: false
+  tags: [ssh, base]
+
+- name: Deploy SSH config
+  ansible.builtin.copy:
+    src: ssh_config
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/ssh/config"
+    mode: "0600"
+    force: false
+  become: false
+  tags: [ssh, base]
+
+- name: Stat ~/.ssh/config
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.ssh/config"
+  register: base_ssh_config_stat
+  become: false
+  tags: [ssh, base]
+
+- name: Symlink ~/.ssh/config → ~/.config/ssh/config
+  ansible.builtin.file:
+    src: "{{ ansible_facts['env']['HOME'] }}/.config/ssh/config"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.ssh/config"
+    state: link
+    force: true
+  become: false
+  when: >-
+    not ansible_check_mode and
+    (not base_ssh_config_stat.stat.exists or base_ssh_config_stat.stat.islnk)
+  tags: [ssh, base]
+
+- name: Check if id_ed25519 key exists
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.ssh/id_ed25519"
+  register: base_ssh_id_ed25519_key
+  become: false
+  tags: [ssh, base]
+
+- name: Fix SSH private key permissions if key exists
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.ssh/id_ed25519"
+    mode: "0600"
+  become: false
+  when: base_ssh_id_ed25519_key.stat.exists
+  tags: [ssh, base]
+
+- name: Check if sysadmin_key exists
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.ssh/sysadmin_key"
+  register: base_ssh_sysadmin_key
+  become: false
+  tags: [ssh, base]
+
+- name: Fix sysadmin_key permissions
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.ssh/sysadmin_key"
+    mode: "0600"
+  become: false
+  when: base_ssh_sysadmin_key.stat.exists
+  tags: [ssh, base]
+
+- name: Add extra host entries to SSH config
+  ansible.builtin.blockinfile:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/ssh/config"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK {{ item.name }}"
+    block: |
+      Host {{ item.name }}
+            HostName {{ item.hostname }}
+            User {{ item.user }}
+            {% if item.identity_file is defined %}IdentityFile {{ item.identity_file }}
+            {% endif %}
+  become: false
+  loop: "{{ base_ssh_extra_hosts }}"
+  tags: [ssh, base]

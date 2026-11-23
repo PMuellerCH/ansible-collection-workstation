@@ -1,0 +1,48 @@
+---
+# ---- python ----
+- name: Install Python toolchain
+  ansible.builtin.apt:
+    name:
+      - build-essential
+      - python3-pip
+      - python3-venv
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  tags: [python, base]
+
+- name: Get installed uv version
+  ansible.builtin.command: uv --version
+  register: base_python_uv_installed_version
+  changed_when: false
+  failed_when: false
+  tags: [python, base]
+
+- name: Download uv archive
+  ansible.builtin.get_url:
+    url: "https://github.com/astral-sh/uv/releases/download/{{ base_python_uv_version }}/uv-x86_64-unknown-linux-musl.tar.gz"
+    dest: "/tmp/uv-{{ base_python_uv_version }}.tar.gz"
+    # uv publishes a matching .sha256 file per release asset — get_url fetches
+    # and verifies against it directly, so there's no static checksum to keep
+    # in sync by hand when Renovate bumps base_python_uv_version.
+    checksum: "sha256:https://github.com/astral-sh/uv/releases/download/{{ base_python_uv_version }}/uv-x86_64-unknown-linux-musl.tar.gz.sha256"
+    mode: "0644"
+  when: base_python_uv_installed_version.rc != 0 or base_python_uv_version not in base_python_uv_installed_version.stdout
+  tags: [python, base]
+
+- name: Install uv and uvx to /usr/local/bin
+  ansible.builtin.unarchive:
+    src: "/tmp/uv-{{ base_python_uv_version }}.tar.gz"
+    dest: /usr/local/bin/
+    include:
+      - "uv-x86_64-unknown-linux-musl/uv"
+      - "uv-x86_64-unknown-linux-musl/uvx"
+    extra_opts: ["--strip-components=1"]
+    remote_src: true
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and
+    (base_python_uv_installed_version.rc != 0 or base_python_uv_version not in base_python_uv_installed_version.stdout)
+  tags: [python, base]

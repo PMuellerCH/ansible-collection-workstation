@@ -1,0 +1,105 @@
+---
+# Node.js LTS from the NodeSource apt repository. The ai_cli role (Claude Code) and
+# the editor role (mermaid-cli) need a working node/npm; they do not install Node.js
+# themselves, so run this component (or the whole base role) before them.
+- name: Install prerequisites for NodeSource apt setup
+  # python3-debian is required by the ansible.builtin.deb822_repository
+  # module used below (it is not present by default on a minimal Ubuntu
+  # image) — added to this same prerequisites task rather than a separate
+  # one, alongside the other NodeSource-setup prerequisites.
+  ansible.builtin.apt:
+    name: [ca-certificates, curl, gnupg, python3-debian]
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: base_nodejs_enabled
+  tags: [nodejs, base]
+
+- name: Create /etc/apt/keyrings directory
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: "0755"
+  become: true
+  when: base_nodejs_enabled
+  tags: [nodejs, base]
+
+- name: Download NodeSource GPG key
+  ansible.builtin.get_url:
+    url: https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key
+    dest: /etc/apt/keyrings/nodesource.asc
+    mode: "0644"
+  become: true
+  when: base_nodejs_enabled
+  tags: [nodejs, base]
+
+- name: Remove legacy NodeSource apt sources list
+  ansible.builtin.file:
+    path: /etc/apt/sources.list.d/nodesource.list
+    state: absent
+  become: true
+  when: base_nodejs_enabled
+  tags: [nodejs, base]
+
+- name: Add NodeSource apt repository for Node.js LTS {{ base_nodejs_major_version }}
+  # python3-debian is only installed for real on a real (non-check) run —
+  # see the task above. Under --check it would still be missing at this
+  # point (a normal apt task never installs anything for real in check
+  # mode), and deb822_repository hard-fails under check mode if the library
+  # isn't importable — so this task (and everything that depends on the
+  # repo it adds) is skipped in check mode too, matching this collection's
+  # general pattern for resources that would only exist after a real run.
+  ansible.builtin.deb822_repository:
+    name: nodesource
+    types: deb
+    uris: "https://deb.nodesource.com/node_{{ base_nodejs_major_version }}.x"
+    suites: nodistro
+    components: main
+    signed_by: /etc/apt/keyrings/nodesource.asc
+    state: present
+  become: true
+  when: base_nodejs_enabled and not ansible_check_mode
+  tags: [nodejs, base]
+
+- name: Check installed Node.js major version
+  ansible.builtin.command: node --version
+  register: base_nodejs_installed_version
+  changed_when: false
+  failed_when: false
+  when: base_nodejs_enabled
+  tags: [nodejs, base]
+
+- name: Remove Node.js if installed major version does not match configured LTS
+  # not ansible_check_mode is required here, not just on the tasks below:
+  # the "Check installed Node.js major version" command task above doesn't
+  # skip under --check, it returns a *simulated* result (rc: 0, empty
+  # stdout, "Command would have run if not in check mode") — without this
+  # guard, that empty stdout never starts with 'v<major>.', so this task
+  # concludes the version doesn't match even when it does, and actually
+  # attempts removal.
+  ansible.builtin.apt:
+    name: nodejs
+    state: absent
+  become: true
+  when: >-
+    not ansible_check_mode and
+    base_nodejs_enabled and
+    base_nodejs_installed_version.rc == 0 and
+    not base_nodejs_installed_version.stdout.startswith('v' + base_nodejs_major_version | string + '.')
+  tags: [nodejs, base]
+
+- name: Install Node.js and build tools
+  ansible.builtin.apt:
+    name:
+      - nodejs
+      - build-essential
+    state: present
+    # No cache_valid_time: the NodeSource repo was only just added above, so the
+    # cache must be refreshed here or apt installs Ubuntu's older nodejs (no npm).
+    update_cache: true
+  become: true
+  when: >-
+    not ansible_check_mode and
+    base_nodejs_enabled
+  tags: [nodejs, base]

@@ -1,0 +1,34 @@
+---
+# editor: neovim + LazyVim, presenterm and mermaid-cli
+
+editor_neovim_enabled: true
+
+# Optional GitHub API token used only to raise the rate limit when resolving
+# the neovim release-asset digest (neovim publishes no checksum file — see
+# tasks/main.yml). Defaults to GH_TOKEN/GITHUB_TOKEN from the environment;
+# unauthenticated (empty) still works but is subject to GitHub's 60 requests/hour
+# per-IP limit. On GitHub Actions the workflow passes GITHUB_TOKEN.
+editor_github_api_token: "{{ lookup('ansible.builtin.env', 'GH_TOKEN') or lookup('ansible.builtin.env', 'GITHUB_TOKEN') }}"
+
+# Deploys ~/.config/nvim/lua/plugins/presenterm.lua for the presenterm.nvim
+# LazyVim plugin. The presenterm *binary* this plugin needs is installed by
+# editor_presenterm_enabled — keep the two in sync, see README.
+editor_presenterm_plugin_enabled: true
+
+# Runs a headless `lazy.nvim` sync (install + update + clean) on every
+# apply, instead of relying on a human running :Lazy sync manually inside
+# neovim. See README for why individual plugin versions aren't
+# Renovate-tracked.
+editor_neovim_lazy_sync_enabled: true
+
+# renovate: datasource=github-releases depName=neovim/neovim extractVersion=^v(?<version>.*)$
+editor_neovim_version: "0.12.6"
+editor_presenterm_enabled: true
+
+# renovate: datasource=github-releases depName=mfontanini/presenterm extractVersion=^v(?<version>.*)$
+editor_presenterm_version: "0.16.1"
+editor_presenterm_download_base: "https://github.com/mfontanini/presenterm/releases/download/v{{ editor_presenterm_version }}"
+editor_presenterm_archive: "presenterm-{{ editor_presenterm_version }}-x86_64-unknown-linux-gnu.tar.gz"
+
+# renovate: datasource=npm depName=@mermaid-js/mermaid-cli
+editor_presenterm_mermaid_cli_version: "12.2.0"

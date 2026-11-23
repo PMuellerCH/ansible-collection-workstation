@@ -1,0 +1,37 @@
+---
+- name: Verify
+  hosts: all
+  gather_facts: true
+  # Load the role's own defaults so the pinned-version assertion below tracks
+  # editor_neovim_version as its single source of truth, rather than a
+  # hardcoded literal that goes stale whenever Renovate bumps the version
+  # (same pattern as the default scenario's verify.yml).
+  vars_files:
+    - ../../defaults/main.yml
+  tasks:
+    - name: Check neovim runs
+      ansible.builtin.command: nvim --version
+      register: _editor_neovim_version
+      changed_when: false
+
+    - name: Assert neovim reports the pinned version
+      ansible.builtin.assert:
+        that: "'NVIM v' + editor_neovim_version in _editor_neovim_version.stdout"
+
+    - name: Stat nvim plugins directory
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lua/plugins"
+      register: _editor_plugins_dir
+
+    - name: Assert nvim plugins directory still exists (created by neovim's own tasks)
+      ansible.builtin.assert:
+        that: _editor_plugins_dir.stat.exists
+
+    - name: Stat presenterm.nvim plugin config
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.config/nvim/lua/plugins/presenterm.lua"
+      register: _editor_presenterm_plugin
+
+    - name: Assert presenterm.nvim plugin config was NOT deployed
+      ansible.builtin.assert:
+        that: not _editor_presenterm_plugin.stat.exists

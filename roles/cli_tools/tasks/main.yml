@@ -1,0 +1,177 @@
+---
+# Thin dispatcher: one task file per component, each behind its own switch.
+# Tags use include_tasks' `apply:` so they reach the tasks inside the file.
+- name: Install bat
+  ansible.builtin.include_tasks:
+    file: bat.yml
+    apply:
+      tags: [bat, cli_tools]
+  when: cli_tools_bat_enabled
+  tags: [bat, cli_tools]
+
+- name: Install btop
+  ansible.builtin.include_tasks:
+    file: btop.yml
+    apply:
+      tags: [btop, cli_tools]
+  when: cli_tools_btop_enabled
+  tags: [btop, cli_tools]
+
+- name: Install htop
+  ansible.builtin.include_tasks:
+    file: htop.yml
+    apply:
+      tags: [htop, cli_tools]
+  when: cli_tools_htop_enabled
+  tags: [htop, cli_tools]
+
+- name: Install eza
+  ansible.builtin.include_tasks:
+    file: eza.yml
+    apply:
+      tags: [eza, cli_tools]
+  when: cli_tools_eza_enabled
+  tags: [eza, cli_tools]
+
+- name: Install fd
+  ansible.builtin.include_tasks:
+    file: fd.yml
+    apply:
+      tags: [fd, cli_tools]
+  when: cli_tools_fd_enabled
+  tags: [fd, cli_tools]
+
+- name: Install ripgrep
+  ansible.builtin.include_tasks:
+    file: ripgrep.yml
+    apply:
+      tags: [ripgrep, cli_tools]
+  when: cli_tools_ripgrep_enabled
+  tags: [ripgrep, cli_tools]
+
+- name: Install zoxide
+  ansible.builtin.include_tasks:
+    file: zoxide.yml
+    apply:
+      tags: [zoxide, cli_tools]
+  when: cli_tools_zoxide_enabled
+  tags: [zoxide, cli_tools]
+
+- name: Install fzf
+  ansible.builtin.include_tasks:
+    file: fzf.yml
+    apply:
+      tags: [fzf, cli_tools]
+  when: cli_tools_fzf_enabled
+  tags: [fzf, cli_tools]
+
+- name: Install emoji-fzf
+  ansible.builtin.include_tasks:
+    file: emoji_fzf.yml
+    apply:
+      tags: [emoji_fzf, cli_tools]
+  when: cli_tools_emoji_fzf_enabled
+  tags: [emoji_fzf, cli_tools]
+
+- name: Install sd
+  ansible.builtin.include_tasks:
+    file: sd.yml
+    apply:
+      tags: [sd, cli_tools]
+  when: cli_tools_sd_enabled
+  tags: [sd, cli_tools]
+
+- name: Install duf
+  ansible.builtin.include_tasks:
+    file: duf.yml
+    apply:
+      tags: [duf, cli_tools]
+  when: cli_tools_duf_enabled
+  tags: [duf, cli_tools]
+
+- name: Install gping
+  ansible.builtin.include_tasks:
+    file: gping.yml
+    apply:
+      tags: [gping, cli_tools]
+  when: cli_tools_gping_enabled
+  tags: [gping, cli_tools]
+
+- name: Install hexyl
+  ansible.builtin.include_tasks:
+    file: hexyl.yml
+    apply:
+      tags: [hexyl, cli_tools]
+  when: cli_tools_hexyl_enabled
+  tags: [hexyl, cli_tools]
+
+- name: Install procs
+  ansible.builtin.include_tasks:
+    file: procs.yml
+    apply:
+      tags: [procs, cli_tools]
+  when: cli_tools_procs_enabled
+  tags: [procs, cli_tools]
+
+- name: Install dust
+  ansible.builtin.include_tasks:
+    file: dust.yml
+    apply:
+      tags: [dust, cli_tools]
+  when: cli_tools_dust_enabled
+  tags: [dust, cli_tools]
+
+- name: Install viddy
+  ansible.builtin.include_tasks:
+    file: viddy.yml
+    apply:
+      tags: [viddy, cli_tools]
+  when: cli_tools_viddy_enabled
+  tags: [viddy, cli_tools]
+
+- name: Install xcp
+  ansible.builtin.include_tasks:
+    file: xcp.yml
+    apply:
+      tags: [xcp, cli_tools]
+  when: cli_tools_xcp_enabled
+  tags: [xcp, cli_tools]
+
+- name: Install doggo
+  ansible.builtin.include_tasks:
+    file: doggo.yml
+    apply:
+      tags: [doggo, cli_tools]
+  when: cli_tools_doggo_enabled
+  tags: [doggo, cli_tools]
+
+- name: Install jaq
+  ansible.builtin.include_tasks:
+    file: jaq.yml
+    apply:
+      tags: [jaq, cli_tools]
+  when: cli_tools_jaq_enabled
+  tags: [jaq, cli_tools]
+
+- name: Install moor
+  ansible.builtin.include_tasks:
+    file: moor.yml
+    apply:
+      tags: [moor, cli_tools]
+  when: cli_tools_moor_enabled
+  tags: [moor, cli_tools]
+
+- name: Install yazi
+  ansible.builtin.include_tasks:
+    file: yazi.yml
+    apply:
+      tags: [yazi, cli_tools]
+  when: cli_tools_yazi_enabled
+  tags: [yazi, cli_tools]
+
+- name: Deploy shell aliases for the installed tools
+  ansible.builtin.include_tasks:
+    file: shell.yml
+    apply:
+      tags: [shell, cli_tools]
+  tags: [bat, btop, htop, eza, fd, ripgrep, zoxide, fzf, emoji_fzf, sd, duf, gping, hexyl, procs, dust, viddy, xcp, doggo, jaq, moor, yazi, cli_tools, shell]

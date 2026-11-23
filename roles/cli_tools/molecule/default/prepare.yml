@@ -1,0 +1,16 @@
+---
+- name: Prepare
+  hosts: all
+  gather_facts: false
+  environment:
+    http_proxy: "{{ lookup('env', 'http_proxy') }}"
+    https_proxy: "{{ lookup('env', 'https_proxy') or lookup('env', 'http_proxy') }}"
+    HTTP_PROXY: "{{ lookup('env', 'http_proxy') }}"
+    HTTPS_PROXY: "{{ lookup('env', 'https_proxy') or lookup('env', 'http_proxy') }}"
+  tasks:
+    # A pristine container has never had `apt-get update` run, so populate the
+    # cache for real before converge (also needed for --check passes).
+    - name: Update apt cache for real
+      ansible.builtin.apt:
+        update_cache: true
+      become: true

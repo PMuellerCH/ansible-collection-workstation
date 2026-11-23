@@ -1,0 +1,77 @@
+---
+# delta (apt package name git-delta, binary name delta) — includes Catppuccin
+# Mocha theming via git config, since delta only has meaningful theming once
+# wired into git itself (unlike bat/btop, which have standalone config files).
+- name: Install delta
+  ansible.builtin.apt:
+    name:
+      - git
+      - git-delta
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: git_delta_enabled
+  tags: [delta, git]
+
+- name: Create git conf.d directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/git"
+    state: directory
+    mode: "0755"
+  become: false
+  when: git_delta_enabled
+  tags: [delta, git]
+
+- name: Download Catppuccin Mocha theme for delta
+  ansible.builtin.get_url:
+    url: "https://raw.githubusercontent.com/catppuccin/delta/{{ git_delta_catppuccin_ref }}/catppuccin.gitconfig"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/git/catppuccin-delta.gitconfig"
+    checksum: "{{ git_delta_catppuccin_checksum }}"
+    mode: "0644"
+  become: false
+  when: git_delta_enabled
+  tags: [delta, git]
+
+- name: Include Catppuccin delta theme file in global gitconfig
+  community.general.git_config:
+    name: include.path
+    value: "{{ ansible_facts['env']['HOME'] }}/.config/git/catppuccin-delta.gitconfig"
+    scope: global
+  become: false
+  when: git_delta_enabled and not ansible_check_mode
+  tags: [delta, git]
+
+- name: Set delta as git's diff pager, with the Catppuccin Mocha theme
+  community.general.git_config:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    scope: global
+  become: false
+  loop:
+    - name: core.pager
+      value: delta
+    - name: delta.features
+      value: catppuccin-mocha
+  when: git_delta_enabled and not ansible_check_mode
+  tags: [delta, git]
+
+- name: Create zsh conf.d directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d"
+    state: directory
+    mode: "0755"
+  become: false
+  when: git_delta_enabled and git_deploy_shell_aliases
+  tags: [delta, git]
+
+- name: Deploy git shell aliases
+  ansible.builtin.copy:
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/git.zsh"
+    mode: "0644"
+    content: |
+      # git aliases — managed by Ansible (git role)
+      command -v delta &>/dev/null && alias diff='delta'
+  become: false
+  when: git_delta_enabled and git_deploy_shell_aliases
+  tags: [delta, git]

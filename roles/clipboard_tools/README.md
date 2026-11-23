@@ -84,7 +84,7 @@ tag cascades to every task in the role and defeats this per-tool filtering.
   `checksums.txt` per release — `get_url`'s `checksum:` param fetches and
   matches it directly by the source URL's basename, so there's no static
   checksum to keep in sync by hand when the version is bumped (same pattern
-  as `cli_dev_env`'s lazygit).
+  as the `git` role's lazygit).
 - **cliphist** (`sentriz/cliphist`) publishes **only** raw per-platform
   binaries per release (e.g. `v0.7.0-linux-amd64`) — no `checksums.txt`,
   `.sha256`, or any other sidecar. Instead of a hand-pinned static checksum,
@@ -112,10 +112,10 @@ tag cascades to every task in the role and defeats this per-tool filtering.
 
 - The deployed `ch` shell function (`cliphist list | fzf --with-nth 2 |
   cliphist decode | wl-copy`) requires **`fzf`**, which lives in the
-  `modern_cli` role (`modern_cli_fzf_enabled`), not this one. Without it,
+  `cli_tools` role (`cli_tools_fzf_enabled`), not this one. Without it,
   `cliphist`/`clipse` still work via their own CLIs, but the `ch` alias
   itself won't run.
-- This is a **two-way** soft coupling: `modern_cli`'s own README documents
+- This is a **two-way** soft coupling: `cli_tools`' own README documents
   its `emoji-fzf`-driven `emoji` shell function depending on **this role's**
   `wl-copy` (`clipboard_tools_wl_clipboard_enabled`) to copy the selected
   emoji to the clipboard. Neither role hard-depends on the other

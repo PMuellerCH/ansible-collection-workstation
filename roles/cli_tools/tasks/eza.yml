@@ -1,0 +1,11 @@
+---
+# eza
+- name: Install eza
+  ansible.builtin.apt:
+    name: eza
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: cli_tools_eza_enabled
+  tags: [eza, cli_tools]
