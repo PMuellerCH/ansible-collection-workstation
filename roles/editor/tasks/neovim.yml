@@ -15,7 +15,7 @@
 - name: Fetch neovim release metadata for the GitHub asset digest
   ansible.builtin.get_url:
     url: "https://api.github.com/repos/neovim/neovim/releases/tags/v{{ editor_neovim_version }}"
-    dest: "/tmp/nvim-linux-x86_64-{{ editor_neovim_version }}_release.json"
+    dest: "{{ editor_dl_tmp.path }}/nvim-linux-x86_64-{{ editor_neovim_version }}_release.json"
     force: true
     headers: >-
       {{ {'Accept': 'application/vnd.github+json'}
@@ -35,7 +35,7 @@
 
 - name: Read neovim release metadata
   ansible.builtin.slurp:
-    path: "/tmp/nvim-linux-x86_64-{{ editor_neovim_version }}_release.json"
+    path: "{{ editor_dl_tmp.path }}/nvim-linux-x86_64-{{ editor_neovim_version }}_release.json"
   register: editor_neovim_release_raw
   when: >-
     not ansible_check_mode and
@@ -73,7 +73,7 @@
 - name: Download neovim archive
   ansible.builtin.get_url:
     url: "https://github.com/neovim/neovim/releases/download/v{{ editor_neovim_version }}/nvim-linux-x86_64.tar.gz"
-    dest: "/tmp/nvim-linux-x86_64-{{ editor_neovim_version }}.tar.gz"
+    dest: "{{ editor_dl_tmp.path }}/nvim-linux-x86_64-{{ editor_neovim_version }}.tar.gz"
     checksum: "{{ editor_neovim_checksum }}"
     mode: "0644"
   when: >-
@@ -85,7 +85,7 @@
 
 - name: Extract neovim to /opt
   ansible.builtin.unarchive:
-    src: "/tmp/nvim-linux-x86_64-{{ editor_neovim_version }}.tar.gz"
+    src: "{{ editor_dl_tmp.path }}/nvim-linux-x86_64-{{ editor_neovim_version }}.tar.gz"
     dest: /opt/
     remote_src: true
   become: true

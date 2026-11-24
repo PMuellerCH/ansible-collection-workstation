@@ -1,26 +1,63 @@
 ---
 # Thin dispatcher: one task file per component, each behind its own switch.
 # Tags use include_tasks' `apply:` so they reach the tasks inside the file.
-- name: Install AWS CLI v2, session-manager-plugin, boto3
-  ansible.builtin.include_tasks:
-    file: aws.yml
-    apply:
+#
+# Release archives are staged in one private directory per run (mktemp -d,
+# mode 0700, owned by the invoking user) instead of fixed /tmp paths, so another
+# local user cannot pre-create or swap a file between the checksum-verified
+# download and the root-level extract/install. It is removed again in `always`,
+# also when a component fails.
+- name: Install the cloud_cli components in a private download directory
+  block:
+    - name: Create private download directory
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: cloud_cli_stage_
+      register: cloud_cli_stage_tmp
+      become: false
+      # Directory creation that every download below depends on, so it also
+      # runs in --check (the sanctioned check_mode: false exception). Reports
+      # unchanged: it is scratch space, not managed state.
+      check_mode: false
+      changed_when: false
+      tags: [always]
+
+    - name: Install AWS CLI v2, session-manager-plugin, boto3
+      ansible.builtin.include_tasks:
+        file: aws.yml
+        apply:
+          tags: [aws, cloud_cli]
+      when: cloud_cli_aws_enabled
       tags: [aws, cloud_cli]
-  when: cloud_cli_aws_enabled
-  tags: [aws, cloud_cli]
 
-- name: Install Terraform, Vault, tfswitch, tflint, terraform-docs
-  ansible.builtin.include_tasks:
-    file: terraform.yml
-    apply:
+    - name: Install Terraform, Vault, tfswitch, tflint, terraform-docs
+      ansible.builtin.include_tasks:
+        file: terraform.yml
+        apply:
+          tags: [terraform, cloud_cli]
+      when: cloud_cli_terraform_enabled
       tags: [terraform, cloud_cli]
-  when: cloud_cli_terraform_enabled
-  tags: [terraform, cloud_cli]
 
-- name: Install floci (local AWS emulator CLI)
-  ansible.builtin.include_tasks:
-    file: floci.yml
-    apply:
+    - name: Install floci (local AWS emulator CLI)
+      ansible.builtin.include_tasks:
+        file: floci.yml
+        apply:
+          tags: [floci, cloud_cli]
+      when: cloud_cli_floci_enabled
       tags: [floci, cloud_cli]
-  when: cloud_cli_floci_enabled
-  tags: [floci, cloud_cli]
+  rescue:
+    - name: Report the failed cloud_cli component
+      ansible.builtin.fail:
+        msg: "A cloud_cli component failed ({{ ansible_failed_task.name | default('unknown task') }}): {{ ansible_failed_result.msg | default('see the preceding error') }}"
+      # `always` so a tag-filtered run cannot skip this and swallow the failure.
+      tags: [always]
+  always:
+    - name: Remove private download directory
+      ansible.builtin.file:
+        path: "{{ cloud_cli_stage_tmp.path }}"
+        state: absent
+      become: false
+      check_mode: false
+      changed_when: false
+      when: cloud_cli_stage_tmp.path is defined
+      tags: [always]

@@ -27,19 +27,39 @@
   when: cli_tools_btop_enabled
   tags: [btop, cli_tools]
 
+- name: Read the installed Catppuccin btop theme version marker
+  # The archive is staged in a fresh private directory every run, so the
+  # download task can no longer signal "already current" by being unchanged.
+  # The marker records which release the installed theme came from, so a
+  # Renovate bump of cli_tools_btop_catppuccin_version still refreshes it.
+  ansible.builtin.slurp:
+    src: "{{ ansible_facts['env']['HOME'] }}/.config/btop/themes/.catppuccin_version"
+  register: cli_tools_btop_theme_marker
+  become: false
+  failed_when: false
+  when: cli_tools_btop_enabled
+  tags: [btop, cli_tools]
+
+- name: Determine whether the Catppuccin btop theme needs (re)installing
+  ansible.builtin.set_fact:
+    cli_tools_btop_theme_needed: >-
+      {{ not cli_tools_btop_theme_stat.stat.exists or
+         (cli_tools_btop_theme_marker.content | default('') | b64decode | trim) != cli_tools_btop_catppuccin_version }}
+  when: cli_tools_btop_enabled
+  tags: [btop, cli_tools]
+
 - name: Download Catppuccin btop themes archive
   ansible.builtin.get_url:
     url: "https://github.com/catppuccin/btop/releases/download/{{ cli_tools_btop_catppuccin_version }}/themes.tar.gz"
-    dest: "/tmp/catppuccin-btop-themes.tar.gz"
+    dest: "{{ cli_tools_dl_tmp.path }}/catppuccin-btop-themes.tar.gz"
     checksum: "{{ cli_tools_btop_catppuccin_checksum }}"
     mode: "0644"
-  register: cli_tools_btop_theme_archive
-  when: cli_tools_btop_enabled
+  when: cli_tools_btop_enabled and cli_tools_btop_theme_needed
   tags: [btop, cli_tools]
 
 - name: Extract Catppuccin Mocha btop theme
   ansible.builtin.unarchive:
-    src: "/tmp/catppuccin-btop-themes.tar.gz"
+    src: "{{ cli_tools_dl_tmp.path }}/catppuccin-btop-themes.tar.gz"
     dest: "{{ ansible_facts['env']['HOME'] }}/.config/btop/themes"
     include:
       - themes/catppuccin_mocha.theme
@@ -47,10 +67,17 @@
       - --strip-components=1
     remote_src: true
   become: false
-  when: >-
-    cli_tools_btop_enabled and
-    (cli_tools_btop_theme_archive.changed or not cli_tools_btop_theme_stat.stat.exists)
+  when: cli_tools_btop_enabled and cli_tools_btop_theme_needed
   ignore_errors: "{{ ansible_check_mode }}"
+  tags: [btop, cli_tools]
+
+- name: Record the installed Catppuccin btop theme version
+  ansible.builtin.copy:
+    content: "{{ cli_tools_btop_catppuccin_version }}\n"
+    dest: "{{ ansible_facts['env']['HOME'] }}/.config/btop/themes/.catppuccin_version"
+    mode: "0644"
+  become: false
+  when: cli_tools_btop_enabled and cli_tools_btop_theme_needed
   tags: [btop, cli_tools]
 
 - name: Configure btop to use Catppuccin Mocha theme

@@ -10,7 +10,7 @@
 - name: Download k9s archive
   ansible.builtin.get_url:
     url: "https://github.com/derailed/k9s/releases/download/v{{ k8s_tools_k9s_version }}/k9s_Linux_amd64.tar.gz"
-    dest: "/tmp/k9s_{{ k8s_tools_k9s_version }}_Linux_amd64.tar.gz"
+    dest: "{{ k8s_tools_dl_tmp.path }}/k9s_{{ k8s_tools_k9s_version }}_Linux_amd64.tar.gz"
     # k9s publishes an aggregate checksums.sha256 per release (matched by basename).
     checksum: "sha256:https://github.com/derailed/k9s/releases/download/v{{ k8s_tools_k9s_version }}/checksums.sha256"
     mode: "0644"
@@ -19,7 +19,7 @@
 
 - name: Install k9s binary
   ansible.builtin.unarchive:
-    src: "/tmp/k9s_{{ k8s_tools_k9s_version }}_Linux_amd64.tar.gz"
+    src: "{{ k8s_tools_dl_tmp.path }}/k9s_{{ k8s_tools_k9s_version }}_Linux_amd64.tar.gz"
     dest: /usr/local/bin/
     include:
       - k9s

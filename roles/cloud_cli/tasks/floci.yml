@@ -25,14 +25,14 @@
   # in sync by hand when Renovate bumps cloud_cli_floci_version.
   ansible.builtin.get_url:
     url: "https://github.com/floci-io/floci-cli/releases/download/{{ cloud_cli_floci_version }}/sha256sums.txt"
-    dest: "/tmp/floci-{{ cloud_cli_floci_version }}-sha256sums.txt"
+    dest: "{{ cloud_cli_stage_tmp.path }}/floci-{{ cloud_cli_floci_version }}-sha256sums.txt"
     mode: "0644"
   when: >-
     (cloud_cli_floci_current_version.rc != 0 or cloud_cli_floci_version not in cloud_cli_floci_current_version.stdout)
 
 - name: Slurp floci CLI checksums file
   ansible.builtin.slurp:
-    src: "/tmp/floci-{{ cloud_cli_floci_version }}-sha256sums.txt"
+    src: "{{ cloud_cli_stage_tmp.path }}/floci-{{ cloud_cli_floci_version }}-sha256sums.txt"
   register: cloud_cli_floci_checksums_raw
   when: >-
     not ansible_check_mode and

@@ -183,4 +183,4 @@ session. The `ch()` function needs `fzf` (the `cli_tools` role) and `wl-copy` (t
 ### Known limitation: download staging
 
 Release downloads land in a fixed `/tmp` path and their checksum is verified at download time; the root-level install
-follows. On a single-user workstation the window in between is accepted (tracked in #170).
+follows. On a single-user workstation the window in between is accepted (tracked in #193).

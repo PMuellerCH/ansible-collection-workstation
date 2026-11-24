@@ -1,18 +1,55 @@
 ---
 # Thin dispatcher: one task file per component, each behind its own switch.
 # Tags use include_tasks' `apply:` so they reach the tasks inside the file.
-- name: Install neovim with LazyVim
-  ansible.builtin.include_tasks:
-    file: neovim.yml
-    apply:
-      tags: [neovim, editor]
-  when: editor_neovim_enabled
-  tags: [neovim, editor]
+#
+# Release archives are staged in one private directory per run (mktemp -d,
+# mode 0700, owned by the invoking user) instead of fixed /tmp paths, so another
+# local user cannot pre-create or swap a file between the checksum-verified
+# download and the root-level extract/install. It is removed again in `always`,
+# also when a component fails.
+- name: Install the editor components in a private download directory
+  block:
+    - name: Create private download directory
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: editor_dl_
+      register: editor_dl_tmp
+      become: false
+      # Directory creation that every download below depends on, so it also
+      # runs in --check (the sanctioned check_mode: false exception). Reports
+      # unchanged: it is scratch space, not managed state.
+      check_mode: false
+      changed_when: false
+      tags: [always]
 
-- name: Install presenterm and mermaid-cli
-  ansible.builtin.include_tasks:
-    file: presenterm.yml
-    apply:
+    - name: Install neovim with LazyVim
+      ansible.builtin.include_tasks:
+        file: neovim.yml
+        apply:
+          tags: [neovim, editor]
+      when: editor_neovim_enabled
+      tags: [neovim, editor]
+
+    - name: Install presenterm and mermaid-cli
+      ansible.builtin.include_tasks:
+        file: presenterm.yml
+        apply:
+          tags: [presenterm, editor]
+      when: editor_presenterm_enabled
       tags: [presenterm, editor]
-  when: editor_presenterm_enabled
-  tags: [presenterm, editor]
+  rescue:
+    - name: Report the failed editor component
+      ansible.builtin.fail:
+        msg: "A editor component failed ({{ ansible_failed_task.name | default('unknown task') }}): {{ ansible_failed_result.msg | default('see the preceding error') }}"
+      # `always` so a tag-filtered run cannot skip this and swallow the failure.
+      tags: [always]
+  always:
+    - name: Remove private download directory
+      ansible.builtin.file:
+        path: "{{ editor_dl_tmp.path }}"
+        state: absent
+      become: false
+      check_mode: false
+      changed_when: false
+      when: editor_dl_tmp.path is defined
+      tags: [always]

@@ -14,7 +14,7 @@
 - name: Download act archive
   ansible.builtin.get_url:
     url: "{{ ansible_dev_act_download_base }}/act_Linux_x86_64.tar.gz"
-    dest: "/tmp/act_{{ ansible_dev_act_version }}_Linux_x86_64.tar.gz"
+    dest: "{{ ansible_dev_dl_tmp.path }}/act_{{ ansible_dev_act_version }}_Linux_x86_64.tar.gz"
     # nektos/act publishes an aggregate checksums.txt per release — get_url
     # fetches it and matches the entry by the source URL's basename, so
     # there's no static checksum to keep in sync by hand when Renovate bumps
@@ -27,7 +27,7 @@
 
 - name: Install act binary to /usr/local/bin
   ansible.builtin.unarchive:
-    src: "/tmp/act_{{ ansible_dev_act_version }}_Linux_x86_64.tar.gz"
+    src: "{{ ansible_dev_dl_tmp.path }}/act_{{ ansible_dev_act_version }}_Linux_x86_64.tar.gz"
     dest: /usr/local/bin/
     include:
       - act

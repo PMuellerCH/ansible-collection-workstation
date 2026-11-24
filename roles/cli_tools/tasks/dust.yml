@@ -15,7 +15,7 @@
 - name: Fetch dust release metadata for the GitHub asset digest
   ansible.builtin.get_url:
     url: "https://api.github.com/repos/bootandy/dust/releases/tags/v{{ cli_tools_dust_version }}"
-    dest: "/tmp/du-dust_{{ cli_tools_dust_version }}_release.json"
+    dest: "{{ cli_tools_dl_tmp.path }}/du-dust_{{ cli_tools_dust_version }}_release.json"
     force: true
     headers: >-
       {{ {'Accept': 'application/vnd.github+json'}
@@ -35,7 +35,7 @@
 
 - name: Read dust release metadata
   ansible.builtin.slurp:
-    path: "/tmp/du-dust_{{ cli_tools_dust_version }}_release.json"
+    path: "{{ cli_tools_dl_tmp.path }}/du-dust_{{ cli_tools_dust_version }}_release.json"
   register: cli_tools_dust_release_raw
   when: >-
     not ansible_check_mode and
@@ -73,7 +73,7 @@
 - name: Download dust .deb
   ansible.builtin.get_url:
     url: "https://github.com/bootandy/dust/releases/download/v{{ cli_tools_dust_version }}/du-dust_{{ cli_tools_dust_version }}-1_amd64.deb"
-    dest: "/tmp/du-dust_{{ cli_tools_dust_version }}_amd64.deb"
+    dest: "{{ cli_tools_dl_tmp.path }}/du-dust_{{ cli_tools_dust_version }}_amd64.deb"
     checksum: "{{ cli_tools_dust_checksum }}"
     mode: "0644"
   when: >-
@@ -85,7 +85,7 @@
 
 - name: Install dust
   ansible.builtin.apt:
-    deb: "/tmp/du-dust_{{ cli_tools_dust_version }}_amd64.deb"
+    deb: "{{ cli_tools_dl_tmp.path }}/du-dust_{{ cli_tools_dust_version }}_amd64.deb"
     # A machine provisioned by an older version of this role may still have
     # du-dust dpkg-held from before the hold task was removed — without
     # this, apt refuses to install a newer pinned .deb over a held package.

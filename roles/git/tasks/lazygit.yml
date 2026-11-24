@@ -30,7 +30,7 @@
 - name: Download lazygit archive
   ansible.builtin.get_url:
     url: "{{ git_lazygit_download_base }}/lazygit_{{ git_lazygit_version }}_linux_x86_64.tar.gz"
-    dest: "/tmp/lazygit_{{ git_lazygit_version }}_linux_x86_64.tar.gz"
+    dest: "{{ git_dl_tmp.path }}/lazygit_{{ git_lazygit_version }}_linux_x86_64.tar.gz"
     # jesseduffield/lazygit publishes an aggregate checksums.txt per release —
     # get_url fetches it and matches the entry by the destination's basename,
     # so there's no static checksum to keep in sync by hand when Renovate
@@ -45,7 +45,7 @@
 
 - name: Install lazygit binary to /usr/local/bin
   ansible.builtin.unarchive:
-    src: "/tmp/lazygit_{{ git_lazygit_version }}_linux_x86_64.tar.gz"
+    src: "{{ git_dl_tmp.path }}/lazygit_{{ git_lazygit_version }}_linux_x86_64.tar.gz"
     dest: /usr/local/bin/
     include:
       - lazygit

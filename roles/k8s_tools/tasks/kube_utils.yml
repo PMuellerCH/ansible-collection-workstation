@@ -10,7 +10,7 @@
 - name: Download kubectx archive
   ansible.builtin.get_url:
     url: "https://github.com/ahmetb/kubectx/releases/download/v{{ k8s_tools_kubectx_version }}/{{ k8s_tools_kubectx_archive }}"
-    dest: "/tmp/kubectx_{{ k8s_tools_kubectx_version }}_linux_x86_64.tar.gz"
+    dest: "{{ k8s_tools_dl_tmp.path }}/kubectx_{{ k8s_tools_kubectx_version }}_linux_x86_64.tar.gz"
     # kubectx/kubens share one checksums.txt per release (matched by basename).
     checksum: "sha256:https://github.com/ahmetb/kubectx/releases/download/v{{ k8s_tools_kubectx_version }}/checksums.txt"
     mode: "0644"
@@ -19,7 +19,7 @@
 
 - name: Install kubectx binary
   ansible.builtin.unarchive:
-    src: "/tmp/kubectx_{{ k8s_tools_kubectx_version }}_linux_x86_64.tar.gz"
+    src: "{{ k8s_tools_dl_tmp.path }}/kubectx_{{ k8s_tools_kubectx_version }}_linux_x86_64.tar.gz"
     dest: /usr/local/bin/
     include:
       - kubectx
@@ -32,7 +32,7 @@
 - name: Download kubens archive
   ansible.builtin.get_url:
     url: "https://github.com/ahmetb/kubectx/releases/download/v{{ k8s_tools_kubectx_version }}/{{ k8s_tools_kubens_archive }}"
-    dest: "/tmp/kubens_{{ k8s_tools_kubectx_version }}_linux_x86_64.tar.gz"
+    dest: "{{ k8s_tools_dl_tmp.path }}/kubens_{{ k8s_tools_kubectx_version }}_linux_x86_64.tar.gz"
     checksum: "sha256:https://github.com/ahmetb/kubectx/releases/download/v{{ k8s_tools_kubectx_version }}/checksums.txt"
     mode: "0644"
   when: >-
@@ -40,7 +40,7 @@
 
 - name: Install kubens binary
   ansible.builtin.unarchive:
-    src: "/tmp/kubens_{{ k8s_tools_kubectx_version }}_linux_x86_64.tar.gz"
+    src: "{{ k8s_tools_dl_tmp.path }}/kubens_{{ k8s_tools_kubectx_version }}_linux_x86_64.tar.gz"
     dest: /usr/local/bin/
     include:
       - kubens
@@ -60,7 +60,7 @@
 - name: Download stern archive
   ansible.builtin.get_url:
     url: "https://github.com/stern/stern/releases/download/v{{ k8s_tools_stern_version }}/stern_{{ k8s_tools_stern_version }}_linux_amd64.tar.gz"
-    dest: "/tmp/stern_{{ k8s_tools_stern_version }}_linux_amd64.tar.gz"
+    dest: "{{ k8s_tools_dl_tmp.path }}/stern_{{ k8s_tools_stern_version }}_linux_amd64.tar.gz"
     checksum: "sha256:https://github.com/stern/stern/releases/download/v{{ k8s_tools_stern_version }}/checksums.txt"
     mode: "0644"
   when: >-
@@ -68,7 +68,7 @@
 
 - name: Install stern binary
   ansible.builtin.unarchive:
-    src: "/tmp/stern_{{ k8s_tools_stern_version }}_linux_amd64.tar.gz"
+    src: "{{ k8s_tools_dl_tmp.path }}/stern_{{ k8s_tools_stern_version }}_linux_amd64.tar.gz"
     dest: /usr/local/bin/
     include:
       - stern
@@ -144,7 +144,7 @@
 - name: Download kubeconform archive
   ansible.builtin.get_url:
     url: "https://github.com/yannh/kubeconform/releases/download/v{{ k8s_tools_kubeconform_version }}/kubeconform-linux-amd64.tar.gz"
-    dest: "/tmp/kubeconform-{{ k8s_tools_kubeconform_version }}-linux-amd64.tar.gz"
+    dest: "{{ k8s_tools_dl_tmp.path }}/kubeconform-{{ k8s_tools_kubeconform_version }}-linux-amd64.tar.gz"
     checksum: "sha256:https://github.com/yannh/kubeconform/releases/download/v{{ k8s_tools_kubeconform_version }}/CHECKSUMS"
     mode: "0644"
   when: >-
@@ -152,7 +152,7 @@
 
 - name: Install kubeconform binary
   ansible.builtin.unarchive:
-    src: "/tmp/kubeconform-{{ k8s_tools_kubeconform_version }}-linux-amd64.tar.gz"
+    src: "{{ k8s_tools_dl_tmp.path }}/kubeconform-{{ k8s_tools_kubeconform_version }}-linux-amd64.tar.gz"
     dest: /usr/local/bin/
     include:
       - kubeconform
@@ -203,7 +203,7 @@
 - name: Download kube-linter archive
   ansible.builtin.get_url:
     url: "https://github.com/stackrox/kube-linter/releases/download/v{{ k8s_tools_kube_linter_version }}/kube-linter-linux.tar.gz"
-    dest: "/tmp/kube-linter-{{ k8s_tools_kube_linter_version }}-linux.tar.gz"
+    dest: "{{ k8s_tools_dl_tmp.path }}/kube-linter-{{ k8s_tools_kube_linter_version }}-linux.tar.gz"
     checksum: >-
       {{
         (k8s_tools_kube_linter_release.json.assets
@@ -217,7 +217,7 @@
 
 - name: Install kube-linter binary
   ansible.builtin.unarchive:
-    src: "/tmp/kube-linter-{{ k8s_tools_kube_linter_version }}-linux.tar.gz"
+    src: "{{ k8s_tools_dl_tmp.path }}/kube-linter-{{ k8s_tools_kube_linter_version }}-linux.tar.gz"
     dest: /usr/local/bin/
     include:
       - kube-linter
