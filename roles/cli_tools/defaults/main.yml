@@ -27,8 +27,10 @@ cli_tools_yazi_enabled: true
 # release-asset digests for tools that publish no checksum file (dust, jaq,
 # moor, procs, xcp, yazi — see tasks/main.yml). Defaults to GH_TOKEN/GITHUB_TOKEN
 # from the environment; unauthenticated (empty) still works but is subject to
-# GitHub's 60 requests/hour per-IP limit. On GitHub Actions the workflow passes
-# GITHUB_TOKEN; a consumer can override this with their own token.
+# GitHub's 60 requests/hour per-IP limit. The shared molecule
+# workflow does not currently pass a token, so CI runs unauthenticated and
+# relies on the metadata-fetch retries (3 retries, 15 s apart); a consumer can
+# override this with their own token.
 cli_tools_github_api_token: "{{ lookup('ansible.builtin.env', 'GH_TOKEN') or lookup('ansible.builtin.env', 'GITHUB_TOKEN') }}"
 
 # Pinned commit of catppuccin/bat (theme is fetched from an immutable ref, not the mutable "main" branch)

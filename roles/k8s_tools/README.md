@@ -81,6 +81,7 @@ per-component enable switches: the role as a whole is the unit.
   kube-linter publishes none (only sigstore bundles), so its sha256 is read from the GitHub releases API
   (`assets[].digest`) — this needs unauthenticated `api.github.com` access and is only called when an install or upgrade
   is actually needed (a rate-limited shared proxy IP would surface as a clear failure, never as skipped verification).
+  The kube-linter metadata fetch is retried (3 retries, 15 s apart) first.
   All downloads are staged in a private temporary directory (mode 0700, removed afterwards, also on failure): helm
   (`helm.yml`) and krew (`kube_utils.yml`) in their own directories, every other archive in a per-run directory created in `tasks/main.yml`.
 - **Python libraries on non-Ubuntu**: injected into the `ansible-core` pipx venv created by the `ansible_dev` role,

@@ -10,7 +10,10 @@ name: Molecule
 # whose own files actually changed (not the full matrix). README.md and meta/
 # changes within a role don't count either: every role here has an empty
 # dependencies: [] (galaxy_info is purely descriptive), so neither affects
-# runtime behavior molecule would catch. A change to a shared file
+# runtime behavior molecule would catch. A role whose scenario uses another
+# role (e.g. ai_cli's prepare.yml installs Node.js via base's nodejs component)
+# declares those paths, one glob per line, in molecule/dependent_paths.txt, so
+# a change there re-runs it too. A change to a shared file
 # (requirements.yml, requirements-molecule.yml, galaxy.yml) still runs the full
 # matrix, since those affect every role's test environment, as does a change
 # to this workflow itself.
@@ -78,6 +81,12 @@ jobs:
               echo "  - 'roles/$role/**'"
               echo "  - '!roles/$role/README.md'"
               echo "  - '!roles/$role/meta/**'"
+              # Paths outside the role that its molecule scenario depends on
+              # (e.g. ai_cli's prepare.yml uses base's nodejs component).
+              if [ -f "roles/$role/molecule/dependent_paths.txt" ]; then
+                grep -vE '^[[:space:]]*(#|$)' "roles/$role/molecule/dependent_paths.txt" \
+                  | while read -r path; do echo "  - '$path'"; done
+              fi
             done
             echo "FILTERS_EOF"
           } >> "$GITHUB_OUTPUT"

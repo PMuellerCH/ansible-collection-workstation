@@ -36,7 +36,7 @@ session. The `ch()` function needs `fzf` (the `cli_tools` role) and `wl-copy` (t
 | `desktop_integration_wl_clipboard_enabled` | `true` | Whether to install wl-clipboard (provides wl-copy/wl-paste). cliphist's autostart entry and the deployed `ch` shell function both depend on wl-copy/wl-paste at runtime — see README "Soft cross-tool dependencies" if disabling this while cliphist stays enabled. |
 | `desktop_integration_cliphist_enabled` | `true` | Whether to install cliphist and deploy its autostart entry (`wl-paste --watch cliphist store`). Requires wl-clipboard at runtime — not hard-gated, see README. |
 | `desktop_integration_clipse_enabled` | `true` | Whether to install clipse (clipboard history TUI). |
-| `desktop_integration_github_api_token` | see `defaults/main.yml` | Optional GitHub API token, only to raise the rate limit when resolving the cliphist release-asset digest. Defaults to `GH_TOKEN`/`GITHUB_TOKEN` |
+| `desktop_integration_github_api_token` | see `defaults/main.yml` | Optional GitHub API token, only to raise the rate limit when resolving the cliphist release-asset digest. Defaults to `GH_TOKEN`/`GITHUB_TOKEN`. The metadata fetch is retried (3 retries, 15 s apart) to ride out transient GitHub API rate limiting or errors; it still fails loudly if every attempt fails. |
 | `desktop_integration_cliphist_version` | see `defaults/main.yml` | cliphist version (github-releases sentriz/cliphist), installed from a checksum-verified binary. |
 | `desktop_integration_cliphist_download_base` | see `defaults/main.yml` | Base URL the cliphist release binary is downloaded from. |
 | `desktop_integration_clipse_version` | see `defaults/main.yml` | clipse version (github-releases savedra1/clipse), installed from a checksum-verified archive. |

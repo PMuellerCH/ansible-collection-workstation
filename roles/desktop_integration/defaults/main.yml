@@ -16,7 +16,9 @@ desktop_integration_clipse_enabled: true
 # the cliphist release-asset digest (cliphist publishes no checksum file — see
 # tasks/cliphist.yml). Defaults to GH_TOKEN/GITHUB_TOKEN from the environment;
 # unauthenticated (empty) still works but is subject to GitHub's 60 requests/hour
-# per-IP limit. On GitHub Actions the workflow passes GITHUB_TOKEN.
+# per-IP limit. The shared molecule workflow does not currently pass a
+# token, so CI runs unauthenticated and relies on the metadata-fetch retries
+# (3 retries, 15 s apart).
 desktop_integration_github_api_token: "{{ lookup('ansible.builtin.env', 'GH_TOKEN') or lookup('ansible.builtin.env', 'GITHUB_TOKEN') }}"
 
 # renovate: datasource=github-releases depName=sentriz/cliphist extractVersion=^v(?<version>.*)$
