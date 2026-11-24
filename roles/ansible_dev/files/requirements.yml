@@ -11,7 +11,7 @@ collections:
     version: "2.1.0"
   # renovate: datasource=galaxy-collection depName=community.docker
   - name: community.docker
-    version: "5.4.0"
+    version: "5.4.1"
   # renovate: datasource=galaxy-collection depName=community.crypto
   - name: community.crypto
     version: "3.6.0"
