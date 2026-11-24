@@ -1,45 +1,82 @@
 ---
 # Thin dispatcher: one task file per component. Tags use include_tasks' `apply:`
 # so they reach the tasks inside the file. The old `base` tag still selects everything.
-- name: Install base packages, set hostname and locale
-  ansible.builtin.include_tasks:
-    file: system.yml
-    apply:
+#
+# Release archives are staged in one private directory per run (mktemp -d,
+# mode 0700, owned by the invoking user) instead of fixed /tmp paths, so another
+# local user cannot pre-create or swap a file between the download and the
+# root-level extract/install. It is removed again in `always`, also when a
+# component fails.
+- name: Run the base tasks with a private download directory
+  block:
+    - name: Create private download directory
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: base_dl_
+      register: base_dl_tmp
+      become: false
+      # Directory creation that every download below depends on, so it also
+      # runs in --check (the sanctioned check_mode: false exception). Reports
+      # unchanged: it is scratch space, not managed state.
+      check_mode: false
+      changed_when: false
+      tags: [always]
+
+    - name: Install base packages, set hostname and locale
+      ansible.builtin.include_tasks:
+        file: system.yml
+        apply:
+          tags: [system, base]
       tags: [system, base]
-  tags: [system, base]
 
-- name: Configure the corporate proxy and CA certificate
-  ansible.builtin.include_tasks:
-    file: proxy.yml
-    apply:
+    - name: Configure the corporate proxy and CA certificate
+      ansible.builtin.include_tasks:
+        file: proxy.yml
+        apply:
+          tags: [proxy, base]
       tags: [proxy, base]
-  tags: [proxy, base]
 
-- name: Configure SSH
-  ansible.builtin.include_tasks:
-    file: ssh.yml
-    apply:
+    - name: Configure SSH
+      ansible.builtin.include_tasks:
+        file: ssh.yml
+        apply:
+          tags: [ssh, base]
       tags: [ssh, base]
-  tags: [ssh, base]
 
-- name: Install the Python toolchain (uv)
-  ansible.builtin.include_tasks:
-    file: python.yml
-    apply:
+    - name: Install the Python toolchain (uv)
+      ansible.builtin.include_tasks:
+        file: python.yml
+        apply:
+          tags: [python, base]
       tags: [python, base]
-  tags: [python, base]
 
-- name: Install Node.js (NodeSource)
-  ansible.builtin.include_tasks:
-    file: nodejs.yml
-    apply:
+    - name: Install Node.js (NodeSource)
+      ansible.builtin.include_tasks:
+        file: nodejs.yml
+        apply:
+          tags: [nodejs, base]
+      when: base_nodejs_enabled
       tags: [nodejs, base]
-  when: base_nodejs_enabled
-  tags: [nodejs, base]
 
-- name: Install fonts
-  ansible.builtin.include_tasks:
-    file: fonts.yml
-    apply:
+    - name: Install fonts
+      ansible.builtin.include_tasks:
+        file: fonts.yml
+        apply:
+          tags: [fonts, base]
       tags: [fonts, base]
-  tags: [fonts, base]
+  rescue:
+    - name: Report the failed base task
+      ansible.builtin.fail:
+        msg: "A base task failed ({{ ansible_failed_task.name | default('unknown task') }}): {{ ansible_failed_result.msg | default('see the preceding error') }}"
+      # `always` so a tag-filtered run cannot skip this and swallow the failure.
+      tags: [always]
+  always:
+    - name: Remove private download directory
+      ansible.builtin.file:
+        path: "{{ base_dl_tmp.path }}"
+        state: absent
+      become: false
+      check_mode: false
+      changed_when: false
+      when: base_dl_tmp.path is defined
+      tags: [always]

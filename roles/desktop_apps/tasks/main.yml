@@ -1,50 +1,87 @@
 ---
 # Thin dispatcher: one task file per component, each behind its own switch.
 # Tags use include_tasks' `apply:` so they reach the tasks inside the file.
-- name: Install OnlyOffice
-  ansible.builtin.include_tasks:
-    file: onlyoffice.yml
-    apply:
+#
+# Release archives are staged in one private directory per run (mktemp -d,
+# mode 0700, owned by the invoking user) instead of fixed /tmp paths, so another
+# local user cannot pre-create or swap a file between the download and the
+# root-level extract/install. It is removed again in `always`, also when a
+# component fails.
+- name: Run the desktop_apps tasks with a private download directory
+  block:
+    - name: Create private download directory
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: desktop_apps_dl_
+      register: desktop_apps_dl_tmp
+      become: false
+      # Directory creation that every download below depends on, so it also
+      # runs in --check (the sanctioned check_mode: false exception). Reports
+      # unchanged: it is scratch space, not managed state.
+      check_mode: false
+      changed_when: false
+      tags: [always]
+
+    - name: Install OnlyOffice
+      ansible.builtin.include_tasks:
+        file: onlyoffice.yml
+        apply:
+          tags: [onlyoffice, desktop_apps]
+      when: desktop_apps_onlyoffice_enabled
       tags: [onlyoffice, desktop_apps]
-  when: desktop_apps_onlyoffice_enabled
-  tags: [onlyoffice, desktop_apps]
 
-- name: Deploy Firefox policies
-  ansible.builtin.include_tasks:
-    file: firefox.yml
-    apply:
+    - name: Deploy Firefox policies
+      ansible.builtin.include_tasks:
+        file: firefox.yml
+        apply:
+          tags: [firefox, desktop_apps]
+      when: desktop_apps_firefox_enabled
       tags: [firefox, desktop_apps]
-  when: desktop_apps_firefox_enabled
-  tags: [firefox, desktop_apps]
 
-- name: Install Brave
-  ansible.builtin.include_tasks:
-    file: brave.yml
-    apply:
+    - name: Install Brave
+      ansible.builtin.include_tasks:
+        file: brave.yml
+        apply:
+          tags: [brave, desktop_apps]
+      when: desktop_apps_brave_enabled
       tags: [brave, desktop_apps]
-  when: desktop_apps_brave_enabled
-  tags: [brave, desktop_apps]
 
-- name: Install LibreWolf
-  ansible.builtin.include_tasks:
-    file: librewolf.yml
-    apply:
+    - name: Install LibreWolf
+      ansible.builtin.include_tasks:
+        file: librewolf.yml
+        apply:
+          tags: [librewolf, desktop_apps]
+      when: desktop_apps_librewolf_enabled
       tags: [librewolf, desktop_apps]
-  when: desktop_apps_librewolf_enabled
-  tags: [librewolf, desktop_apps]
 
-- name: Install Slack (Flatpak)
-  ansible.builtin.include_tasks:
-    file: slack.yml
-    apply:
+    - name: Install Slack (Flatpak)
+      ansible.builtin.include_tasks:
+        file: slack.yml
+        apply:
+          tags: [slack, desktop_apps]
+      when: desktop_apps_slack_enabled
       tags: [slack, desktop_apps]
-  when: desktop_apps_slack_enabled
-  tags: [slack, desktop_apps]
 
-- name: Install teams-for-linux
-  ansible.builtin.include_tasks:
-    file: teams.yml
-    apply:
+    - name: Install teams-for-linux
+      ansible.builtin.include_tasks:
+        file: teams.yml
+        apply:
+          tags: [teams, desktop_apps]
+      when: desktop_apps_teams_enabled
       tags: [teams, desktop_apps]
-  when: desktop_apps_teams_enabled
-  tags: [teams, desktop_apps]
+  rescue:
+    - name: Report the failed desktop_apps task
+      ansible.builtin.fail:
+        msg: "A desktop_apps task failed ({{ ansible_failed_task.name | default('unknown task') }}): {{ ansible_failed_result.msg | default('see the preceding error') }}"
+      # `always` so a tag-filtered run cannot skip this and swallow the failure.
+      tags: [always]
+  always:
+    - name: Remove private download directory
+      ansible.builtin.file:
+        path: "{{ desktop_apps_dl_tmp.path }}"
+        state: absent
+      become: false
+      check_mode: false
+      changed_when: false
+      when: desktop_apps_dl_tmp.path is defined
+      tags: [always]

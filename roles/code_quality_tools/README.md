@@ -153,3 +153,9 @@ pin, force-reinstalls it (`python3 -m pipx runpip ansible-lint install
 --force-reinstall "ansible-core==<pinned version>"`). Uses `python3 -m pipx`
 rather than a `pipx` `$PATH` lookup, same reasoning as the pipx bootstrap
 above.
+
+## Download staging
+
+Release downloads are staged in a private per-run directory (`ansible.builtin.tempfile`, mode 0700, created in the
+role's `tasks/main.yml` and removed in an `always` section, also on failure) rather than fixed `/tmp` paths, so no other
+local user can pre-create or swap a file between the download and the root-level install.

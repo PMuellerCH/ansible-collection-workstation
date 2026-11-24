@@ -15,7 +15,7 @@
 - name: Download ncspot
   ansible.builtin.get_url:
     url: "{{ media_ncspot_download_base }}/ncspot-v{{ media_ncspot_version }}-linux-x86_64.tar.gz"
-    dest: "/tmp/ncspot-v{{ media_ncspot_version }}.tar.gz"
+    dest: "{{ media_dl_tmp.path }}/ncspot-v{{ media_ncspot_version }}.tar.gz"
     # hrkfdn/ncspot publishes a matching .sha256 file per asset; get_url fetches it and matches by the
     # source URL's basename, so there is no static checksum to keep in sync when Renovate bumps the version.
     checksum: "sha256:{{ media_ncspot_download_base }}/ncspot-v{{ media_ncspot_version }}-linux-x86_64.sha256"
@@ -24,7 +24,7 @@
 
 - name: Install ncspot binary
   ansible.builtin.unarchive:
-    src: "/tmp/ncspot-v{{ media_ncspot_version }}.tar.gz"
+    src: "{{ media_dl_tmp.path }}/ncspot-v{{ media_ncspot_version }}.tar.gz"
     dest: /usr/local/bin/
     include:
       - ncspot

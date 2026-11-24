@@ -1,203 +1,240 @@
 ---
 # trivy
-- name: Get installed trivy version
-  ansible.builtin.command: dpkg-query -W -f='${Version}' trivy
-  register: code_quality_tools_trivy_current_version
-  changed_when: false
-  failed_when: false
-  when: code_quality_tools_trivy_enabled
-  tags: [trivy, code_quality_tools]
+#
+# Release archives are staged in one private directory per run (mktemp -d,
+# mode 0700, owned by the invoking user) instead of fixed /tmp paths, so another
+# local user cannot pre-create or swap a file between the download and the
+# root-level extract/install. It is removed again in `always`, also when a
+# component fails.
+- name: Run the code_quality_tools tasks with a private download directory
+  block:
+    - name: Create private download directory
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: code_quality_tools_dl_
+      register: code_quality_tools_dl_tmp
+      become: false
+      # Directory creation that every download below depends on, so it also
+      # runs in --check (the sanctioned check_mode: false exception). Reports
+      # unchanged: it is scratch space, not managed state.
+      check_mode: false
+      changed_when: false
+      tags: [always]
 
-- name: Download trivy .deb
-  ansible.builtin.get_url:
-    url: "{{ code_quality_tools_trivy_download_base }}/trivy_{{ code_quality_tools_trivy_version }}_Linux-64bit.deb"
-    dest: "/tmp/trivy_{{ code_quality_tools_trivy_version }}_Linux-64bit.deb"
-    checksum: "sha256:{{ code_quality_tools_trivy_download_base }}/trivy_{{ code_quality_tools_trivy_version }}_checksums.txt"
-    mode: "0644"
-  when: >-
-    code_quality_tools_trivy_enabled and
-    (code_quality_tools_trivy_current_version.rc != 0 or
-     code_quality_tools_trivy_current_version.stdout != code_quality_tools_trivy_version)
-  tags: [trivy, code_quality_tools]
+    - name: Get installed trivy version
+      ansible.builtin.command: dpkg-query -W -f='${Version}' trivy
+      register: code_quality_tools_trivy_current_version
+      changed_when: false
+      failed_when: false
+      when: code_quality_tools_trivy_enabled
+      tags: [trivy, code_quality_tools]
 
-- name: Install trivy
-  ansible.builtin.apt:
-    deb: "/tmp/trivy_{{ code_quality_tools_trivy_version }}_Linux-64bit.deb"
-    # A machine provisioned by an older version of this role may still have
-    # trivy dpkg-held from before the hold task was removed — without this,
-    # apt refuses to install a newer pinned .deb over a held package.
-    allow_change_held_packages: true
-  become: true
-  when: >-
-    not ansible_check_mode and
-    code_quality_tools_trivy_enabled and
-    (code_quality_tools_trivy_current_version.rc != 0 or
-     code_quality_tools_trivy_current_version.stdout != code_quality_tools_trivy_version)
-  tags: [trivy, code_quality_tools]
+    - name: Download trivy .deb
+      ansible.builtin.get_url:
+        url: "{{ code_quality_tools_trivy_download_base }}/trivy_{{ code_quality_tools_trivy_version }}_Linux-64bit.deb"
+        dest: "{{ code_quality_tools_dl_tmp.path }}/trivy_{{ code_quality_tools_trivy_version }}_Linux-64bit.deb"
+        checksum: "sha256:{{ code_quality_tools_trivy_download_base }}/trivy_{{ code_quality_tools_trivy_version }}_checksums.txt"
+        mode: "0644"
+      when: >-
+        code_quality_tools_trivy_enabled and
+        (code_quality_tools_trivy_current_version.rc != 0 or
+         code_quality_tools_trivy_current_version.stdout != code_quality_tools_trivy_version)
+      tags: [trivy, code_quality_tools]
 
-# actionlint — static linter for GitHub Actions workflow YAML (catches
-# syntax errors, invalid expressions, shellcheck integration for `run:`
-# steps), so problems in a workflow are caught locally before pushing
-# instead of only surfacing in CI.
-- name: Get installed actionlint version
-  ansible.builtin.command: actionlint -version
-  register: code_quality_tools_actionlint_current_version
-  changed_when: false
-  failed_when: false
-  when: code_quality_tools_actionlint_enabled
-  tags: [actionlint, code_quality_tools]
+    - name: Install trivy
+      ansible.builtin.apt:
+        deb: "{{ code_quality_tools_dl_tmp.path }}/trivy_{{ code_quality_tools_trivy_version }}_Linux-64bit.deb"
+        # A machine provisioned by an older version of this role may still have
+        # trivy dpkg-held from before the hold task was removed — without this,
+        # apt refuses to install a newer pinned .deb over a held package.
+        allow_change_held_packages: true
+      become: true
+      when: >-
+        not ansible_check_mode and
+        code_quality_tools_trivy_enabled and
+        (code_quality_tools_trivy_current_version.rc != 0 or
+         code_quality_tools_trivy_current_version.stdout != code_quality_tools_trivy_version)
+      tags: [trivy, code_quality_tools]
 
-- name: Download actionlint archive
-  ansible.builtin.get_url:
-    url: "{{ code_quality_tools_actionlint_download_base }}/actionlint_{{ code_quality_tools_actionlint_version }}_linux_amd64.tar.gz"
-    dest: "/tmp/actionlint_{{ code_quality_tools_actionlint_version }}_linux_amd64.tar.gz"
-    # rhysd/actionlint publishes an aggregate, version-named checksums.txt per
-    # release — get_url fetches it and matches the entry by the source URL's
-    # basename, so there's no static checksum to keep in sync by hand when
-    # Renovate bumps code_quality_tools_actionlint_version.
-    checksum: "sha256:{{ code_quality_tools_actionlint_download_base }}/actionlint_{{ code_quality_tools_actionlint_version }}_checksums.txt"
-    mode: "0644"
-  when: >-
-    code_quality_tools_actionlint_enabled and
-    (code_quality_tools_actionlint_current_version.rc != 0 or
-     code_quality_tools_actionlint_version not in code_quality_tools_actionlint_current_version.stdout)
-  tags: [actionlint, code_quality_tools]
+    # actionlint — static linter for GitHub Actions workflow YAML (catches
+    # syntax errors, invalid expressions, shellcheck integration for `run:`
+    # steps), so problems in a workflow are caught locally before pushing
+    # instead of only surfacing in CI.
+    - name: Get installed actionlint version
+      ansible.builtin.command: actionlint -version
+      register: code_quality_tools_actionlint_current_version
+      changed_when: false
+      failed_when: false
+      when: code_quality_tools_actionlint_enabled
+      tags: [actionlint, code_quality_tools]
 
-- name: Install actionlint binary to /usr/local/bin
-  ansible.builtin.unarchive:
-    src: "/tmp/actionlint_{{ code_quality_tools_actionlint_version }}_linux_amd64.tar.gz"
-    dest: /usr/local/bin/
-    include:
-      - actionlint
-    remote_src: true
-    mode: "0755"
-  become: true
-  when: >-
-    not ansible_check_mode and
-    code_quality_tools_actionlint_enabled and
-    (code_quality_tools_actionlint_current_version.rc != 0 or
-     code_quality_tools_actionlint_version not in code_quality_tools_actionlint_current_version.stdout)
-  tags: [actionlint, code_quality_tools]
+    - name: Download actionlint archive
+      ansible.builtin.get_url:
+        url: "{{ code_quality_tools_actionlint_download_base }}/actionlint_{{ code_quality_tools_actionlint_version }}_linux_amd64.tar.gz"
+        dest: "{{ code_quality_tools_dl_tmp.path }}/actionlint_{{ code_quality_tools_actionlint_version }}_linux_amd64.tar.gz"
+        # rhysd/actionlint publishes an aggregate, version-named checksums.txt per
+        # release — get_url fetches it and matches the entry by the source URL's
+        # basename, so there's no static checksum to keep in sync by hand when
+        # Renovate bumps code_quality_tools_actionlint_version.
+        checksum: "sha256:{{ code_quality_tools_actionlint_download_base }}/actionlint_{{ code_quality_tools_actionlint_version }}_checksums.txt"
+        mode: "0644"
+      when: >-
+        code_quality_tools_actionlint_enabled and
+        (code_quality_tools_actionlint_current_version.rc != 0 or
+         code_quality_tools_actionlint_version not in code_quality_tools_actionlint_current_version.stdout)
+      tags: [actionlint, code_quality_tools]
 
-# pre-commit (apt)
-- name: Install pre-commit via apt
-  ansible.builtin.apt:
-    name: pre-commit
-    state: present
-    update_cache: true
-    cache_valid_time: 3600
-  become: true
-  when: code_quality_tools_pre_commit_enabled
-  tags: [pre_commit, code_quality_tools]
+    - name: Install actionlint binary to /usr/local/bin
+      ansible.builtin.unarchive:
+        src: "{{ code_quality_tools_dl_tmp.path }}/actionlint_{{ code_quality_tools_actionlint_version }}_linux_amd64.tar.gz"
+        dest: /usr/local/bin/
+        include:
+          - actionlint
+        remote_src: true
+        mode: "0755"
+      become: true
+      when: >-
+        not ansible_check_mode and
+        code_quality_tools_actionlint_enabled and
+        (code_quality_tools_actionlint_current_version.rc != 0 or
+         code_quality_tools_actionlint_version not in code_quality_tools_actionlint_current_version.stdout)
+      tags: [actionlint, code_quality_tools]
 
-# pipx bootstrap — community.general.pipx requires pipx >= 1.7.0, but Ubuntu
-# 24.04's apt-provided pipx is only 1.4.3. Per role independence, this role
-# cannot assume a consumer has already upgraded pipx globally (as
-# computer-setup's own site.yml pre_tasks currently do), so it bootstraps an
-# adequate pipx itself, scoped to whichever pipx-based tools are enabled.
-# See README for why `python3 -m pipx` (not a PATH lookup) is what matters.
-- name: Install python3-pip and python3-venv (required to bootstrap a newer pipx and its managed venvs)
-  ansible.builtin.apt:
-    name:
-      - python3-pip
-      - python3-venv
-    state: present
-    update_cache: true
-    cache_valid_time: 3600
-  become: true
-  when: >-
-    code_quality_tools_detect_secrets_enabled or
-    code_quality_tools_yamllint_enabled or
-    code_quality_tools_checkov_enabled or
-    code_quality_tools_ansible_lint_enabled
-  tags: [detect_secrets, yamllint, checkov, ansible_lint, code_quality_tools]
+    # pre-commit (apt)
+    - name: Install pre-commit via apt
+      ansible.builtin.apt:
+        name: pre-commit
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+      become: true
+      when: code_quality_tools_pre_commit_enabled
+      tags: [pre_commit, code_quality_tools]
 
-- name: Ensure pipx >= minimum version is importable via `python -m pipx`
-  ansible.builtin.pip:
-    name: "pipx=={{ code_quality_tools_pipx_min_version }}"
-    extra_args: "--user --break-system-packages"
-    executable: pip3
-  become: false
-  when: >-
-    code_quality_tools_detect_secrets_enabled or
-    code_quality_tools_yamllint_enabled or
-    code_quality_tools_checkov_enabled or
-    code_quality_tools_ansible_lint_enabled
-  tags: [detect_secrets, yamllint, checkov, ansible_lint, code_quality_tools]
+    # pipx bootstrap — community.general.pipx requires pipx >= 1.7.0, but Ubuntu
+    # 24.04's apt-provided pipx is only 1.4.3. Per role independence, this role
+    # cannot assume a consumer has already upgraded pipx globally (as
+    # computer-setup's own site.yml pre_tasks currently do), so it bootstraps an
+    # adequate pipx itself, scoped to whichever pipx-based tools are enabled.
+    # See README for why `python3 -m pipx` (not a PATH lookup) is what matters.
+    - name: Install python3-pip and python3-venv (required to bootstrap a newer pipx and its managed venvs)
+      ansible.builtin.apt:
+        name:
+          - python3-pip
+          - python3-venv
+        state: present
+        update_cache: true
+        cache_valid_time: 3600
+      become: true
+      when: >-
+        code_quality_tools_detect_secrets_enabled or
+        code_quality_tools_yamllint_enabled or
+        code_quality_tools_checkov_enabled or
+        code_quality_tools_ansible_lint_enabled
+      tags: [detect_secrets, yamllint, checkov, ansible_lint, code_quality_tools]
 
-# pre-commit tool installs (pipx) — all depend on the pipx bootstrap above
-# having actually run for real; get_url-style check-mode caveat applies here
-# too (ansible.builtin.pip reports changed but doesn't install under
-# --check), so everything downstream of it must skip in check mode.
-- name: Install detect-secrets via pipx
-  community.general.pipx:
-    name: "detect-secrets=={{ code_quality_tools_detect_secrets_version }}"
-    state: present
-  become: false
-  when: not ansible_check_mode and code_quality_tools_detect_secrets_enabled
-  tags: [detect_secrets, code_quality_tools]
+    - name: Ensure pipx >= minimum version is importable via `python -m pipx`
+      ansible.builtin.pip:
+        name: "pipx=={{ code_quality_tools_pipx_min_version }}"
+        extra_args: "--user --break-system-packages"
+        executable: pip3
+      become: false
+      when: >-
+        code_quality_tools_detect_secrets_enabled or
+        code_quality_tools_yamllint_enabled or
+        code_quality_tools_checkov_enabled or
+        code_quality_tools_ansible_lint_enabled
+      tags: [detect_secrets, yamllint, checkov, ansible_lint, code_quality_tools]
 
-- name: Install yamllint via pipx
-  community.general.pipx:
-    name: "yamllint=={{ code_quality_tools_yamllint_version }}"
-    state: present
-  become: false
-  when: not ansible_check_mode and code_quality_tools_yamllint_enabled
-  tags: [yamllint, code_quality_tools]
+    # pre-commit tool installs (pipx) — all depend on the pipx bootstrap above
+    # having actually run for real; get_url-style check-mode caveat applies here
+    # too (ansible.builtin.pip reports changed but doesn't install under
+    # --check), so everything downstream of it must skip in check mode.
+    - name: Install detect-secrets via pipx
+      community.general.pipx:
+        name: "detect-secrets=={{ code_quality_tools_detect_secrets_version }}"
+        state: present
+      become: false
+      when: not ansible_check_mode and code_quality_tools_detect_secrets_enabled
+      tags: [detect_secrets, code_quality_tools]
 
-- name: Install checkov via pipx
-  community.general.pipx:
-    name: "checkov=={{ code_quality_tools_checkov_version }}"
-    state: present
-  become: false
-  when: not ansible_check_mode and code_quality_tools_checkov_enabled
-  tags: [checkov, code_quality_tools]
+    - name: Install yamllint via pipx
+      community.general.pipx:
+        name: "yamllint=={{ code_quality_tools_yamllint_version }}"
+        state: present
+      become: false
+      when: not ansible_check_mode and code_quality_tools_yamllint_enabled
+      tags: [yamllint, code_quality_tools]
 
-- name: Install ansible-lint via pipx
-  community.general.pipx:
-    name: "ansible-lint=={{ code_quality_tools_ansible_lint_version }}"
-    state: present
-  become: false
-  when: not ansible_check_mode and code_quality_tools_ansible_lint_enabled
-  tags: [ansible_lint, code_quality_tools]
+    - name: Install checkov via pipx
+      community.general.pipx:
+        name: "checkov=={{ code_quality_tools_checkov_version }}"
+        state: present
+      become: false
+      when: not ansible_check_mode and code_quality_tools_checkov_enabled
+      tags: [checkov, code_quality_tools]
 
-- name: Inject ansible-core into ansible-lint pipx venv
-  community.general.pipx:
-    name: ansible-lint
-    state: inject
-    inject_packages:
-      - "ansible-core=={{ code_quality_tools_ansible_core_version }}"
-  become: false
-  when: not ansible_check_mode and code_quality_tools_ansible_lint_enabled
-  tags: [ansible_lint, code_quality_tools]
+    - name: Install ansible-lint via pipx
+      community.general.pipx:
+        name: "ansible-lint=={{ code_quality_tools_ansible_lint_version }}"
+        state: present
+      become: false
+      when: not ansible_check_mode and code_quality_tools_ansible_lint_enabled
+      tags: [ansible_lint, code_quality_tools]
 
-- name: Get installed ansible-core version in the ansible-lint pipx venv
-  # community.general.pipx's `state: inject` idempotency check only looks at
-  # whether *a* version of ansible-core is present in the venv, not whether
-  # it matches the pin above — so a Renovate bump to
-  # code_quality_tools_ansible_core_version silently has no effect on a
-  # machine that already had an older version injected. This check (and the
-  # force-reinstall task below) close that gap. Uses `python3 -m pipx`
-  # rather than a `pipx` PATH lookup, same reasoning as the pipx bootstrap
-  # itself (see README).
-  ansible.builtin.command: python3 -m pipx runpip ansible-lint show ansible-core
-  register: code_quality_tools_ansible_core_installed
-  become: false
-  changed_when: false
-  failed_when: false
-  when: code_quality_tools_ansible_lint_enabled and not ansible_check_mode
-  tags: [ansible_lint, code_quality_tools]
+    - name: Inject ansible-core into ansible-lint pipx venv
+      community.general.pipx:
+        name: ansible-lint
+        state: inject
+        inject_packages:
+          - "ansible-core=={{ code_quality_tools_ansible_core_version }}"
+      become: false
+      when: not ansible_check_mode and code_quality_tools_ansible_lint_enabled
+      tags: [ansible_lint, code_quality_tools]
 
-- name: Force-reinstall ansible-core in the ansible-lint pipx venv when the pinned version drifted
-  ansible.builtin.command:
-    cmd: >-
-      python3 -m pipx runpip ansible-lint install --force-reinstall
-      "ansible-core=={{ code_quality_tools_ansible_core_version }}"
-  become: false
-  changed_when: true
-  when: >-
-    not ansible_check_mode and
-    code_quality_tools_ansible_lint_enabled and
-    code_quality_tools_ansible_core_installed.rc == 0 and
-    ('Version: ' + code_quality_tools_ansible_core_version) not in code_quality_tools_ansible_core_installed.stdout_lines
-  tags: [ansible_lint, code_quality_tools]
+    - name: Get installed ansible-core version in the ansible-lint pipx venv
+      # community.general.pipx's `state: inject` idempotency check only looks at
+      # whether *a* version of ansible-core is present in the venv, not whether
+      # it matches the pin above — so a Renovate bump to
+      # code_quality_tools_ansible_core_version silently has no effect on a
+      # machine that already had an older version injected. This check (and the
+      # force-reinstall task below) close that gap. Uses `python3 -m pipx`
+      # rather than a `pipx` PATH lookup, same reasoning as the pipx bootstrap
+      # itself (see README).
+      ansible.builtin.command: python3 -m pipx runpip ansible-lint show ansible-core
+      register: code_quality_tools_ansible_core_installed
+      become: false
+      changed_when: false
+      failed_when: false
+      when: code_quality_tools_ansible_lint_enabled and not ansible_check_mode
+      tags: [ansible_lint, code_quality_tools]
+
+    - name: Force-reinstall ansible-core in the ansible-lint pipx venv when the pinned version drifted
+      ansible.builtin.command:
+        cmd: >-
+          python3 -m pipx runpip ansible-lint install --force-reinstall
+          "ansible-core=={{ code_quality_tools_ansible_core_version }}"
+      become: false
+      changed_when: true
+      when: >-
+        not ansible_check_mode and
+        code_quality_tools_ansible_lint_enabled and
+        code_quality_tools_ansible_core_installed.rc == 0 and
+        ('Version: ' + code_quality_tools_ansible_core_version) not in code_quality_tools_ansible_core_installed.stdout_lines
+      tags: [ansible_lint, code_quality_tools]
+  rescue:
+    - name: Report the failed code_quality_tools task
+      ansible.builtin.fail:
+        msg: "A code_quality_tools task failed ({{ ansible_failed_task.name | default('unknown task') }}): {{ ansible_failed_result.msg | default('see the preceding error') }}"
+      # `always` so a tag-filtered run cannot skip this and swallow the failure.
+      tags: [always]
+  always:
+    - name: Remove private download directory
+      ansible.builtin.file:
+        path: "{{ code_quality_tools_dl_tmp.path }}"
+        state: absent
+      become: false
+      check_mode: false
+      changed_when: false
+      when: code_quality_tools_dl_tmp.path is defined
+      tags: [always]

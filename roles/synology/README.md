@@ -75,3 +75,10 @@ With a pre-seeded Drive connection:
 | OS | Tested |
 | --- | --- |
 | Ubuntu 24.04 (COSMIC) | yes |
+
+## Download staging
+
+Release downloads are staged in a private per-run directory (`ansible.builtin.tempfile`, mode 0700, created in the
+role's `tasks/main.yml` and removed in an `always` section, also on failure) rather than fixed `/tmp` paths, so no other
+local user can pre-create or swap a file between the download and the root-level install.
+The rendered Drive database init script is staged there too, so it cannot be replaced before it runs.

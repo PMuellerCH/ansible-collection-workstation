@@ -19,7 +19,7 @@
   # checksum that's still guaranteed to match what was actually downloaded.
   ansible.builtin.get_url:
     url: "{{ desktop_apps_teams_download_base }}/latest-linux.yml"
-    dest: "/tmp/teams-for-linux-{{ desktop_apps_teams_version }}-latest-linux.yml"
+    dest: "{{ desktop_apps_dl_tmp.path }}/teams-for-linux-{{ desktop_apps_teams_version }}-latest-linux.yml"
     mode: "0644"
   when: >-
     desktop_apps_teams_enabled and
@@ -32,7 +32,7 @@
   # --check, so this (and everything downstream that depends on the file
   # existing) must be skipped in check mode rather than hard-fail.
   ansible.builtin.slurp:
-    src: "/tmp/teams-for-linux-{{ desktop_apps_teams_version }}-latest-linux.yml"
+    src: "{{ desktop_apps_dl_tmp.path }}/teams-for-linux-{{ desktop_apps_teams_version }}-latest-linux.yml"
   register: desktop_apps_teams_release_metadata
   when: >-
     not ansible_check_mode and
@@ -87,7 +87,7 @@
 - name: Download teams-for-linux .deb
   ansible.builtin.get_url:
     url: "{{ desktop_apps_teams_download_base }}/teams-for-linux_{{ desktop_apps_teams_version }}_amd64.deb"
-    dest: "/tmp/teams-for-linux_{{ desktop_apps_teams_version }}_amd64.deb"
+    dest: "{{ desktop_apps_dl_tmp.path }}/teams-for-linux_{{ desktop_apps_teams_version }}_amd64.deb"
     checksum: "sha512:{{ desktop_apps_teams_sha512_hex.stdout | trim }}"
     mode: "0644"
   when: >-
@@ -99,7 +99,7 @@
 
 - name: Install teams-for-linux
   ansible.builtin.apt:
-    deb: "/tmp/teams-for-linux_{{ desktop_apps_teams_version }}_amd64.deb"
+    deb: "{{ desktop_apps_dl_tmp.path }}/teams-for-linux_{{ desktop_apps_teams_version }}_amd64.deb"
   become: true
   when: >-
     not ansible_check_mode and

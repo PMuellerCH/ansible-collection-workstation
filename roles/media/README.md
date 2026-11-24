@@ -71,7 +71,8 @@ no Renovate datasource for them.
   per-asset `.sha256` file.
 - **plex**: no TUI client is installed — no mature standalone Plex TUI with pre-built binaries exists.
 
-### Known limitation: download staging
+### Download staging
 
-Release downloads land in a fixed `/tmp` path and their checksum is verified at download time; the root-level install
-follows. On a single-user workstation the window in between is accepted (tracked in #193).
+Release downloads are staged in a private per-run directory (`ansible.builtin.tempfile`, mode 0700, created in the
+role's `tasks/main.yml` and removed in an `always` section, also on failure) rather than fixed `/tmp` paths, so no other
+local user can pre-create or swap a file between the checksum-verified download and the root-level install.

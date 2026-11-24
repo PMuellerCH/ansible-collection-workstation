@@ -2,118 +2,155 @@
 # --- Synology Drive Client ---
 # Download URL uses version 4.x.x-<build> but dpkg stores 8.x.x-<build>
 # Use build number for idempotency check
+#
+# Release archives are staged in one private directory per run (mktemp -d,
+# mode 0700, owned by the invoking user) instead of fixed /tmp paths, so another
+# local user cannot pre-create or swap a file between the download and the
+# root-level extract/install. It is removed again in `always`, also when a
+# component fails.
+- name: Run the synology tasks with a private download directory
+  block:
+    - name: Create private download directory
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: synology_dl_
+      register: synology_dl_tmp
+      become: false
+      # Directory creation that every download below depends on, so it also
+      # runs in --check (the sanctioned check_mode: false exception). Reports
+      # unchanged: it is scratch space, not managed state.
+      check_mode: false
+      changed_when: false
+      tags: [always]
 
-- name: Get installed Synology Drive version
-  ansible.builtin.command: dpkg-query -W -f='${Version}' synology-drive
-  register: synology_drive_current_version
-  changed_when: false
-  failed_when: false
 
-- name: Download Synology Drive Client .deb
-  ansible.builtin.get_url:
-    url: "https://global.synologydownload.com/download/Utility/SynologyDriveClient/\
-      {{ synology_drive_version }}/Ubuntu/Installer/\
-      synology-drive-client-{{ synology_drive_version.split('-')[1] }}.x86_64.deb"
-    dest: "/tmp/synology-drive-client-{{ synology_drive_version }}.deb"
-    mode: "0644"
-  when: synology_drive_current_version.rc != 0 or synology_drive_version.split('-')[1] not in synology_drive_current_version.stdout
+    - name: Get installed Synology Drive version
+      ansible.builtin.command: dpkg-query -W -f='${Version}' synology-drive
+      register: synology_drive_current_version
+      changed_when: false
+      failed_when: false
 
-- name: Install Synology Drive Client
-  ansible.builtin.apt:
-    deb: "/tmp/synology-drive-client-{{ synology_drive_version }}.deb"
-  become: true
-  when: >-
-    not ansible_check_mode and
-    (synology_drive_current_version.rc != 0 or synology_drive_version.split('-')[1] not in synology_drive_current_version.stdout)
+    - name: Download Synology Drive Client .deb
+      ansible.builtin.get_url:
+        url: "https://global.synologydownload.com/download/Utility/SynologyDriveClient/\
+          {{ synology_drive_version }}/Ubuntu/Installer/\
+          synology-drive-client-{{ synology_drive_version.split('-')[1] }}.x86_64.deb"
+        dest: "{{ synology_dl_tmp.path }}/synology-drive-client-{{ synology_drive_version }}.deb"
+        mode: "0644"
+      when: synology_drive_current_version.rc != 0 or synology_drive_version.split('-')[1] not in synology_drive_current_version.stdout
 
-# --- Synology Drive — sync folders and pre-seeded config ---
+    - name: Install Synology Drive Client
+      ansible.builtin.apt:
+        deb: "{{ synology_dl_tmp.path }}/synology-drive-client-{{ synology_drive_version }}.deb"
+      become: true
+      when: >-
+        not ansible_check_mode and
+        (synology_drive_current_version.rc != 0 or synology_drive_version.split('-')[1] not in synology_drive_current_version.stdout)
 
-- name: Create Synology Drive sync directories
-  ansible.builtin.file:
-    path: "{{ item }}"
-    state: directory
-    mode: "0755"
-  loop:
-    - "{{ synology_drive_private_local }}"
-    - "{{ synology_drive_shared_local }}"
+    # --- Synology Drive — sync folders and pre-seeded config ---
 
-- name: Create Synology Drive data directory
-  ansible.builtin.file:
-    path: "{{ ansible_facts['env']['HOME'] }}/.SynologyDrive/data/db"
-    state: directory
-    mode: "0755"
+    - name: Create Synology Drive sync directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+        mode: "0755"
+      loop:
+        - "{{ synology_drive_private_local }}"
+        - "{{ synology_drive_shared_local }}"
 
-- name: Check if Synology Drive database already exists
-  ansible.builtin.stat:
-    path: "{{ ansible_facts['env']['HOME'] }}/.SynologyDrive/data/db/sys.sqlite"
-  register: synology_drive_db_stat
+    - name: Create Synology Drive data directory
+      ansible.builtin.file:
+        path: "{{ ansible_facts['env']['HOME'] }}/.SynologyDrive/data/db"
+        state: directory
+        mode: "0755"
 
-- name: Render Drive database init script
-  ansible.builtin.template:
-    src: init-drive-db.py.j2
-    dest: /tmp/init-drive-db.py
-    mode: "0700"
-  when: not synology_drive_db_stat.stat.exists
+    - name: Check if Synology Drive database already exists
+      ansible.builtin.stat:
+        path: "{{ ansible_facts['env']['HOME'] }}/.SynologyDrive/data/db/sys.sqlite"
+      register: synology_drive_db_stat
 
-- name: Initialise Synology Drive database
-  ansible.builtin.command: python3 /tmp/init-drive-db.py
-  when: not synology_drive_db_stat.stat.exists
-  changed_when: true
+    - name: Render Drive database init script
+      ansible.builtin.template:
+        src: init-drive-db.py.j2
+        dest: "{{ synology_dl_tmp.path }}/init-drive-db.py"
+        mode: "0700"
+      when: not synology_drive_db_stat.stat.exists
 
-- name: Remove Drive database init script
-  ansible.builtin.file:
-    path: /tmp/init-drive-db.py
-    state: absent
-  when: not synology_drive_db_stat.stat.exists
+    - name: Initialise Synology Drive database
+      ansible.builtin.command: python3 {{ synology_dl_tmp.path }}/init-drive-db.py
+      when: not synology_drive_db_stat.stat.exists
+      changed_when: true
 
-# --- Synology Chat Client ---
-# dpkg version is 1.x.x~<build> (tilde, no leading zero) vs URL 1.x.x-0<build>
-# Use base version (e.g. 1.2.3) for idempotency check
+    - name: Remove Drive database init script
+      ansible.builtin.file:
+        path: "{{ synology_dl_tmp.path }}/init-drive-db.py"
+        state: absent
+      when: not synology_drive_db_stat.stat.exists
 
-- name: Get installed Synology Chat version
-  ansible.builtin.command: dpkg-query -W -f='${Version}' chat
-  register: synology_chat_current_version
-  changed_when: false
-  failed_when: false
+    # --- Synology Chat Client ---
+    # dpkg version is 1.x.x~<build> (tilde, no leading zero) vs URL 1.x.x-0<build>
+    # Use base version (e.g. 1.2.3) for idempotency check
 
-- name: Download Synology Chat Client .deb
-  ansible.builtin.get_url:
-    url: "https://global.synologydownload.com/download/Utility/ChatClient/\
-      {{ synology_chat_version }}/Ubuntu/x86_64/\
-      Synology%20Chat%20Client-{{ synology_chat_version }}.deb"
-    dest: "/tmp/synology-chat-client-{{ synology_chat_version }}.deb"
-    mode: "0644"
-  when: synology_chat_current_version.rc != 0 or synology_chat_version.split('-')[0] not in synology_chat_current_version.stdout
+    - name: Get installed Synology Chat version
+      ansible.builtin.command: dpkg-query -W -f='${Version}' chat
+      register: synology_chat_current_version
+      changed_when: false
+      failed_when: false
 
-- name: Install Synology Chat Client
-  ansible.builtin.apt:
-    deb: "/tmp/synology-chat-client-{{ synology_chat_version }}.deb"
-  become: true
-  when: >-
-    not ansible_check_mode and
-    (synology_chat_current_version.rc != 0 or synology_chat_version.split('-')[0] not in synology_chat_current_version.stdout)
+    - name: Download Synology Chat Client .deb
+      ansible.builtin.get_url:
+        url: "https://global.synologydownload.com/download/Utility/ChatClient/\
+          {{ synology_chat_version }}/Ubuntu/x86_64/\
+          Synology%20Chat%20Client-{{ synology_chat_version }}.deb"
+        dest: "{{ synology_dl_tmp.path }}/synology-chat-client-{{ synology_chat_version }}.deb"
+        mode: "0644"
+      when: synology_chat_current_version.rc != 0 or synology_chat_version.split('-')[0] not in synology_chat_current_version.stdout
 
-# --- Synology Note Station Client ---
+    - name: Install Synology Chat Client
+      ansible.builtin.apt:
+        deb: "{{ synology_dl_tmp.path }}/synology-chat-client-{{ synology_chat_version }}.deb"
+      become: true
+      when: >-
+        not ansible_check_mode and
+        (synology_chat_current_version.rc != 0 or synology_chat_version.split('-')[0] not in synology_chat_current_version.stdout)
 
-- name: Get installed Synology Note Station version
-  ansible.builtin.command: dpkg-query -W -f='${Version}' synology-note-station
-  register: synology_note_station_current_version
-  changed_when: false
-  failed_when: false
+    # --- Synology Note Station Client ---
 
-- name: Download Synology Note Station Client .deb
-  ansible.builtin.get_url:
-    url: "https://global.synologydownload.com/download/Utility/NoteStationClient/\
-      {{ synology_note_station_version }}/Ubuntu/x86_64/\
-      synology-note-station-client-{{ synology_note_station_version }}-linux-x64.deb"
-    dest: "/tmp/synology-note-station-client-{{ synology_note_station_version }}.deb"
-    mode: "0644"
-  when: synology_note_station_current_version.rc != 0 or synology_note_station_version not in synology_note_station_current_version.stdout
+    - name: Get installed Synology Note Station version
+      ansible.builtin.command: dpkg-query -W -f='${Version}' synology-note-station
+      register: synology_note_station_current_version
+      changed_when: false
+      failed_when: false
 
-- name: Install Synology Note Station Client
-  ansible.builtin.apt:
-    deb: "/tmp/synology-note-station-client-{{ synology_note_station_version }}.deb"
-  become: true
-  when: >-
-    not ansible_check_mode and
-    (synology_note_station_current_version.rc != 0 or synology_note_station_version not in synology_note_station_current_version.stdout)
+    - name: Download Synology Note Station Client .deb
+      ansible.builtin.get_url:
+        url: "https://global.synologydownload.com/download/Utility/NoteStationClient/\
+          {{ synology_note_station_version }}/Ubuntu/x86_64/\
+          synology-note-station-client-{{ synology_note_station_version }}-linux-x64.deb"
+        dest: "{{ synology_dl_tmp.path }}/synology-note-station-client-{{ synology_note_station_version }}.deb"
+        mode: "0644"
+      when: synology_note_station_current_version.rc != 0 or synology_note_station_version not in synology_note_station_current_version.stdout
+
+    - name: Install Synology Note Station Client
+      ansible.builtin.apt:
+        deb: "{{ synology_dl_tmp.path }}/synology-note-station-client-{{ synology_note_station_version }}.deb"
+      become: true
+      when: >-
+        not ansible_check_mode and
+        (synology_note_station_current_version.rc != 0 or synology_note_station_version not in synology_note_station_current_version.stdout)
+  rescue:
+    - name: Report the failed synology task
+      ansible.builtin.fail:
+        msg: "A synology task failed ({{ ansible_failed_task.name | default('unknown task') }}): {{ ansible_failed_result.msg | default('see the preceding error') }}"
+      # `always` so a tag-filtered run cannot skip this and swallow the failure.
+      tags: [always]
+  always:
+    - name: Remove private download directory
+      ansible.builtin.file:
+        path: "{{ synology_dl_tmp.path }}"
+        state: absent
+      become: false
+      check_mode: false
+      changed_when: false
+      when: synology_dl_tmp.path is defined
+      tags: [always]

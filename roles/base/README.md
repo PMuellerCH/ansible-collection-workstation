@@ -150,3 +150,12 @@ The NodeSource apt key is fetched over TLS from `deb.nodesource.com` (re-fetched
 and is used as `signed_by` for the NodeSource repository only; there is no fingerprint pin yet. apt then verifies every
 package against the signed repository metadata. The same applies to the Docker and HashiCorp keys in `ansible_dev` and
 `cloud_cli`.
+
+## Download staging
+
+Release downloads are staged in a private per-run directory (`ansible.builtin.tempfile`, mode 0700, created in the
+role's `tasks/main.yml` and removed in an `always` section, also on failure) rather than fixed `/tmp` paths, so no other
+local user can pre-create or swap a file between the download and the root-level install.
+This covers the `uv` archive and the Nerd Font zip; the `nodejs` component uses apt keyrings and needs no staging.
+A component file run on its own via `include_role ... tasks_from:` bypasses `tasks/main.yml`, so for `python` or `fonts`
+it needs `base_dl_tmp` to be defined first.
