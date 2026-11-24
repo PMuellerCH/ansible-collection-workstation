@@ -38,7 +38,7 @@ cloud_cli_aws_profiles: []
 
 # ── terraform ────────────────────────────────────────────────────────────
 # renovate: datasource=github-releases depName=terraform-linters/tflint extractVersion=^v(?<version>.*)$
-cloud_cli_tflint_version: "0.65.0"
+cloud_cli_tflint_version: "0.66.0"
 # renovate: datasource=github-releases depName=terraform-docs/terraform-docs extractVersion=^v(?<version>.*)$
 cloud_cli_terraform_docs_version: "0.25.1"
 cloud_cli_terraform_docs_download_base: "https://github.com/terraform-docs/terraform-docs/releases/download/v{{ cloud_cli_terraform_docs_version }}"
