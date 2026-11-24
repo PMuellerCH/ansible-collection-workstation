@@ -46,6 +46,9 @@ Setting the login email:
 ## Notes
 
 - The Bitwarden `.deb` is downloaded to `/tmp` and installed via `apt`; the installed version is checked first for idempotency.
+- Since `desktop-v2026.11.0` upstream prefixes every release asset with `oss-` (open source) or `bit-` (commercial). The role installs the
+  open-source build (`oss-Bitwarden-<version>-amd64.deb`), which is the former unprefixed asset. Versions before 2026.11.0 are not
+  downloadable with this URL.
 - Both install tasks (`.deb` GUI, `rbw` binary) skip in `--check` mode via `not ansible_check_mode` — the preceding
   download doesn't actually fetch the file in a dry run, so the install would otherwise fail.
 - Neither upstream (`bitwarden/clients`, `doy/rbw`) publishes a plain checksum file for the Linux release assets
