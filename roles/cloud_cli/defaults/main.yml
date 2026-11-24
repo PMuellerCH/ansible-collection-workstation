@@ -59,4 +59,4 @@ cloud_cli_terraform_vault_github_token: ""
 # (the emulator engine itself, which ships only as a Docker image with no
 # GitHub release binaries — floci start pulls and manages it directly).
 # renovate: datasource=github-releases depName=floci-io/floci-cli extractVersion=^(?<version>.*)$
-cloud_cli_floci_version: "0.4.0"
+cloud_cli_floci_version: "1.0.0"
