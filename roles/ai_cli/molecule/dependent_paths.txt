@@ -1,0 +1,8 @@
+# Paths outside this role whose change must re-run this role's molecule
+# scenario. One dorny/paths-filter glob per line; read by
+# .github/workflows/molecule.yml. Keep in sync with molecule/default/prepare.yml.
+#
+# prepare.yml installs Node.js through base's nodejs component (tasks_from:
+# nodejs) and relies on base's defaults for the NodeSource settings.
+roles/base/tasks/nodejs.yml
+roles/base/defaults/main.yml

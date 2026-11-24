@@ -66,7 +66,7 @@ the changed-files lint runs pre-commit inline.
   checkov suite.
 - **Molecule** (`molecule.yml`) auto-discovers any role with a `roles/<name>/molecule/default/`
   scenario and runs `molecule test` as a matrix job. On every PR it tests only the roles whose
-  files changed (shared files like `requirements*.yml`, `galaxy.yml` or the workflow itself
+  files changed (plus paths declared in `molecule/dependent_paths.txt`; shared files like `requirements*.yml`, `galaxy.yml` or the workflow itself
   trigger the full matrix); on the release-please PR and `workflow_dispatch` it runs the full
   matrix. This means **a release is never cut without molecule passing** on the release-please
   PR — merge it only once that check is green.
@@ -75,6 +75,10 @@ the changed-files lint runs pre-commit inline.
   (e.g. anything depending on the COSMIC desktop, X11, or a systemd user session) —
   add a scenario where it adds real signal (idempotency, package installs, file
   templating), skip it where a container can't meaningfully exercise the role.
+- If a scenario uses another role (e.g. `include_role` in `prepare.yml`/`converge.yml`), add
+  `roles/<role>/molecule/dependent_paths.txt`: one `dorny/paths-filter` glob per line (`#`
+  comments allowed) for the other role's files it depends on, so a change there re-runs this
+  role. See `ai_cli` (depends on `base`'s nodejs component) and `cloud_cli` (on `ansible_dev`).
 
 ## Key conventions
 

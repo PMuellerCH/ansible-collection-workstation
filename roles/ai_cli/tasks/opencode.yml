@@ -51,6 +51,12 @@
   # leak into invocation.module_args under -v or on failure — identical posture
   # to the neovim digest fetch above. Unauthenticated runs keep full logging.
   no_log: "{{ ai_cli_opencode_github_api_token | length > 0 }}"
+  register: ai_cli_opencode_release_fetch
+  until: ai_cli_opencode_release_fetch is succeeded
+  # GitHub answers 403 when the unauthenticated per-IP rate limit is hit and
+  # transient 5xx now and then; a few spaced retries ride out the short ones.
+  retries: 3
+  delay: 15
   become: false
   when: >-
     not ansible_check_mode and

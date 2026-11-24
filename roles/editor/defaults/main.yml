@@ -7,7 +7,9 @@ editor_neovim_enabled: true
 # the neovim release-asset digest (neovim publishes no checksum file — see
 # tasks/main.yml). Defaults to GH_TOKEN/GITHUB_TOKEN from the environment;
 # unauthenticated (empty) still works but is subject to GitHub's 60 requests/hour
-# per-IP limit. On GitHub Actions the workflow passes GITHUB_TOKEN.
+# per-IP limit. The shared molecule workflow does not currently pass a
+# token, so CI runs unauthenticated and relies on the metadata-fetch retries
+# (3 retries, 15 s apart).
 editor_github_api_token: "{{ lookup('ansible.builtin.env', 'GH_TOKEN') or lookup('ansible.builtin.env', 'GITHUB_TOKEN') }}"
 
 # Deploys ~/.config/nvim/lua/plugins/presenterm.lua for the presenterm.nvim

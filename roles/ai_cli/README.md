@@ -313,7 +313,9 @@ reports no digest for the asset the role fails loudly rather than skipping
 verification. `ai_cli_opencode_github_api_token` (defaulting to the same
 `GH_TOKEN`/`GITHUB_TOKEN` lookup as `ai_cli_github_api_token`) only raises
 the API rate limit for that digest fetch; unauthenticated runs still work,
-subject to GitHub's 60 requests/hour per-IP limit.
+subject to GitHub's 60 requests/hour per-IP limit. The metadata fetch is retried (3 retries, 15 s apart) to ride out
+transient GitHub API rate limiting or errors; it still fails loudly if every
+attempt fails.
 
 ### Notes
 

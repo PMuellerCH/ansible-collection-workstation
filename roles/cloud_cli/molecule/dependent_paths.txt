@@ -1,0 +1,11 @@
+# Paths outside this role whose change must re-run this role's molecule
+# scenario. One dorny/paths-filter glob per line; read by
+# .github/workflows/molecule.yml. Keep in sync with molecule/default/converge.yml.
+#
+# converge.yml applies ansible_dev (ansible component only) first: it provides
+# the ansible-core pipx venv that cloud_cli injects boto3 into.
+roles/ansible_dev/tasks/main.yml
+roles/ansible_dev/tasks/ansible.yml
+roles/ansible_dev/defaults/**
+roles/ansible_dev/files/**
+roles/ansible_dev/handlers/**

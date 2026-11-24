@@ -34,7 +34,7 @@ aliases to take effect. `emoji-fzf`'s `emoji` function pipes through `wl-copy` (
 
 | Variable | Default | Description |
 | --- | --- | --- |
-| `cli_tools_github_api_token` | see `defaults/main.yml` | Optional GitHub API token, only to raise the rate limit when resolving release-asset digests (dust, jaq, moor, procs, xcp, yazi). Defaults to `GH_TOKEN`/`GITHUB_TOKEN` |
+| `cli_tools_github_api_token` | see `defaults/main.yml` | Optional GitHub API token, only to raise the rate limit when resolving release-asset digests (dust, jaq, moor, procs, xcp, yazi). Defaults to `GH_TOKEN`/`GITHUB_TOKEN`. The metadata fetch is retried (3 retries, 15 s apart) to ride out transient GitHub API rate limiting or errors; it still fails loudly if every attempt fails. |
 | `cli_tools_bat_enabled` | `true` | Whether to install bat. |
 | `cli_tools_btop_enabled` | `true` | Whether to install btop. |
 | `cli_tools_emoji_fzf_enabled` | `true` | Whether to install emoji-fzf via pipx (also gates the pipx bootstrap). Requires fzf and wl-copy (this collection's desktop_integration role, desktop_integration_wl_clipboard_enabled) at runtime for the deployed `emoji` shell function. |

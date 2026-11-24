@@ -343,7 +343,7 @@ CI only tests what a PR changed; the full suite runs on the release PR (or manua
 
 | Event | Lint (`ci.yml`) | Molecule (`molecule.yml`) |
 | --- | --- | --- |
-| Any PR to `main` (feature, fix, Renovate) | `lint-changed`: pre-commit on files changed vs. `origin/main` | Only roles whose own files changed |
+| Any PR to `main` (feature, fix, Renovate) | `lint-changed`: pre-commit on files changed vs. `origin/main` | Only roles whose own files changed (plus declared dependent paths) |
 | release-please PR | `lint-full`: complete shared lint suite | Full matrix of every role with a scenario |
 | `workflow_dispatch` | `lint-full` | Full matrix |
 
@@ -365,6 +365,10 @@ Details and limits:
   a shared file (`requirements.yml`, `requirements-molecule.yml`, `galaxy.yml`, the
   molecule-relevant pins in `.github/requirements.txt` or `molecule.yml` itself) runs the
   full matrix.
+- A role whose molecule scenario uses another role's files lists those paths (one `dorny/paths-filter` glob per line;
+  `#` comments and blank lines allowed) in `roles/<role>/molecule/dependent_paths.txt`; a change to them also re-runs
+  that role's scenario. Examples: `ai_cli` depends on `base`'s nodejs component, `cloud_cli` on `ansible_dev`. Keep
+  the file in sync with `prepare.yml`/`converge.yml`.
 - A PR that changes no role skips the Molecule job (a skipped check counts as passing).
 - Troubleshooting: if `lint-changed` fails but a local run passes, run
   `pre-commit run --from-ref origin/main --to-ref HEAD` after `git fetch origin main`
