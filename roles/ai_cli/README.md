@@ -32,6 +32,12 @@ role's molecule scenario.
 | `ai_cli_claude_code_enabled` | `true` | Whether to install the Claude Code CLI, and configure its MCP servers (needs Node.js/npm from the `base` role). |
 | `ai_cli_kiro_enabled` | `true` | Whether to install the Kiro CLI (kiro-cli), set its default behaviour (v3 agent engine, tool auto-search, autonomous mode), and deploy its shell aliases. |
 | `ai_cli_claude_code_version` | see `defaults/main.yml` | @anthropic-ai/claude-code npm package version (npm datasource). |
+| `ai_cli_mcp_ansible_version` | see `defaults/main.yml` | Pinned version of the @ansible/ansible-mcp-server MCP server package (npm datasource, Renovate-managed). |
+| `ai_cli_mcp_aws_documentation_version` | see `defaults/main.yml` | Pinned version of the awslabs.aws-documentation-mcp-server MCP server package (PyPI datasource, Renovate-managed). |
+| `ai_cli_mcp_aws_core_version` | see `defaults/main.yml` | Pinned version of the awslabs.core-mcp-server MCP server package (PyPI datasource, Renovate-managed). |
+| `ai_cli_mcp_terraform_version` | see `defaults/main.yml` | Pinned version of the terraform-mcp-server MCP server package (npm datasource, Renovate-managed). |
+| `ai_cli_mcp_github_version` | see `defaults/main.yml` | Pinned version of the @modelcontextprotocol/server-github MCP server package (npm datasource, Renovate-managed). |
+| `ai_cli_mcp_renovate_version` | see `defaults/main.yml` | Pinned version of the renovate-mcp MCP server package (npm datasource, Renovate-managed). |
 | `ai_cli_claude_code_aws_profile` | `default` | AWS_PROFILE passed to the awslabs.core MCP server. |
 | `ai_cli_claude_code_aws_region` | `eu-central-1` | AWS_REGION passed to the awslabs.core MCP server. |
 | `ai_cli_claude_code_github_token` | `""` | GitHub PAT passed as GITHUB_PERSONAL_ACCESS_TOKEN to the github MCP server (from the consumer's own secret store, e.g. Ansible Vault). Empty by default. |
@@ -135,12 +141,20 @@ remains authoritative for its own servers' config:
 
 | Server | Command | Purpose |
 | --- | --- | --- |
-| `ansible` | `npx -y @ansible/ansible-mcp-server --stdio` | Ansible module/collection lookup |
-| `awslabs.aws-documentation` | `uvx awslabs.aws-documentation-mcp-server@latest` | AWS documentation search |
-| `awslabs.core` | `uvx awslabs.core-mcp-server@latest` | AWS MCP server discovery/routing (uses `ai_cli_claude_code_aws_profile`/`_aws_region`) |
-| `terraform` | `npx -y terraform-mcp-server` | Terraform registry/provider lookup |
-| `github` | `npx -y @modelcontextprotocol/server-github` | GitHub API access (uses `ai_cli_claude_code_github_token`) |
-| `renovate` | `npx -y renovate-mcp` | Renovate config lookup |
+| `ansible` | `npx -y @ansible/ansible-mcp-server@<version> --stdio` | Ansible module/collection lookup |
+| `awslabs.aws-documentation` | `uvx awslabs.aws-documentation-mcp-server@<version>` | AWS documentation search |
+| `awslabs.core` | `uvx awslabs.core-mcp-server@<version>` | AWS MCP server discovery/routing (uses `ai_cli_claude_code_aws_profile`/`_aws_region`) |
+| `terraform` | `npx -y terraform-mcp-server@<version>` | Terraform registry/provider lookup |
+| `github` | `npx -y @modelcontextprotocol/server-github@<version>` | GitHub API access (uses `ai_cli_claude_code_github_token`) |
+| `renovate` | `npx -y renovate-mcp@<version>` | Renovate config lookup |
+
+Every server is pinned to an exact version (`ai_cli_mcp_<server>_version` in
+`defaults/main.yml`, tracked by Renovate), so nothing floats on `latest` at
+login — important because the servers start with every Claude Code session and
+the `github` server receives the GitHub token. A Renovate bump changes the
+`args` in `~/.claude.json` on the next run. Note that
+`@modelcontextprotocol/server-github` is archived and unmaintained
+upstream; its last release (`2025.4.8`) stays pinned until it is replaced.
 
 The two `uvx`-launched servers (`awslabs.*`) set `UV_SYSTEM_CERTS: "true"` in
 their own `env` block, on top of (belt-and-suspenders with) the `base` role's
