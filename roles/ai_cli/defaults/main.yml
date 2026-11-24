@@ -11,6 +11,30 @@ ai_cli_claude_code_aws_profile: "default"
 ai_cli_claude_code_aws_region: "eu-central-1"
 ai_cli_claude_code_github_token: ""
 
+# ---- Claude Code MCP servers (pinned) ----
+# Each server is launched at login via npx/uvx, and the GitHub one receives the
+# GitHub token, so every package is pinned to an exact version instead of
+# floating on latest. Renovate bumps them through the regex manager that
+# covers roles/*/defaults/main.yml.
+
+# renovate: datasource=npm depName=@ansible/ansible-mcp-server
+ai_cli_mcp_ansible_version: "26.6.0"
+
+# renovate: datasource=pypi depName=awslabs.aws-documentation-mcp-server
+ai_cli_mcp_aws_documentation_version: "1.2.6"
+
+# renovate: datasource=pypi depName=awslabs.core-mcp-server
+ai_cli_mcp_aws_core_version: "1.0.27"
+
+# renovate: datasource=npm depName=terraform-mcp-server
+ai_cli_mcp_terraform_version: "0.13.0"
+
+# renovate: datasource=npm depName=@modelcontextprotocol/server-github
+ai_cli_mcp_github_version: "2025.4.8"
+
+# renovate: datasource=npm depName=renovate-mcp
+ai_cli_mcp_renovate_version: "2.2.1"
+
 # ---- kiro-cli (Kiro CLI, AI coding agent) ----
 # Grouped here with Claude Code and OpenCode: all three are CLI-first AI coding
 # agents a developer reaches for directly in the terminal, the same

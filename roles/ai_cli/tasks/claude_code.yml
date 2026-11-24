@@ -176,19 +176,19 @@
       ansible:
         type: stdio
         command: npx
-        args: ["-y", "@ansible/ansible-mcp-server", "--stdio"]
+        args: ["-y", "@ansible/ansible-mcp-server@{{ ai_cli_mcp_ansible_version }}", "--stdio"]
         env: {}
       awslabs.aws-documentation:
         type: stdio
         command: uvx
-        args: ["awslabs.aws-documentation-mcp-server@latest"]
+        args: ["awslabs.aws-documentation-mcp-server@{{ ai_cli_mcp_aws_documentation_version }}"]
         env:
           FASTMCP_LOG_LEVEL: ERROR
           UV_SYSTEM_CERTS: "true"
       awslabs.core:
         type: stdio
         command: uvx
-        args: ["awslabs.core-mcp-server@latest"]
+        args: ["awslabs.core-mcp-server@{{ ai_cli_mcp_aws_core_version }}"]
         env:
           AWS_PROFILE: "{{ ai_cli_claude_code_aws_profile }}"
           AWS_REGION: "{{ ai_cli_claude_code_aws_region }}"
@@ -197,18 +197,18 @@
       terraform:
         type: stdio
         command: npx
-        args: ["-y", "terraform-mcp-server"]
+        args: ["-y", "terraform-mcp-server@{{ ai_cli_mcp_terraform_version }}"]
         env: {}
       github:
         type: stdio
         command: npx
-        args: ["-y", "@modelcontextprotocol/server-github"]
+        args: ["-y", "@modelcontextprotocol/server-github@{{ ai_cli_mcp_github_version }}"]
         env:
           GITHUB_PERSONAL_ACCESS_TOKEN: "{{ ai_cli_claude_code_github_token }}"
       renovate:
         type: stdio
         command: npx
-        args: ["-y", "renovate-mcp"]
+        args: ["-y", "renovate-mcp@{{ ai_cli_mcp_renovate_version }}"]
         env: {}
     # Merge onto (not replace) any existing mcpServers entries — a server
     # registered outside this role (e.g. via `claude mcp add`, or `aws
