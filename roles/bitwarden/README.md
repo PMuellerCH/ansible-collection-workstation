@@ -45,7 +45,8 @@ Setting the login email:
 
 ## Notes
 
-- The Bitwarden `.deb` is downloaded to `/tmp` and installed via `apt`; the installed version is checked first for idempotency.
+- The Bitwarden `.deb` is downloaded to a private per-run directory (mode 0700, removed afterwards, also on failure)
+  and installed via `apt`; the installed version is checked first for idempotency.
 - Since `desktop-v2026.11.0` upstream prefixes every release asset with `oss-` (open source) or `bit-` (commercial). The role installs the
   open-source build (`oss-Bitwarden-<version>-amd64.deb`), which is the former unprefixed asset. Versions before 2026.11.0 are not
   downloadable with this URL.

@@ -15,7 +15,7 @@
   # when Renovate bumps desktop_integration_cliphist_version.
   ansible.builtin.get_url:
     url: "https://api.github.com/repos/sentriz/cliphist/releases/tags/v{{ desktop_integration_cliphist_version }}"
-    dest: "/tmp/cliphist-{{ desktop_integration_cliphist_version }}_release.json"
+    dest: "{{ desktop_integration_dl_tmp.path }}/cliphist-{{ desktop_integration_cliphist_version }}_release.json"
     force: true
     headers: >-
       {{ {'Accept': 'application/vnd.github+json'}
@@ -41,7 +41,7 @@
 
 - name: Read cliphist release metadata
   ansible.builtin.slurp:
-    path: "/tmp/cliphist-{{ desktop_integration_cliphist_version }}_release.json"
+    path: "{{ desktop_integration_dl_tmp.path }}/cliphist-{{ desktop_integration_cliphist_version }}_release.json"
   register: desktop_integration_cliphist_release_raw
   when: >-
     not ansible_check_mode and
@@ -79,7 +79,7 @@
 - name: Download cliphist binary
   ansible.builtin.get_url:
     url: "{{ desktop_integration_cliphist_download_base }}/v{{ desktop_integration_cliphist_version }}-linux-amd64"
-    dest: "/tmp/cliphist-{{ desktop_integration_cliphist_version }}"
+    dest: "{{ desktop_integration_dl_tmp.path }}/cliphist-{{ desktop_integration_cliphist_version }}"
     checksum: "{{ desktop_integration_cliphist_checksum }}"
     mode: "0755"
   when: >-
@@ -91,7 +91,7 @@
 
 - name: Install cliphist binary to /usr/local/bin
   ansible.builtin.command:
-    cmd: install -m 0755 /tmp/cliphist-{{ desktop_integration_cliphist_version }} /usr/local/bin/cliphist
+    cmd: install -m 0755 {{ desktop_integration_dl_tmp.path }}/cliphist-{{ desktop_integration_cliphist_version }} /usr/local/bin/cliphist
   become: true
   when: >-
     not ansible_check_mode and

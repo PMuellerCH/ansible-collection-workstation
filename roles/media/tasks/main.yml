@@ -1,42 +1,79 @@
 ---
 # Thin dispatcher: one task file per component, each behind its own switch.
 # Tags use include_tasks' `apply:` so they reach the tasks inside the file.
-- name: Bootstrap Flatpak and Flathub
-  ansible.builtin.include_tasks:
-    file: flatpak.yml
-    apply:
+#
+# Release archives are staged in one private directory per run (mktemp -d,
+# mode 0700, owned by the invoking user) instead of fixed /tmp paths, so another
+# local user cannot pre-create or swap a file between the download and the
+# root-level extract/install. It is removed again in `always`, also when a
+# component fails.
+- name: Run the media tasks with a private download directory
+  block:
+    - name: Create private download directory
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: media_dl_
+      register: media_dl_tmp
+      become: false
+      # Directory creation that every download below depends on, so it also
+      # runs in --check (the sanctioned check_mode: false exception). Reports
+      # unchanged: it is scratch space, not managed state.
+      check_mode: false
+      changed_when: false
+      tags: [always]
+
+    - name: Bootstrap Flatpak and Flathub
+      ansible.builtin.include_tasks:
+        file: flatpak.yml
+        apply:
+          tags: [graphics, spotify, plex, media]
+      when: media_graphics_enabled or media_spotify_enabled or media_plex_enabled
       tags: [graphics, spotify, plex, media]
-  when: media_graphics_enabled or media_spotify_enabled or media_plex_enabled
-  tags: [graphics, spotify, plex, media]
 
-- name: Install graphics tools (Inkscape, GIMP, Pinta)
-  ansible.builtin.include_tasks:
-    file: graphics.yml
-    apply:
+    - name: Install graphics tools (Inkscape, GIMP, Pinta)
+      ansible.builtin.include_tasks:
+        file: graphics.yml
+        apply:
+          tags: [graphics, media]
+      when: media_graphics_enabled
       tags: [graphics, media]
-  when: media_graphics_enabled
-  tags: [graphics, media]
 
-- name: Install beets
-  ansible.builtin.include_tasks:
-    file: beets.yml
-    apply:
+    - name: Install beets
+      ansible.builtin.include_tasks:
+        file: beets.yml
+        apply:
+          tags: [beets, media]
+      when: media_beets_enabled
       tags: [beets, media]
-  when: media_beets_enabled
-  tags: [beets, media]
 
-- name: Install Spotify and ncspot
-  ansible.builtin.include_tasks:
-    file: spotify.yml
-    apply:
+    - name: Install Spotify and ncspot
+      ansible.builtin.include_tasks:
+        file: spotify.yml
+        apply:
+          tags: [spotify, media]
+      when: media_spotify_enabled
       tags: [spotify, media]
-  when: media_spotify_enabled
-  tags: [spotify, media]
 
-- name: Install Plex Desktop and Plexamp
-  ansible.builtin.include_tasks:
-    file: plex.yml
-    apply:
+    - name: Install Plex Desktop and Plexamp
+      ansible.builtin.include_tasks:
+        file: plex.yml
+        apply:
+          tags: [plex, media]
+      when: media_plex_enabled
       tags: [plex, media]
-  when: media_plex_enabled
-  tags: [plex, media]
+  rescue:
+    - name: Report the failed media task
+      ansible.builtin.fail:
+        msg: "A media task failed ({{ ansible_failed_task.name | default('unknown task') }}): {{ ansible_failed_result.msg | default('see the preceding error') }}"
+      # `always` so a tag-filtered run cannot skip this and swallow the failure.
+      tags: [always]
+  always:
+    - name: Remove private download directory
+      ansible.builtin.file:
+        path: "{{ media_dl_tmp.path }}"
+        state: absent
+      become: false
+      check_mode: false
+      changed_when: false
+      when: media_dl_tmp.path is defined
+      tags: [always]

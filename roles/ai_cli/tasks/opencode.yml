@@ -19,8 +19,8 @@
 
 - name: Ensure the opencode download cache directory exists
   # The metadata JSON and the release tarball are fetched here as the target
-  # user, so they go under the user's own cache rather than shared /tmp (the
-  # neovim block writes to /tmp as root; this is a per-user install). A role-
+  # user, so they go under the user's own cache rather than shared /tmp (other
+  # roles stage downloads in a private per-run tempdir; this is a per-user install). A role-
   # owned ~/.cache/opencode subdirectory, not ~/.cache itself: creating it with
   # an explicit mode cannot widen the permissions of the user's shared cache
   # (and satisfies ansible-lint's risky-file-permissions, which requires an
