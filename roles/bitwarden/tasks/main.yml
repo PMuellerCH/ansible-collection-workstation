@@ -9,7 +9,7 @@
 
 - name: Download Bitwarden .deb
   ansible.builtin.get_url:
-    url: "https://github.com/bitwarden/clients/releases/download/desktop-v{{ bitwarden_version }}/Bitwarden-{{ bitwarden_version }}-amd64.deb"
+    url: "https://github.com/bitwarden/clients/releases/download/desktop-v{{ bitwarden_version }}/oss-Bitwarden-{{ bitwarden_version }}-amd64.deb"
     dest: "/tmp/Bitwarden-{{ bitwarden_version }}-amd64.deb"
     mode: "0644"
   when: bitwarden_current_version.rc != 0 or bitwarden_version not in bitwarden_current_version.stdout
