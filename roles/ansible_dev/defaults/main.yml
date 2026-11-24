@@ -24,7 +24,7 @@ ansible_dev_pipx_min_version: "1.18.19"
 # renovate: datasource=pypi depName=ansible-core
 ansible_dev_ansible_core_version: "2.21.6"
 # renovate: datasource=pypi depName=molecule
-ansible_dev_molecule_version: "26.10.0"
+ansible_dev_molecule_version: "26.11.0"
 # renovate: datasource=pypi depName=molecule-plugins
 ansible_dev_molecule_plugins_version: "26.11.0"
 # Also the only hvac this collection injects into the shared ansible-core venv:
