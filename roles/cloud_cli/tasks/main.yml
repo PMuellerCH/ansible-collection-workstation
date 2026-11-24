@@ -12,8 +12,8 @@
     - name: Create private download directory
       ansible.builtin.tempfile:
         state: directory
-        prefix: cloud_cli_dl_
-      register: cloud_cli_dl_tmp
+        prefix: cloud_cli_stage_
+      register: cloud_cli_stage_tmp
       become: false
       # Directory creation that every download below depends on, so it also
       # runs in --check (the sanctioned check_mode: false exception). Reports
@@ -54,10 +54,10 @@
   always:
     - name: Remove private download directory
       ansible.builtin.file:
-        path: "{{ cloud_cli_dl_tmp.path }}"
+        path: "{{ cloud_cli_stage_tmp.path }}"
         state: absent
       become: false
       check_mode: false
       changed_when: false
-      when: cloud_cli_dl_tmp.path is defined
+      when: cloud_cli_stage_tmp.path is defined
       tags: [always]
