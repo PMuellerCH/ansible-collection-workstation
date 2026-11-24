@@ -36,4 +36,4 @@ code_quality_tools_ansible_core_version: "2.21.6"
 # Minimum pipx version community.general.pipx requires (Ubuntu 24.04's apt-provided
 # pipx is only 1.4.3 — see README "pipx bootstrap" section).
 # renovate: datasource=pypi depName=pipx
-code_quality_tools_pipx_min_version: "1.18.19"
+code_quality_tools_pipx_min_version: "1.19.1"

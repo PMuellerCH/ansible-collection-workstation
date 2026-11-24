@@ -50,7 +50,7 @@ cli_tools_emoji_fzf_version: "0.12.0"
 # code_quality_tools_pipx_min_version; cli_tools bootstraps its own pipx
 # since it cannot assume another role already upgraded it (role independence).
 # renovate: datasource=pypi depName=pipx
-cli_tools_pipx_min_version: "1.18.19"
+cli_tools_pipx_min_version: "1.19.1"
 
 # renovate: datasource=github-releases depName=dalance/procs extractVersion=^v(?<version>.*)$
 cli_tools_procs_version: "0.14.12"
