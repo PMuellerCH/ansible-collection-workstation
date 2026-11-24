@@ -70,7 +70,11 @@
           - "('terraform-mcp-server@' ~ ai_cli_mcp_terraform_version) in _ai_cli_mcp['terraform'].args"
           - "('@modelcontextprotocol/server-github@' ~ ai_cli_mcp_github_version) in _ai_cli_mcp['github'].args"
           - "('renovate-mcp@' ~ ai_cli_mcp_renovate_version) in _ai_cli_mcp['renovate'].args"
-          - _ai_cli_mcp | dict2items | map(attribute='value.args') | flatten | select('search', '@latest$') | list | length == 0
+          # Only role-managed servers: the seeded `aws-mcp` (prepare.yml) is
+          # deliberately external, keeps its own `@latest`, and must survive.
+          - >-
+            _ai_cli_mcp | dict2items | rejectattr('key', 'equalto', 'aws-mcp')
+            | map(attribute='value.args') | flatten | select('search', '@latest$') | list | length == 0
 
 
     - name: Assert a manually-registered MCP server (seeded in prepare.yml) survived converge
