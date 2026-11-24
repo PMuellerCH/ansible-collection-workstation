@@ -2,44 +2,81 @@
 # Thin dispatcher: one task file per component group. Every task carries the
 # k8s_tools tag via include_tasks' `apply:`; there are no per-component
 # switches — the role as a whole is the unit (don't include it to skip it).
-- name: Install kubectl
-  ansible.builtin.include_tasks:
-    file: kubectl.yml
-    apply:
+#
+# Release archives are staged in one private directory per run (mktemp -d,
+# mode 0700, owned by the invoking user) instead of fixed /tmp paths, so another
+# local user cannot pre-create or swap a file between the checksum-verified
+# download and the root-level extract/install. It is removed again in `always`,
+# also when a component fails.
+- name: Install the k8s_tools components in a private download directory
+  block:
+    - name: Create private download directory
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: k8s_tools_dl_
+      register: k8s_tools_dl_tmp
+      become: false
+      # Directory creation that every download below depends on, so it also
+      # runs in --check (the sanctioned check_mode: false exception). Reports
+      # unchanged: it is scratch space, not managed state.
+      check_mode: false
+      changed_when: false
+      tags: [always]
+
+    - name: Install kubectl
+      ansible.builtin.include_tasks:
+        file: kubectl.yml
+        apply:
+          tags: [kubectl, k8s_tools]
       tags: [kubectl, k8s_tools]
-  tags: [kubectl, k8s_tools]
 
-- name: Install k9s (with Catppuccin skin)
-  ansible.builtin.include_tasks:
-    file: k9s.yml
-    apply:
+    - name: Install k9s (with Catppuccin skin)
+      ansible.builtin.include_tasks:
+        file: k9s.yml
+        apply:
+          tags: [k9s, k8s_tools]
       tags: [k9s, k8s_tools]
-  tags: [k9s, k8s_tools]
 
-- name: Install helm and helm-diff
-  ansible.builtin.include_tasks:
-    file: helm.yml
-    apply:
+    - name: Install helm and helm-diff
+      ansible.builtin.include_tasks:
+        file: helm.yml
+        apply:
+          tags: [helm, k8s_tools]
       tags: [helm, k8s_tools]
-  tags: [helm, k8s_tools]
 
-- name: Install kubectx/kubens, stern, krew, kubeconform, kube-linter
-  ansible.builtin.include_tasks:
-    file: kube_utils.yml
-    apply:
+    - name: Install kubectx/kubens, stern, krew, kubeconform, kube-linter
+      ansible.builtin.include_tasks:
+        file: kube_utils.yml
+        apply:
+          tags: [kube_utils, k8s_tools]
       tags: [kube_utils, k8s_tools]
-  tags: [kube_utils, k8s_tools]
 
-- name: Install Python Kubernetes libraries
-  ansible.builtin.include_tasks:
-    file: python_libs.yml
-    apply:
+    - name: Install Python Kubernetes libraries
+      ansible.builtin.include_tasks:
+        file: python_libs.yml
+        apply:
+          tags: [python_libs, k8s_tools]
       tags: [python_libs, k8s_tools]
-  tags: [python_libs, k8s_tools]
 
-- name: Configure kubeconfig and shell integration
-  ansible.builtin.include_tasks:
-    file: config.yml
-    apply:
+    - name: Configure kubeconfig and shell integration
+      ansible.builtin.include_tasks:
+        file: config.yml
+        apply:
+          tags: [config, k8s_tools]
       tags: [config, k8s_tools]
-  tags: [config, k8s_tools]
+  rescue:
+    - name: Report the failed k8s_tools component
+      ansible.builtin.fail:
+        msg: "A k8s_tools component failed ({{ ansible_failed_task.name | default('unknown task') }}): {{ ansible_failed_result.msg | default('see the preceding error') }}"
+      # `always` so a tag-filtered run cannot skip this and swallow the failure.
+      tags: [always]
+  always:
+    - name: Remove private download directory
+      ansible.builtin.file:
+        path: "{{ k8s_tools_dl_tmp.path }}"
+        state: absent
+      become: false
+      check_mode: false
+      changed_when: false
+      when: k8s_tools_dl_tmp.path is defined
+      tags: [always]

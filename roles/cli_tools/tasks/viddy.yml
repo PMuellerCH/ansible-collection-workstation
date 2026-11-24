@@ -11,7 +11,7 @@
 - name: Download viddy archive
   ansible.builtin.get_url:
     url: "{{ _cli_tools_viddy_release_base }}.tar.gz"
-    dest: "/tmp/viddy-{{ cli_tools_viddy_version }}.tar.gz"
+    dest: "{{ cli_tools_dl_tmp.path }}/viddy-{{ cli_tools_viddy_version }}.tar.gz"
     # sachaos/viddy publishes a matching .sha256 file per release asset —
     # get_url fetches and verifies against it directly, so there's no static
     # checksum to keep in sync by hand when Renovate bumps
@@ -29,7 +29,7 @@
 
 - name: Install viddy binary to /usr/local/bin
   ansible.builtin.unarchive:
-    src: "/tmp/viddy-{{ cli_tools_viddy_version }}.tar.gz"
+    src: "{{ cli_tools_dl_tmp.path }}/viddy-{{ cli_tools_viddy_version }}.tar.gz"
     dest: /usr/local/bin/
     include:
       - viddy

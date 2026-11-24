@@ -12,7 +12,7 @@
 - name: Download presenterm archive
   ansible.builtin.get_url:
     url: "{{ editor_presenterm_download_base }}/{{ editor_presenterm_archive }}"
-    dest: "/tmp/{{ editor_presenterm_archive }}"
+    dest: "{{ editor_dl_tmp.path }}/{{ editor_presenterm_archive }}"
     # mfontanini/presenterm publishes a matching .sha512 file per release
     # asset — get_url fetches and verifies against it directly (matched by
     # the source URL's basename), so there's no static checksum to keep in
@@ -26,7 +26,7 @@
 
 - name: Install presenterm binary to /usr/local/bin
   ansible.builtin.unarchive:
-    src: "/tmp/{{ editor_presenterm_archive }}"
+    src: "{{ editor_dl_tmp.path }}/{{ editor_presenterm_archive }}"
     dest: /usr/local/bin/
     include:
       - "presenterm-{{ editor_presenterm_version }}/presenterm"

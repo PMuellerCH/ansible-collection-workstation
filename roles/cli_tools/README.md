@@ -58,7 +58,7 @@ aliases to take effect. `emoji-fzf`'s `emoji` function pipes through `wl-copy` (
 | `cli_tools_yazi_enabled` | `true` | Whether to install yazi (from a GitHub-released .deb). |
 | `cli_tools_bat_theme_ref` | see `defaults/main.yml` | Pinned commit of catppuccin/bat the theme file is downloaded from (immutable, unlike the "main" branch). |
 | `cli_tools_bat_theme_checksum` | see `defaults/main.yml` | Checksum of the bat theme file at cli_tools_bat_theme_ref, verified by get_url. |
-| `cli_tools_btop_catppuccin_version` | see `defaults/main.yml` | Release tag of catppuccin/btop to download the Mocha theme archive from. |
+| `cli_tools_btop_catppuccin_version` | see `defaults/main.yml` | Release tag of catppuccin/btop to download the Mocha theme archive from. The installed tag is recorded in `~/.config/btop/themes/.catppuccin_version`; a bump re-downloads and re-extracts the theme. |
 | `cli_tools_btop_catppuccin_checksum` | see `defaults/main.yml` | Checksum of the themes.tar.gz archive at cli_tools_btop_catppuccin_version, verified by get_url. |
 | `cli_tools_fzf_version` | see `defaults/main.yml` | fzf version (github-releases junegunn/fzf), installed from a checksum-verified binary tarball. |
 | `cli_tools_emoji_fzf_version` | see `defaults/main.yml` | emoji-fzf version (pypi), installed via pipx. |
@@ -141,8 +141,8 @@ fetched) but, like every other package in this role, are no longer
 dpkg-held after install — a held package blocks even a legitimate reinstall
 of a newer pinned `.deb`.
 
-### Known limitation: download staging
+### Download staging
 
-Release archives are downloaded to a fixed `/tmp` path and their checksum is verified at download time; the root-level
-extraction follows. On a single-user workstation the window in between is accepted. (The AWS CLI and
-session-manager-plugin downloads in `cloud_cli` and the OpenCode install in `ai_cli` use private directories instead.)
+Release archives are staged in a private per-run directory (`ansible.builtin.tempfile`, mode 0700, created in the role's
+`tasks/main.yml` and removed in an `always` section, also on failure) rather than fixed `/tmp` paths, so no other local
+user can pre-create or swap a file between the checksum-verified download and the root-level extraction.

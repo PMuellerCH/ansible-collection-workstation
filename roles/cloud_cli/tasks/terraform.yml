@@ -70,7 +70,7 @@
 - name: Download tflint archive
   ansible.builtin.get_url:
     url: "https://github.com/terraform-linters/tflint/releases/download/v{{ cloud_cli_tflint_version }}/tflint_linux_amd64.zip"
-    dest: "/tmp/tflint_{{ cloud_cli_tflint_version }}_linux_amd64.zip"
+    dest: "{{ cloud_cli_dl_tmp.path }}/tflint_{{ cloud_cli_tflint_version }}_linux_amd64.zip"
     # tflint publishes an aggregate checksums.txt per release; get_url matches
     # the entry by the download URL's basename, so nothing to keep in sync by
     # hand when Renovate bumps cloud_cli_tflint_version.
@@ -81,7 +81,7 @@
 
 - name: Install tflint binary to /usr/local/bin
   ansible.builtin.unarchive:
-    src: "/tmp/tflint_{{ cloud_cli_tflint_version }}_linux_amd64.zip"
+    src: "{{ cloud_cli_dl_tmp.path }}/tflint_{{ cloud_cli_tflint_version }}_linux_amd64.zip"
     dest: /usr/local/bin/
     include:
       - tflint
@@ -101,7 +101,7 @@
 - name: Download terraform-docs archive
   ansible.builtin.get_url:
     url: "{{ cloud_cli_terraform_docs_download_base }}/{{ cloud_cli_terraform_docs_archive }}"
-    dest: "/tmp/{{ cloud_cli_terraform_docs_archive }}"
+    dest: "{{ cloud_cli_dl_tmp.path }}/{{ cloud_cli_terraform_docs_archive }}"
     # terraform-docs publishes a sha256sum-format file per release covering
     # every archive (matched by basename).
     checksum: "sha256:{{ cloud_cli_terraform_docs_download_base }}/terraform-docs-v{{ cloud_cli_terraform_docs_version }}.sha256sum"
@@ -112,7 +112,7 @@
 
 - name: Install terraform-docs binary to /usr/local/bin
   ansible.builtin.unarchive:
-    src: "/tmp/{{ cloud_cli_terraform_docs_archive }}"
+    src: "{{ cloud_cli_dl_tmp.path }}/{{ cloud_cli_terraform_docs_archive }}"
     dest: /usr/local/bin/
     include:
       - terraform-docs
@@ -139,7 +139,7 @@
 - name: Download tfswitch archive
   ansible.builtin.get_url:
     url: "{{ cloud_cli_tfswitch_download_base }}/{{ cloud_cli_tfswitch_archive }}"
-    dest: "/tmp/{{ cloud_cli_tfswitch_archive }}"
+    dest: "{{ cloud_cli_dl_tmp.path }}/{{ cloud_cli_tfswitch_archive }}"
     checksum: "sha256:{{ cloud_cli_tfswitch_download_base }}/terraform-switcher_v{{ cloud_cli_tfswitch_version }}_checksums.txt"
     mode: "0644"
   when: >-
@@ -148,7 +148,7 @@
 
 - name: Install tfswitch binary to /usr/local/bin
   ansible.builtin.unarchive:
-    src: "/tmp/{{ cloud_cli_tfswitch_archive }}"
+    src: "{{ cloud_cli_dl_tmp.path }}/{{ cloud_cli_tfswitch_archive }}"
     dest: /usr/local/bin/
     include:
       - tfswitch

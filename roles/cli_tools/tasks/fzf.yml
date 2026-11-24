@@ -11,7 +11,7 @@
 - name: Download fzf archive
   ansible.builtin.get_url:
     url: "https://github.com/junegunn/fzf/releases/download/v{{ cli_tools_fzf_version }}/fzf-{{ cli_tools_fzf_version }}-linux_amd64.tar.gz"
-    dest: "/tmp/fzf-{{ cli_tools_fzf_version }}-linux_amd64.tar.gz"
+    dest: "{{ cli_tools_dl_tmp.path }}/fzf-{{ cli_tools_fzf_version }}-linux_amd64.tar.gz"
     # junegunn/fzf publishes a plain sha256sum-format checksums file per
     # release; get_url fetches and matches against it by the source URL's
     # basename, so there's no static checksum to keep in sync by hand when
@@ -25,7 +25,7 @@
 
 - name: Install fzf binary to /usr/local/bin
   ansible.builtin.unarchive:
-    src: "/tmp/fzf-{{ cli_tools_fzf_version }}-linux_amd64.tar.gz"
+    src: "{{ cli_tools_dl_tmp.path }}/fzf-{{ cli_tools_fzf_version }}-linux_amd64.tar.gz"
     dest: /usr/local/bin/
     include:
       - fzf

@@ -89,8 +89,9 @@ pipx-based task downstream of it (the `ansible-core` install and every inject) i
   fixed `/tmp` path, and installed with `ansible-galaxy collection install --upgrade` so Renovate bumps of
   `files/requirements.yml` actually apply on an already-provisioned machine.
 - `act` is checksum-verified against upstream's own aggregate `checksums.txt` and extracted straight to
-  `/usr/local/bin/act`. Downloads land in a fixed `/tmp` path; the content is verified at download time (a small
-  window remains between that and the root-level extraction — acceptable for a single-user workstation).
+  `/usr/local/bin/act`. The download is staged in a private per-run directory (mode 0700,
+  removed afterwards, also on failure) and verified at download time, so no other local user can swap it before the
+  root-level extraction.
 - Docker's apt signing key is fetched over TLS from `download.docker.com` (re-fetched on every run, so rotations are picked up) and apt then verifies
   every package against the signed repository metadata.
 - Docker client proxy config is deployed with `force: false`, so `docker login` credentials and manual edits survive

@@ -127,8 +127,8 @@ flowchart LR
   metadata, so no per-package checksum is needed.
 - `tflint`, `terraform-docs` and `tfswitch` are downloaded from pinned GitHub releases and checksum-verified against
   upstream's own per-release checksum files (`get_url` matches the entry by file name, so there's no static hash to
-  keep in sync when Renovate bumps a version). Downloads land in a fixed `/tmp` path; the content is verified at
-  download time.
+  keep in sync when Renovate bumps a version). Downloads are staged in a private per-run
+  directory (mode 0700, removed afterwards, also on failure) and verified at download time.
 - `floci` uses a fetch-and-parse checksum (its `sha256sums.txt` lists directory-style paths `get_url` can't match
   directly).
 - `terraformrc` (which may contain the Terraform Cloud token) is deployed with `no_log: true`; the Vault GitHub token

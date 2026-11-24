@@ -11,7 +11,7 @@
 - name: Download doggo archive
   ansible.builtin.get_url:
     url: "https://github.com/mr-karan/doggo/releases/download/v{{ cli_tools_doggo_version }}/doggo-linux-x86_64.tar.gz"
-    dest: "/tmp/doggo-{{ cli_tools_doggo_version }}.tar.gz"
+    dest: "{{ cli_tools_dl_tmp.path }}/doggo-{{ cli_tools_doggo_version }}.tar.gz"
     # mr-karan/doggo publishes an aggregate, version-named checksums.txt per
     # release — get_url fetches it and matches the entry by the source URL's
     # basename, so there's no static checksum to keep in sync by hand when
@@ -26,7 +26,7 @@
 
 - name: Install doggo binary to /usr/local/bin
   ansible.builtin.unarchive:
-    src: "/tmp/doggo-{{ cli_tools_doggo_version }}.tar.gz"
+    src: "{{ cli_tools_dl_tmp.path }}/doggo-{{ cli_tools_doggo_version }}.tar.gz"
     dest: /usr/local/bin/
     include:
       - doggo

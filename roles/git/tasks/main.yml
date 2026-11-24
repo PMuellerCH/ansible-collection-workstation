@@ -1,33 +1,70 @@
 ---
 # Thin dispatcher: one task file per component, each behind its own switch.
 # Tags use include_tasks' `apply:` so they reach the tasks inside the file.
-- name: Install git and configure the global git config
-  ansible.builtin.include_tasks:
-    file: config.yml
-    apply:
+#
+# Release archives are staged in one private directory per run (mktemp -d,
+# mode 0700, owned by the invoking user) instead of fixed /tmp paths, so another
+# local user cannot pre-create or swap a file between the checksum-verified
+# download and the root-level extract/install. It is removed again in `always`,
+# also when a component fails.
+- name: Install the git components in a private download directory
+  block:
+    - name: Create private download directory
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: git_dl_
+      register: git_dl_tmp
+      become: false
+      # Directory creation that every download below depends on, so it also
+      # runs in --check (the sanctioned check_mode: false exception). Reports
+      # unchanged: it is scratch space, not managed state.
+      check_mode: false
+      changed_when: false
+      tags: [always]
+
+    - name: Install git and configure the global git config
+      ansible.builtin.include_tasks:
+        file: config.yml
+        apply:
+          tags: [config, git]
       tags: [config, git]
-  tags: [config, git]
 
-- name: Install the GitHub CLI
-  ansible.builtin.include_tasks:
-    file: gh.yml
-    apply:
+    - name: Install the GitHub CLI
+      ansible.builtin.include_tasks:
+        file: gh.yml
+        apply:
+          tags: [gh, git]
+      when: git_gh_enabled
       tags: [gh, git]
-  when: git_gh_enabled
-  tags: [gh, git]
 
-- name: Install lazygit
-  ansible.builtin.include_tasks:
-    file: lazygit.yml
-    apply:
+    - name: Install lazygit
+      ansible.builtin.include_tasks:
+        file: lazygit.yml
+        apply:
+          tags: [lazygit, git]
+      when: git_lazygit_enabled
       tags: [lazygit, git]
-  when: git_lazygit_enabled
-  tags: [lazygit, git]
 
-- name: Install delta (git pager) with the Catppuccin Mocha theme
-  ansible.builtin.include_tasks:
-    file: delta.yml
-    apply:
+    - name: Install delta (git pager) with the Catppuccin Mocha theme
+      ansible.builtin.include_tasks:
+        file: delta.yml
+        apply:
+          tags: [delta, git]
+      when: git_delta_enabled
       tags: [delta, git]
-  when: git_delta_enabled
-  tags: [delta, git]
+  rescue:
+    - name: Report the failed git component
+      ansible.builtin.fail:
+        msg: "A git component failed ({{ ansible_failed_task.name | default('unknown task') }}): {{ ansible_failed_result.msg | default('see the preceding error') }}"
+      # `always` so a tag-filtered run cannot skip this and swallow the failure.
+      tags: [always]
+  always:
+    - name: Remove private download directory
+      ansible.builtin.file:
+        path: "{{ git_dl_tmp.path }}"
+        state: absent
+      become: false
+      check_mode: false
+      changed_when: false
+      when: git_dl_tmp.path is defined
+      tags: [always]

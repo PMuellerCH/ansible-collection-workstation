@@ -13,7 +13,7 @@
 - name: Fetch xcp release metadata for the GitHub asset digest
   ansible.builtin.get_url:
     url: "https://api.github.com/repos/tarka/xcp/releases/tags/xcp-v{{ cli_tools_xcp_version }}"
-    dest: "/tmp/xcp-{{ cli_tools_xcp_version }}_release.json"
+    dest: "{{ cli_tools_dl_tmp.path }}/xcp-{{ cli_tools_xcp_version }}_release.json"
     force: true
     headers: >-
       {{ {'Accept': 'application/vnd.github+json'}
@@ -30,7 +30,7 @@
 
 - name: Read xcp release metadata
   ansible.builtin.slurp:
-    path: "/tmp/xcp-{{ cli_tools_xcp_version }}_release.json"
+    path: "{{ cli_tools_dl_tmp.path }}/xcp-{{ cli_tools_xcp_version }}_release.json"
   register: cli_tools_xcp_release_raw
   when: >-
     not ansible_check_mode and
@@ -68,7 +68,7 @@
 - name: Download xcp archive
   ansible.builtin.get_url:
     url: "https://github.com/tarka/xcp/releases/download/xcp-v{{ cli_tools_xcp_version }}/xcp-v{{ cli_tools_xcp_version }}-x86_64-unknown-linux-gnu.tar.gz"
-    dest: "/tmp/xcp-{{ cli_tools_xcp_version }}.tar.gz"
+    dest: "{{ cli_tools_dl_tmp.path }}/xcp-{{ cli_tools_xcp_version }}.tar.gz"
     checksum: "{{ cli_tools_xcp_checksum }}"
     mode: "0644"
   when: >-
@@ -80,7 +80,7 @@
 
 - name: Install xcp binary to /usr/local/bin
   ansible.builtin.unarchive:
-    src: "/tmp/xcp-{{ cli_tools_xcp_version }}.tar.gz"
+    src: "{{ cli_tools_dl_tmp.path }}/xcp-{{ cli_tools_xcp_version }}.tar.gz"
     dest: /usr/local/bin/
     include:
       - "xcp-v{{ cli_tools_xcp_version }}-x86_64-unknown-linux-gnu/bin/xcp"

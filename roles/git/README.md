@@ -98,8 +98,8 @@ integration rather than generic git configuration, so it lives in `delta.yml` ne
 
 The `base_git_*` variables were renamed to `git_*` (`base_git_user_name` → `git_user_name`, and so on). There are no aliases.
 
-### Known limitation: download staging
+### Download staging
 
-Release archives are downloaded to a fixed `/tmp` path and their checksum is verified at download time; the root-level
-extraction follows. On a single-user workstation the window in between is accepted. (The AWS CLI and
-session-manager-plugin downloads in `cloud_cli` and the OpenCode install in `ai_cli` use private directories instead.)
+Release archives are staged in a private per-run directory (`ansible.builtin.tempfile`, mode 0700, created in the role's
+`tasks/main.yml` and removed in an `always` section, also on failure) rather than fixed `/tmp` paths, so no other local
+user can pre-create or swap a file between the checksum-verified download and the root-level extraction.
