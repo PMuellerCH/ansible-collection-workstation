@@ -10,9 +10,13 @@ Installs modern replacements for the classic CLI tools: `bat` (cat), `btop`/`hto
 port or no themeable config). `emoji-fzf` covers only the CLI picker — the GUI picker (`smile`) belongs to
 `desktop_integration`.
 
-> **Size:** with 21 components this role is above the "~8 components per role" budget from #130. They are small,
-> independent task files behind per-tool switches (about 700 task lines in total), and the tools share nothing but the
-> shell snippet, so a finer split would only add roles without isolating any Renovate churn.
+> **Size:** with 21 components this role is above the "~8 components per role" budget from #130. Decision (#173): it
+> stays one role. The components are small, independent task files (about 50 lines on average, 11 to 121) behind per-tool switches and
+> per-tool tags; they share only the shell snippet and the per-run download directory. The Molecule job takes about
+> 5 minutes in CI (roughly 230-335 s), comparable to or below `cloud_cli` and `ansible_dev` (up to about 10 minutes in
+> recent runs), so runtime is no reason to split. A split would rename roles and variables (a breaking change for every consumer playbook) and duplicate the
+> shell-snippet and staging boilerplate, without isolating any Renovate churn. Revisit if a component needs its own
+> lifecycle, or if the CI runtime clearly exceeds the other roles'.
 
 ## What it does
 
