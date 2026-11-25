@@ -91,7 +91,9 @@ Every version string must be pinned to an exact version and covered by a Renovat
 - **GitHub releases / pipx / npm**: version variable in `defaults/main.yml` with appropriate Renovate datasource comment
 - **Python CI tools** (`.github/requirements.txt`): exact pin, tracked by `pip_requirements` manager
 - **Node CI tools** (`.github/package.json`): exact pin, tracked by npm manager
-- **GitHub Actions**: tracked by `github-actions` manager
+- **GitHub Actions**: third-party actions SHA-pinned (`@<sha> # vX`), kept in sync by the `github-actions` manager
+  (`helpers:pinGitHubActionDigests`); only `PMuellerCH/shared-actions@v1` stays floating by design.
+  `minimumReleaseAge: 3 days` delays automerge
 - **Pre-commit hooks**: tracked by `pre-commit` manager
 
 ### Collection dependencies

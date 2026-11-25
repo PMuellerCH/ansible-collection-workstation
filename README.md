@@ -392,8 +392,8 @@ If a Renovate PR stops merging, check that lint and Molecule are green on the PR
 Supply-chain hardening: third-party GitHub Actions are pinned to full commit SHAs with the
 version in a trailing comment (`uses: owner/action@<sha> # v7`); Renovate keeps both in sync
 (`helpers:pinGitHubActionDigests`). `PMuellerCH/shared-actions` is deliberately excluded and
-stays on the floating `@v1` tag. `minimumReleaseAge: "3 days"` with `internalChecksFilter: "strict"`
-holds every update PR (and therefore automerge) back until the release is 3 days old, so a
+stays on the floating `@v1` tag. `minimumReleaseAge: "3 days"`
+holds automerge of every update back until the release is 3 days old, so a
 freshly published, possibly compromised release is not merged immediately.
 
 ## License
