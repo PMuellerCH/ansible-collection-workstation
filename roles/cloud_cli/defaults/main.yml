@@ -37,6 +37,9 @@ cloud_cli_aws_session_manager_plugin_key_fingerprint: "7959 6371 24CE 093A D501 
 cloud_cli_aws_profiles: []
 
 # ── terraform ────────────────────────────────────────────────────────────
+# Primary-key fingerprint of the HashiCorp apt signing key (HashiCorp Security,
+# expires 2031). The key is only installed when the downloaded file matches.
+cloud_cli_hashicorp_apt_key_fingerprint: "D55C0D1AC78A8D8126CB631CFC9CA96ACA026560"  # pragma: allowlist secret
 # renovate: datasource=github-releases depName=terraform-linters/tflint extractVersion=^v(?<version>.*)$
 cloud_cli_tflint_version: "0.66.0"
 # renovate: datasource=github-releases depName=terraform-docs/terraform-docs extractVersion=^v(?<version>.*)$

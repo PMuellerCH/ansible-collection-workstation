@@ -87,7 +87,7 @@
 
 - name: Install helm-diff plugin
   ansible.builtin.command:
-    cmd: helm plugin install https://github.com/databus23/helm-diff --verify=false
+    cmd: helm plugin install https://github.com/databus23/helm-diff --version v{{ k8s_tools_helm_diff_version }} --verify=false
   become: false
   when: >-
     not ansible_check_mode and not k8s_tools_helm_diff_stat.stat.exists

@@ -2,6 +2,10 @@
 # editor: neovim + LazyVim, presenterm and mermaid-cli
 
 editor_neovim_enabled: true
+# Pinned commit of LazyVim/starter (no releases/tags upstream; cloned from an
+# immutable ref instead of the mutable "main" branch). Renovate bumps the digest.
+# renovate: datasource=git-refs depName=https://github.com/LazyVim/starter branch=main
+editor_neovim_lazyvim_starter_ref: "803bc181d7c0d6d5eeba9274d9be49b287294d99"  # pragma: allowlist secret
 
 # Optional GitHub API token used only to raise the rate limit when resolving
 # the neovim release-asset digest (neovim publishes no checksum file — see

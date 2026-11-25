@@ -378,9 +378,10 @@ Renovate is self-contained in this repo's `renovate.json` — it no longer exten
 preset. It extends `config:recommended` and `:enablePreCommit`, defines its own
 `pip_requirements` manager (covering root and `.github/` requirements files), pins
 `ansible-core` to the 2.21.x line (2.22+ needs Python 3.13, but the target Ubuntu 24.04
-ships Python 3.12) while still skipping the broken 2.21.0, and carries three custom regex
+ships Python 3.12) while still skipping the broken 2.21.0, and carries four custom regex
 managers for
-version strings the recommended config does not see: role `defaults/main.yml`, the root
+version strings the recommended config does not see: role `defaults/main.yml` (version strings, and commit SHAs of
+release-less git repositories via the `git-refs` datasource, e.g. the LazyVim starter), the root
 `requirements.yml` / `requirements-molecule.yml`, and per-role `files/requirements.yml`.
 
 Automerge is driven entirely by `renovate.json`, not by a shared approval workflow. The

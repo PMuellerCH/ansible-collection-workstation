@@ -47,6 +47,17 @@
     },
     {
       "customType": "regex",
+      "description": "Update commit SHAs pinned in Ansible role defaults for git repositories without releases (LazyVim starter)",
+      "managerFilePatterns": [
+        "/^roles/.+/defaults/main\\.yml$/"
+      ],
+      "matchStrings": [
+        "# renovate: datasource=git-refs depName=(?<depName>[^\\s]+) branch=(?<currentValue>[^\\s]+)\\n[a-z0-9_]+: \"(?<currentDigest>[a-f0-9]{40})\""
+      ],
+      "datasourceTemplate": "git-refs"
+    },
+    {
+      "customType": "regex",
       "description": "Update Ansible Galaxy collection versions in requirements.yml and requirements-molecule.yml",
       "managerFilePatterns": [
         "/^requirements(-molecule)?\\.yml$/"

@@ -66,6 +66,7 @@ consuming playbook runs.
 | `base_desktop_environment` | `gnome` | `gnome` or `cosmic`; controls which proxy integration path is applied |
 | `base_nodejs_enabled` | `true` | Install Node.js (NodeSource) and `build-essential` |
 | `base_nodejs_major_version` | `"24"` | Node.js LTS major version; selects the NodeSource apt repository |
+| `base_nodejs_apt_key_fingerprint` | see `defaults/main.yml` | Pinned primary-key fingerprint of the NodeSource apt signing key |
 | `base_ssh_extra_hosts` | `[]` | Extra SSH host blocks (`name`, `hostname`, `user`, optional `identity_file`) |
 | `base_python_uv_version` | see `defaults/main.yml` | `uv` version (github-releases `astral-sh/uv`) |
 | `base_fonts_nerd_font_version` | see `defaults/main.yml` | Nerd Fonts release version (github-releases `ryanoasis/nerd-fonts`) |
@@ -144,18 +145,22 @@ cascades to every task in the role and defeats this per-tool filtering.
   downloaded release artifacts, not apt-repo packages, and don't have this
   failure mode.
 
-### Known limitation: NodeSource signing key
+### NodeSource signing key (fingerprint-pinned)
 
-The NodeSource apt key is fetched over TLS from `deb.nodesource.com` (re-fetched on every run, so rotations are picked up)
-and is used as `signed_by` for the NodeSource repository only; there is no fingerprint pin yet. apt then verifies every
-package against the signed repository metadata. The same applies to the Docker and HashiCorp keys in `ansible_dev` and
-`cloud_cli`.
+The NodeSource apt key is downloaded over TLS from `deb.nodesource.com` into the private staging directory and installed
+to `/etc/apt/keyrings/nodesource.asc` only if the file holds exactly one primary key whose fingerprint equals
+`base_nodejs_apt_key_fingerprint`; otherwise the run fails before apt can trust it. The key is used as `signed_by` for the
+NodeSource repository only, and apt then verifies every package against the signed repository metadata. If NodeSource rotates
+its key the run fails with the fingerprint mismatch: verify the new fingerprint out of band and update the variable.
+`gnupg` (installed by this component) provides the `gpg` check. The Docker and HashiCorp keys in `ansible_dev` and `cloud_cli`
+work the same way.
 
 ## Download staging
 
 Release downloads are staged in a private per-run directory (`ansible.builtin.tempfile`, mode 0700, created in the
 role's `tasks/main.yml` and removed in an `always` section, also on failure) rather than fixed `/tmp` paths, so no other
 local user can pre-create or swap a file between the download and the root-level install.
-This covers the `uv` archive and the Nerd Font zip; the `nodejs` component uses apt keyrings and needs no staging.
+This covers the `uv` archive and the Nerd Font zip; the `nodejs` component is self-contained and stages the NodeSource key in its own
+private directory for the fingerprint check.
 A component file run on its own via `include_role ... tasks_from:` bypasses `tasks/main.yml`, so for `python` or `fonts`
 it needs `base_dl_tmp` to be defined first.

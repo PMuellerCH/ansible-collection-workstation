@@ -14,6 +14,10 @@ argument_specs:
         description: Whether to install Terraform, Vault, tfswitch, tflint, terraform-docs.
         required: false
         type: bool
+      cloud_cli_hashicorp_apt_key_fingerprint:
+        description: Expected primary-key fingerprint of the HashiCorp apt signing key; the key is installed only if the download matches.
+        required: false
+        type: str
       cloud_cli_floci_enabled:
         default: true
         description: "Whether to install the floci CLI (local AWS emulator for validating Terraform/AWS changes\

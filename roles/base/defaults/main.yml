@@ -33,6 +33,10 @@ base_fonts_nerd_font_version: "3.5.1"
 # Whether to install Node.js (NodeSource apt repository). The ai_cli and editor roles
 # need a working node/npm; disable only if another source provides it.
 base_nodejs_enabled: true
+# Primary-key fingerprint of the NodeSource apt signing key. The key is only
+# installed when the downloaded file has exactly this fingerprint; update it
+# (and re-verify out of band) when NodeSource rotates its key.
+base_nodejs_apt_key_fingerprint: "6F71F525282841EEDAF851B42F59B5F99B1BE0B4"  # pragma: allowlist secret
 # Selects which NodeSource major-version apt repo to add
 # (deb.nodesource.com/node_{{ major }}.x) — nodejs/build-essential
 # themselves are installed unpinned, see the root README.

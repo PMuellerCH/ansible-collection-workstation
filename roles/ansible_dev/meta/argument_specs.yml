@@ -14,6 +14,10 @@ argument_specs:
         description: Whether to install Docker CE.
         required: false
         type: bool
+      ansible_dev_docker_apt_key_fingerprint:
+        description: Expected primary-key fingerprint of the Docker apt signing key; the key is installed only if the download matches.
+        required: false
+        type: str
       ansible_dev_act_enabled:
         default: true
         description: >-

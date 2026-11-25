@@ -23,6 +23,7 @@ and Vault with `tfswitch`/`tflint`/`terraform-docs`, and `floci` (a local AWS em
 | --- | --- | --- |
 | `cloud_cli_aws_enabled` | `true` | Install AWS CLI v2, session-manager-plugin, boto3 inject, AWS config |
 | `cloud_cli_terraform_enabled` | `true` | Install Terraform, Vault, tfswitch, tflint, terraform-docs |
+| `cloud_cli_hashicorp_apt_key_fingerprint` | see `defaults/main.yml` | Pinned primary-key fingerprint of the HashiCorp apt signing key |
 | `cloud_cli_floci_enabled` | `true` | Install the floci CLI |
 | `cloud_cli_http_proxy` | `""` | Only toggles the AWS/Terraform proxy shell snippets. Leave empty on machines without a proxy |
 | `cloud_cli_vault_addr` | `""` | HashiCorp Vault server address. Leave empty to skip Vault shell integration |
@@ -123,8 +124,11 @@ flowchart LR
 ### Other notes
 
 - **Terraform and Vault** come from the HashiCorp apt repository (`signed_by` a keyring fetched over TLS from
-  `apt.releases.hashicorp.com`, re-fetched on every run), no key-fingerprint pin yet; apt validates package integrity against the signed `Release`
-  metadata, so no per-package checksum is needed.
+  `apt.releases.hashicorp.com`, re-fetched on every run into the private staging directory and installed only if its primary-key
+  fingerprint equals `cloud_cli_hashicorp_apt_key_fingerprint`); apt validates package integrity against the signed `Release`
+  metadata, so no per-package checksum is needed. On a key rotation the run fails with a fingerprint mismatch: verify the new
+  fingerprint out of band and update the variable. The key download and check run for real even under `--check` (scratch space only) and use
+  `cloud_cli_stage_tmp` from `tasks/main.yml`, so `tasks_from: terraform` on its own needs that variable defined first. The HashiCorp key expires 2031.
 - `tflint`, `terraform-docs` and `tfswitch` are downloaded from pinned GitHub releases and checksum-verified against
   upstream's own per-release checksum files (`get_url` matches the entry by file name, so there's no static hash to
   keep in sync when Renovate bumps a version). Downloads are staged in a private per-run
