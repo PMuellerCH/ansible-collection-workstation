@@ -25,7 +25,7 @@ ansible_dev_pipx_min_version: "1.19.1"
 # target Ubuntu 24.04 ships Python 3.12, which this pipx venv runs on.
 # renovate.json constrains ansible-core to <2.22.0 accordingly.
 # renovate: datasource=pypi depName=ansible-core
-ansible_dev_ansible_core_version: "2.21.6"
+ansible_dev_ansible_core_version: "2.22.0"
 # renovate: datasource=pypi depName=molecule
 ansible_dev_molecule_version: "26.11.0"
 # renovate: datasource=pypi depName=molecule-plugins
