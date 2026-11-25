@@ -1,7 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended", ":enablePreCommit", "helpers:pinGitHubActionDigests"],
-  "minimumReleaseAge": "3 days",
   "labels": ["dependencies"],
   "pip_requirements": {
     "managerFilePatterns": [
