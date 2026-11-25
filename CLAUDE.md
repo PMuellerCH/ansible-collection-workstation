@@ -89,6 +89,10 @@ Every version string must be pinned to an exact version and covered by a Renovat
 - **apt packages**: installed unpinned from real apt repos (see README "apt package versions are unpinned"); only
   packages that need a fixed version (e.g. `trivy`, `dust`, `yazi`) are pinned in `defaults/main.yml` with a Renovate comment
 - **GitHub releases / pipx / npm**: version variable in `defaults/main.yml` with appropriate Renovate datasource comment
+- **Git repositories without releases** (e.g. the LazyVim starter): pinned to a 40-hex commit SHA in `defaults/main.yml`, with
+  `# renovate: datasource=git-refs depName=<url> branch=<branch>` on the line above; Renovate bumps the SHA
+- **apt signing keys**: pinned by primary-key fingerprint (`*_apt_key_fingerprint` in `defaults/main.yml`); the role refuses to
+  install a downloaded key whose fingerprint differs. Not Renovate-managed — update manually after verifying out of band
 - **Python CI tools** (`.github/requirements.txt`): exact pin, tracked by `pip_requirements` manager
 - **Node CI tools** (`.github/package.json`): exact pin, tracked by npm manager
 - **GitHub Actions**: third-party actions SHA-pinned (`@<sha> # vX`), kept in sync by the `github-actions` manager

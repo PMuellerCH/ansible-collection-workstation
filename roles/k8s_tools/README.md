@@ -89,8 +89,8 @@ per-component enable switches: the role as a whole is the unit.
   and skipped (not failed) if that venv doesn't exist yet — run `ansible_dev` first and re-run this role. `hvac` is
   injected by `ansible_dev` only.
 - **helm-diff** is installed from the upstream repository at the pinned tag `k8s_tools_helm_diff_version` (Renovate-tracked) with
-  `--verify=false` (the plugin ships no provenance file); this is a known limitation, but the
-  code is no longer a moving target. `git` (for the plugin clone) and `curl`
+  `--verify=false` (the plugin ships no provenance file); this is a known limitation: the
+  tag is pinned (not commit-pinned) and there is no provenance verification. `git` (for the plugin clone) and `curl`
   (used by the plugin's install hook) are installed for it.
 - `~/.kube/config` and the k9s config are deployed with `force: false` so manual edits survive re-runs.
 - The zsh snippet was renamed from `kubernetes_tools.zsh` to `k8s_tools.zsh`; the role removes the old file.

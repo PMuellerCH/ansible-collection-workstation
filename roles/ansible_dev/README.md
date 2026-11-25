@@ -21,6 +21,7 @@ collections, Docker CE, and `act` (run GitHub Actions workflows locally). Split 
 | --- | --- | --- |
 | `ansible_dev_ansible_enabled` | `true` | Install ansible-core, molecule and Galaxy collections |
 | `ansible_dev_docker_enabled` | `true` | Install Docker CE |
+| `ansible_dev_docker_apt_key_fingerprint` | see `defaults/main.yml` | Pinned primary-key fingerprint of the Docker apt signing key |
 | `ansible_dev_act_enabled` | `true` | Install act (needs a working Docker daemon to actually run anything) |
 | `ansible_dev_http_proxy` | `""` | Corporate HTTP proxy URL for the Docker daemon/client. Leave empty on machines without a proxy |
 | `ansible_dev_https_proxy` | `ansible_dev_http_proxy` | Corporate HTTPS proxy URL |
@@ -95,7 +96,8 @@ pipx-based task downstream of it (the `ansible-core` install and every inject) i
 - Docker's apt signing key is fetched over TLS from `download.docker.com` (re-fetched on every run) into the private staging
   directory and installed only if its primary-key fingerprint equals `ansible_dev_docker_apt_key_fingerprint`; apt then verifies
   every package against the signed repository metadata. A rotated key fails the run with a fingerprint mismatch: verify the new
-  fingerprint out of band and update the variable.
+  fingerprint out of band and update the variable. The key download and check run for real even under `--check` (scratch space
+  only) and use `ansible_dev_dl_tmp` from `tasks/main.yml`, so running `tasks_from: docker` on its own needs that variable defined first.
 - Docker client proxy config is deployed with `force: false`, so `docker login` credentials and manual edits survive
   re-runs.
 - The Docker apt repository, packages and group membership are skipped under `--check` (the `docker` group is created

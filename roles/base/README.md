@@ -161,5 +161,5 @@ Release downloads are staged in a private per-run directory (`ansible.builtin.te
 role's `tasks/main.yml` and removed in an `always` section, also on failure) rather than fixed `/tmp` paths, so no other
 local user can pre-create or swap a file between the download and the root-level install.
 This covers the `uv` archive and the Nerd Font zip; the `nodejs` component stages the NodeSource key there for its fingerprint check.
-A component file run on its own via `include_role ... tasks_from:` bypasses `tasks/main.yml`, so for `python` or `fonts`
+A component file run on its own via `include_role ... tasks_from:` bypasses `tasks/main.yml`, so for `python`, `fonts` or `nodejs`
 it needs `base_dl_tmp` to be defined first.
