@@ -36,7 +36,10 @@ role's molecule scenario.
 | `ai_cli_mcp_aws_documentation_version` | see `defaults/main.yml` | Pinned version of the awslabs.aws-documentation-mcp-server MCP server package (PyPI datasource, Renovate-managed). |
 | `ai_cli_mcp_aws_core_version` | see `defaults/main.yml` | Pinned version of the awslabs.core-mcp-server MCP server package (PyPI datasource, Renovate-managed). |
 | `ai_cli_mcp_terraform_version` | see `defaults/main.yml` | Pinned version of the terraform-mcp-server MCP server package (npm datasource, Renovate-managed). |
-| `ai_cli_mcp_github_version` | see `defaults/main.yml` | Pinned version of the @modelcontextprotocol/server-github MCP server package (npm datasource, Renovate-managed). |
+| `ai_cli_mcp_github_version` | see `defaults/main.yml` | Pinned version of the `github/github-mcp-server` release binary (github-releases datasource, Renovate-managed). |
+| `ai_cli_mcp_github_asset` | `github-mcp-server_Linux_x86_64.tar.gz` | Release asset; its sha256 digest is fetched from the release API at run time. |
+| `ai_cli_mcp_github_bin` | `~/.local/bin/github-mcp-server` | Install path, also the MCP server command. |
+| `ai_cli_mcp_github_api_token` | `{{ ai_cli_github_api_token }}` | Optional token to raise the API rate limit for the digest lookup. |
 | `ai_cli_mcp_renovate_version` | see `defaults/main.yml` | Pinned version of the renovate-mcp MCP server package (npm datasource, Renovate-managed). |
 | `ai_cli_claude_code_aws_profile` | `default` | AWS_PROFILE passed to the awslabs.core MCP server. |
 | `ai_cli_claude_code_aws_region` | `eu-central-1` | AWS_REGION passed to the awslabs.core MCP server. |
@@ -145,16 +148,19 @@ remains authoritative for its own servers' config:
 | `awslabs.aws-documentation` | `uvx awslabs.aws-documentation-mcp-server@<version>` | AWS documentation search |
 | `awslabs.core` | `uvx awslabs.core-mcp-server@<version>` | AWS MCP server discovery/routing (uses `ai_cli_claude_code_aws_profile`/`_aws_region`) |
 | `terraform` | `npx -y terraform-mcp-server@<version>` | Terraform registry/provider lookup |
-| `github` | `npx -y @modelcontextprotocol/server-github@<version>` | GitHub API access (uses `ai_cli_claude_code_github_token`) |
+| `github` | `~/.local/bin/github-mcp-server stdio` | GitHub API access (uses `ai_cli_claude_code_github_token`) |
 | `renovate` | `npx -y renovate-mcp@<version>` | Renovate config lookup |
 
 Every server is pinned to an exact version (`ai_cli_mcp_<server>_version` in
 `defaults/main.yml`, tracked by Renovate), so nothing floats on `latest` at
 login — important because the servers start with every Claude Code session and
 the `github` server receives the GitHub token. A Renovate bump changes the
-`args` in `~/.claude.json` on the next run. Note that
-`@modelcontextprotocol/server-github` is archived and unmaintained
-upstream; its last release (`2025.4.8`) stays pinned until it is replaced.
+`args` in `~/.claude.json` on the next run. The `github` server is the
+official `github/github-mcp-server` Go binary (it replaced the archived
+`@modelcontextprotocol/server-github` npm package): it is installed from the
+GitHub release into `~/.local/bin`, verified against GitHub's per-asset sha256
+digest fetched at run time, and reinstalled when `ai_cli_mcp_github_version`
+changes.
 
 The two `uvx`-launched servers (`awslabs.*`) set `UV_SYSTEM_CERTS: "true"` in
 their own `env` block, on top of (belt-and-suspenders with) the `base` role's

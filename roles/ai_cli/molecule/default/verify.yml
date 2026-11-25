@@ -68,7 +68,7 @@
           - "('awslabs.aws-documentation-mcp-server@' ~ ai_cli_mcp_aws_documentation_version) in _ai_cli_mcp['awslabs.aws-documentation'].args"
           - "('awslabs.core-mcp-server@' ~ ai_cli_mcp_aws_core_version) in _ai_cli_mcp['awslabs.core'].args"
           - "('terraform-mcp-server@' ~ ai_cli_mcp_terraform_version) in _ai_cli_mcp['terraform'].args"
-          - "('@modelcontextprotocol/server-github@' ~ ai_cli_mcp_github_version) in _ai_cli_mcp['github'].args"
+          - "_ai_cli_mcp['github'].command == ai_cli_mcp_github_bin"
           - "('renovate-mcp@' ~ ai_cli_mcp_renovate_version) in _ai_cli_mcp['renovate'].args"
           # Only role-managed servers: the seeded `aws-mcp` (prepare.yml) is
           # deliberately external, keeps its own `@latest`, and must survive.
@@ -76,6 +76,15 @@
             _ai_cli_mcp | dict2items | rejectattr('key', 'equalto', 'aws-mcp')
             | map(attribute='value.args') | flatten | select('search', '@latest$') | list | length == 0
 
+
+    - name: Check github-mcp-server runs and reports the pinned version
+      ansible.builtin.command: "{{ ai_cli_mcp_github_bin }} --version"
+      register: _ai_cli_mcp_github_version_out
+      changed_when: false
+
+    - name: Assert github-mcp-server version matches the pin
+      ansible.builtin.assert:
+        that: ai_cli_mcp_github_version in _ai_cli_mcp_github_version_out.stdout
 
     - name: Assert a manually-registered MCP server (seeded in prepare.yml) survived converge
       # Proves the role merges onto mcpServers instead of replacing it
