@@ -167,6 +167,13 @@
     ai_cli_claude_code_global_stat.stat.exists
   tags: [claude-code, ai_cli]
 
+- name: Install github-mcp-server (GitHub MCP server binary)
+  ansible.builtin.include_tasks:
+    file: github_mcp_server.yml
+    apply:
+      tags: [claude-code, ai_cli]
+  tags: [claude-code, ai_cli]
+
 - name: Configure MCP servers in Claude Code global config
   vars:
     _ai_cli_claude_code_current_global: >-
@@ -201,8 +208,8 @@
         env: {}
       github:
         type: stdio
-        command: npx
-        args: ["-y", "@modelcontextprotocol/server-github@{{ ai_cli_mcp_github_version }}"]
+        command: "{{ ai_cli_mcp_github_bin }}"
+        args: ["stdio"]
         env:
           GITHUB_PERSONAL_ACCESS_TOKEN: "{{ ai_cli_claude_code_github_token }}"
       renovate:

@@ -36,7 +36,20 @@ argument_specs:
         required: false
         type: str
       ai_cli_mcp_github_version:
-        description: Pinned version of the @modelcontextprotocol/server-github MCP server package (npm datasource, Renovate-managed).
+        description: Pinned version of the github/github-mcp-server release binary (github-releases datasource, Renovate-managed).
+        required: false
+        type: str
+      ai_cli_mcp_github_asset:
+        description: Linux release asset name of github-mcp-server; its sha256 digest is fetched from the release API at run time.
+        required: false
+        type: str
+      ai_cli_mcp_github_bin:
+        description: Absolute install path of the github-mcp-server binary (also used as the MCP server command).
+        required: false
+        type: str
+      ai_cli_mcp_github_api_token:
+        default: '{{ ai_cli_github_api_token }}'
+        description: Optional GitHub API token used only to raise the rate limit when resolving the release-asset digest.
         required: false
         type: str
       ai_cli_mcp_renovate_version:

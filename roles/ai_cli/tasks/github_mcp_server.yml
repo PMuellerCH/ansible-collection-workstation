@@ -1,0 +1,96 @@
+---
+# ---- github-mcp-server (official GitHub MCP server, Go binary) ----
+# Replaces the archived @modelcontextprotocol/server-github npm package. A
+# per-user binary in ~/.local/bin (become: false), exact-pinned and verified
+# against GitHub's per-asset sha256 digest, fetched from the release API for
+# the pinned version at run time — the same pattern as opencode.
+- name: Get installed github-mcp-server version
+  ansible.builtin.command: "{{ ai_cli_mcp_github_bin }} --version"
+  register: ai_cli_mcp_github_current_version
+  changed_when: false
+  failed_when: false
+  become: false
+  tags: [claude-code, ai_cli]
+
+- name: Decide whether github-mcp-server needs installing
+  ansible.builtin.set_fact:
+    ai_cli_mcp_github_needs_install: >-
+      {{ ai_cli_mcp_github_current_version.rc | default(1) != 0 or
+         ai_cli_mcp_github_version not in ai_cli_mcp_github_current_version.stdout | default('') }}
+  tags: [claude-code, ai_cli]
+
+- name: Install github-mcp-server
+  when: not ansible_check_mode and ai_cli_mcp_github_needs_install
+  become: false
+  tags: [claude-code, ai_cli]
+  block:
+    - name: Create a private temporary download directory
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: github-mcp-server.
+      register: ai_cli_mcp_github_tmp
+
+    - name: Fetch github-mcp-server release metadata for the asset digest
+      ansible.builtin.uri:
+        url: "https://api.github.com/repos/github/github-mcp-server/releases/tags/v{{ ai_cli_mcp_github_version }}"
+        headers: >-
+          {{ {'Accept': 'application/vnd.github+json'}
+             | combine({'Authorization': 'Bearer ' + ai_cli_mcp_github_api_token}
+                       if ai_cli_mcp_github_api_token else {}) }}
+        return_content: true
+      register: ai_cli_mcp_github_release
+      until: ai_cli_mcp_github_release is succeeded
+      # GitHub answers 403 when the unauthenticated per-IP rate limit is hit
+      # and transient 5xx now and then; a few spaced retries ride out the short ones.
+      retries: 3
+      delay: 15
+      # Keep the Bearer header out of -v output only when a token is in use.
+      no_log: "{{ ai_cli_mcp_github_api_token | length > 0 }}"
+
+    - name: Resolve github-mcp-server archive checksum from the release metadata
+      ansible.builtin.set_fact:
+        ai_cli_mcp_github_checksum: >-
+          {{ ai_cli_mcp_github_release.json.assets
+             | selectattr('name', 'equalto', ai_cli_mcp_github_asset)
+             | map(attribute='digest') | select('string') | first | default('') }}
+
+    - name: Assert GitHub published a sha256 digest for the github-mcp-server archive
+      ansible.builtin.assert:
+        that: ai_cli_mcp_github_checksum.startswith('sha256:')
+        fail_msg: >-
+          GitHub published no sha256 digest for {{ ai_cli_mcp_github_asset }}
+          ({{ ai_cli_mcp_github_version }}); cannot verify the download.
+
+    - name: Download github-mcp-server archive
+      ansible.builtin.get_url:
+        url: "https://github.com/github/github-mcp-server/releases/download/v{{ ai_cli_mcp_github_version }}/{{ ai_cli_mcp_github_asset }}"
+        dest: "{{ ai_cli_mcp_github_tmp.path }}/{{ ai_cli_mcp_github_asset }}"
+        checksum: "{{ ai_cli_mcp_github_checksum }}"
+        mode: "0644"
+
+    - name: Ensure ~/.local/bin exists (github-mcp-server)
+      ansible.builtin.file:
+        path: "{{ ansible_facts['env']['HOME'] }}/.local/bin"
+        state: directory
+        mode: "0755"
+
+    - name: Install github-mcp-server binary to ~/.local/bin
+      ansible.builtin.unarchive:
+        src: "{{ ai_cli_mcp_github_tmp.path }}/{{ ai_cli_mcp_github_asset }}"
+        dest: "{{ ansible_facts['env']['HOME'] }}/.local/bin/"
+        include:
+          - github-mcp-server
+        remote_src: true
+        mode: "0755"
+  rescue:
+    - name: Fail with context after a github-mcp-server install error
+      ansible.builtin.fail:
+        msg: >-
+          Installing github-mcp-server {{ ai_cli_mcp_github_version }} failed;
+          the temporary download directory is removed in the always section.
+  always:
+    - name: Remove the temporary download directory
+      ansible.builtin.file:
+        path: "{{ ai_cli_mcp_github_tmp.path }}"
+        state: absent
+      when: ai_cli_mcp_github_tmp.path is defined

@@ -29,8 +29,15 @@ ai_cli_mcp_aws_core_version: "1.0.27"
 # renovate: datasource=npm depName=terraform-mcp-server
 ai_cli_mcp_terraform_version: "0.13.0"
 
-# renovate: datasource=npm depName=@modelcontextprotocol/server-github
-ai_cli_mcp_github_version: "2025.4.8"
+# The GitHub server is the official github/github-mcp-server Go binary (the
+# @modelcontextprotocol/server-github npm package is archived/deprecated),
+# installed from the GitHub release into ~/.local/bin and run over stdio.
+# renovate: datasource=github-releases depName=github/github-mcp-server extractVersion=^v(?<version>.*)$
+ai_cli_mcp_github_version: "2.3.0"
+ai_cli_mcp_github_asset: "github-mcp-server_Linux_x86_64.tar.gz"
+ai_cli_mcp_github_bin: "{{ ansible_facts['env']['HOME'] }}/.local/bin/github-mcp-server"
+# Optional token to raise the rate limit when resolving the asset digest.
+ai_cli_mcp_github_api_token: "{{ ai_cli_github_api_token }}"
 
 # renovate: datasource=npm depName=renovate-mcp
 ai_cli_mcp_renovate_version: "2.2.1"
