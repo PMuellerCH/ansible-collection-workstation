@@ -25,53 +25,82 @@
   when: base_nodejs_enabled
   tags: [nodejs, base]
 
-- name: Download NodeSource GPG key to the private staging directory
-  # Fetched into the private per-run directory first and only installed after
-  # its fingerprint matches the pinned one, so a tampered or swapped key is
-  # never trusted by apt. Real download even under --check (scratch space).
-  ansible.builtin.get_url:
-    url: https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key
-    dest: "{{ base_dl_tmp.path }}/nodesource.key"
-    mode: "0600"
-    force: true
-  become: false
-  check_mode: false
-  changed_when: false
-  when: base_nodejs_enabled
-  tags: [nodejs, base]
+- name: Stage and install the NodeSource GPG key
+  # Self-contained on purpose: other roles (ai_cli, editor) run this component
+  # alone via include_role/tasks_from, bypassing tasks/main.yml, so it cannot
+  # rely on that file's per-run staging directory.
+  block:
+    - name: Create private staging directory for the NodeSource key
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: base_nodejs_key_
+      register: base_nodejs_key_tmp
+      become: false
+      check_mode: false
+      changed_when: false
+      when: base_nodejs_enabled
+      tags: [nodejs, base]
 
-- name: Verify the NodeSource GPG key fingerprint
-  # Exactly one primary key, and its fingerprint must equal the pinned value
-  # (spaces/case ignored). Everything in the file would be trusted by apt.
-  ansible.builtin.command:
-    argv:
-      - gpg
-      - --batch
-      - --show-keys
-      - --with-colons
-      - --with-fingerprint
-      - "{{ base_dl_tmp.path }}/nodesource.key"
-  register: base_dl_nodesource_key
-  become: false
-  check_mode: false
-  changed_when: false
-  failed_when: >-
-    base_dl_nodesource_key.rc != 0 or
-    (base_dl_nodesource_key.stdout_lines | select('match', '^pub:') | list | length) != 1 or
-    ((base_dl_nodesource_key.stdout_lines | select('match', '^fpr:') | first).split(':')[9] | upper)
-    != (base_nodejs_apt_key_fingerprint | replace(' ', '') | upper)
-  when: base_nodejs_enabled
-  tags: [nodejs, base]
+    - name: Download NodeSource GPG key to the private staging directory
+      # Fetched into the private per-run directory first and only installed after
+      # its fingerprint matches the pinned one, so a tampered or swapped key is
+      # never trusted by apt. Real download even under --check (scratch space).
+      ansible.builtin.get_url:
+        url: https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key
+        dest: "{{ base_nodejs_key_tmp.path }}/nodesource.key"
+        mode: "0600"
+        force: true
+      become: false
+      check_mode: false
+      changed_when: false
+      when: base_nodejs_enabled
+      tags: [nodejs, base]
 
-- name: Install the NodeSource GPG key
-  ansible.builtin.copy:
-    src: "{{ base_dl_tmp.path }}/nodesource.key"
-    dest: /etc/apt/keyrings/nodesource.asc
-    mode: "0644"
-    remote_src: true
-  become: true
-  when: base_nodejs_enabled
-  tags: [nodejs, base]
+    - name: Verify the NodeSource GPG key fingerprint
+      # Exactly one primary key, and its fingerprint must equal the pinned value
+      # (spaces/case ignored). Everything in the file would be trusted by apt.
+      ansible.builtin.command:
+        argv:
+          - gpg
+          - --batch
+          - --show-keys
+          - --with-colons
+          - --with-fingerprint
+          - "{{ base_nodejs_key_tmp.path }}/nodesource.key"
+      register: base_dl_nodesource_key
+      become: false
+      check_mode: false
+      changed_when: false
+      failed_when: >-
+        base_dl_nodesource_key.rc != 0 or
+        (base_dl_nodesource_key.stdout_lines | select('match', '^pub:') | list | length) != 1 or
+        ((base_dl_nodesource_key.stdout_lines | select('match', '^fpr:') | first).split(':')[9] | upper)
+        != (base_nodejs_apt_key_fingerprint | replace(' ', '') | upper)
+      when: base_nodejs_enabled
+      tags: [nodejs, base]
+
+    - name: Install the NodeSource GPG key
+      ansible.builtin.copy:
+        src: "{{ base_nodejs_key_tmp.path }}/nodesource.key"
+        dest: /etc/apt/keyrings/nodesource.asc
+        mode: "0644"
+        remote_src: true
+      become: true
+      when: base_nodejs_enabled
+      tags: [nodejs, base]
+  rescue:
+    - name: Report the failed NodeSource key task
+      ansible.builtin.fail:
+        msg: "NodeSource key setup failed at task '{{ ansible_failed_task.name }}': {{ ansible_failed_result.msg | default('see task output') }}"
+      tags: [nodejs, base]
+  always:
+    - name: Remove private staging directory for the NodeSource key
+      ansible.builtin.file:
+        path: "{{ base_nodejs_key_tmp.path }}"
+        state: absent
+      changed_when: false
+      when: base_nodejs_key_tmp.path is defined
+      tags: [nodejs, base]
 
 - name: Remove legacy NodeSource apt sources list
   ansible.builtin.file:
