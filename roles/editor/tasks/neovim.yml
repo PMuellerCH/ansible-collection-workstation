@@ -124,16 +124,15 @@
   tags: [neovim, editor]
 
 - name: Clone LazyVim starter
-  # LazyVim/starter has no release tags — it is a template meant to be
-  # cloned once and immediately customized/committed by the user, not a
-  # versioned artifact tracked for updates, so cloning the default branch is
-  # deliberate here (unlike get_url downloads elsewhere in this collection,
-  # which always pin to an immutable ref). This only ever runs once per
-  # machine, guarded by the init.lua stat check above.
+  # LazyVim/starter has no release tags, so it is pinned to a commit SHA
+  # (editor_neovim_lazyvim_starter_ref, bumped by Renovate) instead of the
+  # mutable main branch. It is a template cloned once and then customized by
+  # the user, so this only ever runs once per machine, guarded by the init.lua
+  # stat check above.
   ansible.builtin.git:
     repo: https://github.com/LazyVim/starter.git
     dest: "{{ ansible_facts['env']['HOME'] }}/.config/nvim"
-    version: main
+    version: "{{ editor_neovim_lazyvim_starter_ref }}"
     update: false
   become: false
   when: >-

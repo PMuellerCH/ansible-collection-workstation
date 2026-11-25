@@ -123,8 +123,10 @@ flowchart LR
 ### Other notes
 
 - **Terraform and Vault** come from the HashiCorp apt repository (`signed_by` a keyring fetched over TLS from
-  `apt.releases.hashicorp.com`, re-fetched on every run), no key-fingerprint pin yet; apt validates package integrity against the signed `Release`
-  metadata, so no per-package checksum is needed.
+  `apt.releases.hashicorp.com`, re-fetched on every run into the private staging directory and installed only if its primary-key
+  fingerprint equals `cloud_cli_hashicorp_apt_key_fingerprint`); apt validates package integrity against the signed `Release`
+  metadata, so no per-package checksum is needed. On a key rotation the run fails with a fingerprint mismatch: verify the new
+  fingerprint out of band and update the variable.
 - `tflint`, `terraform-docs` and `tfswitch` are downloaded from pinned GitHub releases and checksum-verified against
   upstream's own per-release checksum files (`get_url` matches the entry by file name, so there's no static hash to
   keep in sync when Renovate bumps a version). Downloads are staged in a private per-run

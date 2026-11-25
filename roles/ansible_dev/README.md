@@ -92,8 +92,10 @@ pipx-based task downstream of it (the `ansible-core` install and every inject) i
   `/usr/local/bin/act`. The download is staged in a private per-run directory (mode 0700,
   removed afterwards, also on failure) and verified at download time, so no other local user can swap it before the
   root-level extraction.
-- Docker's apt signing key is fetched over TLS from `download.docker.com` (re-fetched on every run, so rotations are picked up) and apt then verifies
-  every package against the signed repository metadata.
+- Docker's apt signing key is fetched over TLS from `download.docker.com` (re-fetched on every run) into the private staging
+  directory and installed only if its primary-key fingerprint equals `ansible_dev_docker_apt_key_fingerprint`; apt then verifies
+  every package against the signed repository metadata. A rotated key fails the run with a fingerprint mismatch: verify the new
+  fingerprint out of band and update the variable.
 - Docker client proxy config is deployed with `force: false`, so `docker login` credentials and manual edits survive
   re-runs.
 - The Docker apt repository, packages and group membership are skipped under `--check` (the `docker` group is created

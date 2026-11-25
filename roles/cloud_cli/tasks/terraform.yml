@@ -6,26 +6,61 @@
 # .zip (ansible.builtin.unarchive has no pure-Python fallback for .zip);
 # generic utilities, left unpinned like other bundled utilities in this collection.
 
-- name: Install python3-debian and unzip
+- name: Install python3-debian, unzip and gnupg
   ansible.builtin.apt:
     name:
       - python3-debian
       - unzip
+      - gnupg
     state: present
     update_cache: true
     cache_valid_time: 3600
   become: true
 
-- name: Download HashiCorp GPG key
+- name: Download HashiCorp GPG key to the private staging directory
+  # Fetched into the private per-run directory first and only installed after
+  # its fingerprint matches the pinned one, so a tampered or swapped key is
+  # never trusted by apt. Real download even under --check (scratch space).
   ansible.builtin.get_url:
     url: https://apt.releases.hashicorp.com/gpg
+    dest: "{{ cloud_cli_stage_tmp.path }}/hashicorp.key"
+    mode: "0600"
+    force: true
+  become: false
+  check_mode: false
+  changed_when: false
+  tags: [terraform, cloud_cli]
+
+- name: Verify the HashiCorp GPG key fingerprint
+  # Exactly one primary key, and its fingerprint must equal the pinned value
+  # (spaces/case ignored). Everything in the file would be trusted by apt.
+  ansible.builtin.command:
+    argv:
+      - gpg
+      - --batch
+      - --show-keys
+      - --with-colons
+      - --with-fingerprint
+      - "{{ cloud_cli_stage_tmp.path }}/hashicorp.key"
+  register: cloud_cli_stage_hashicorp_key
+  become: false
+  check_mode: false
+  changed_when: false
+  failed_when: >-
+    cloud_cli_stage_hashicorp_key.rc != 0 or
+    (cloud_cli_stage_hashicorp_key.stdout_lines | select('match', '^pub:') | list | length) != 1 or
+    ((cloud_cli_stage_hashicorp_key.stdout_lines | select('match', '^fpr:') | first).split(':')[9] | upper)
+    != (cloud_cli_hashicorp_apt_key_fingerprint | replace(' ', '') | upper)
+  tags: [terraform, cloud_cli]
+
+- name: Install the HashiCorp GPG key
+  ansible.builtin.copy:
+    src: "{{ cloud_cli_stage_tmp.path }}/hashicorp.key"
     dest: /usr/share/keyrings/hashicorp-archive-keyring.asc
     mode: "0644"
-    # force: true so a rotated upstream signing key is re-fetched. With
-    # force: false get_url skips the download whenever dest exists, leaving a
-    # stale key that fails apt signature verification after upstream rotates.
-    force: true
+    remote_src: true
   become: true
+  tags: [terraform, cloud_cli]
 
 - name: Remove legacy HashiCorp apt sources list
   ansible.builtin.file:

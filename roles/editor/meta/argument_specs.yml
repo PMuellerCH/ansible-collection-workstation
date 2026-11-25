@@ -8,6 +8,10 @@ argument_specs:
         description: Whether to install neovim and bootstrap the LazyVim configuration. Also gates the presenterm.nvim plugin config below.
         required: false
         type: bool
+      editor_neovim_lazyvim_starter_ref:
+        description: Commit SHA of LazyVim/starter that is cloned on first run (kept current by Renovate).
+        required: false
+        type: str
       editor_presenterm_plugin_enabled:
         default: true
         description: Whether to deploy the presenterm.nvim plugin config (~/.config/nvim/lua/plugins/presenterm.lua). The presenterm binary this plugin

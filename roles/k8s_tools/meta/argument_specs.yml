@@ -27,6 +27,10 @@ argument_specs:
         description: helm version (github-releases helm/helm).
         required: false
         type: str
+      k8s_tools_helm_diff_version:
+        description: helm-diff plugin version (github-releases databus23/helm-diff); installed from this git tag.
+        required: false
+        type: str
       k8s_tools_kubectx_version:
         description: kubectx/kubens version (github-releases ahmetb/kubectx).
         required: false

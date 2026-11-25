@@ -4,9 +4,9 @@
 # installed to use check mode") — install it explicitly up front so the
 # apt-repository task works in either mode.
 
-- name: Install python3-debian (required by deb822_repository)
+- name: Install python3-debian (required by deb822_repository) and gnupg (key fingerprint check)
   ansible.builtin.apt:
-    name: python3-debian
+    name: [python3-debian, gnupg]
     state: present
     update_cache: true
     cache_valid_time: 3600
@@ -19,16 +19,50 @@
     mode: "0755"
   become: true
 
-- name: Download Docker GPG key
+- name: Download Docker GPG key to the private staging directory
+  # Fetched into the private per-run directory first and only installed after
+  # its fingerprint matches the pinned one, so a tampered or swapped key is
+  # never trusted by apt. Real download even under --check (scratch space).
   ansible.builtin.get_url:
     url: https://download.docker.com/linux/ubuntu/gpg
+    dest: "{{ ansible_dev_dl_tmp.path }}/docker.key"
+    mode: "0600"
+    force: true
+  become: false
+  check_mode: false
+  changed_when: false
+  tags: [docker, ansible_dev]
+
+- name: Verify the Docker GPG key fingerprint
+  # Exactly one primary key, and its fingerprint must equal the pinned value
+  # (spaces/case ignored). Everything in the file would be trusted by apt.
+  ansible.builtin.command:
+    argv:
+      - gpg
+      - --batch
+      - --show-keys
+      - --with-colons
+      - --with-fingerprint
+      - "{{ ansible_dev_dl_tmp.path }}/docker.key"
+  register: ansible_dev_dl_docker_key
+  become: false
+  check_mode: false
+  changed_when: false
+  failed_when: >-
+    ansible_dev_dl_docker_key.rc != 0 or
+    (ansible_dev_dl_docker_key.stdout_lines | select('match', '^pub:') | list | length) != 1 or
+    ((ansible_dev_dl_docker_key.stdout_lines | select('match', '^fpr:') | first).split(':')[9] | upper)
+    != (ansible_dev_docker_apt_key_fingerprint | replace(' ', '') | upper)
+  tags: [docker, ansible_dev]
+
+- name: Install the Docker GPG key
+  ansible.builtin.copy:
+    src: "{{ ansible_dev_dl_tmp.path }}/docker.key"
     dest: /usr/share/keyrings/docker.asc
     mode: "0644"
-    # force: true so a rotated upstream signing key is re-fetched. With
-    # force: false get_url skips the download whenever dest exists, leaving a
-    # stale key that fails apt signature verification after upstream rotates.
-    force: true
+    remote_src: true
   become: true
+  tags: [docker, ansible_dev]
 
 - name: Remove legacy Docker apt sources list
   ansible.builtin.file:

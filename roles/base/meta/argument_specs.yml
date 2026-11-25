@@ -84,3 +84,7 @@ argument_specs:
         required: false
         default: '24'
         description: Node.js major version; selects the NodeSource apt repository (deb.nodesource.com/node_<major>.x).
+      base_nodejs_apt_key_fingerprint:
+        description: Expected primary-key fingerprint of the NodeSource apt signing key; the key is installed only if the download matches.
+        required: false
+        type: str

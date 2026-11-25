@@ -31,6 +31,7 @@ roles.
 | Variable | Default | Description |
 | --- | --- | --- |
 | `editor_neovim_enabled` | `true` | Whether to install neovim and bootstrap the LazyVim configuration. Also gates the presenterm.nvim plugin config below. |
+| `editor_neovim_lazyvim_starter_ref` | see `defaults/main.yml` | Commit SHA of `LazyVim/starter` cloned on first run (Renovate `git-refs` manager) |
 | `editor_presenterm_plugin_enabled` | `true` | Whether to deploy the presenterm.nvim plugin config (~/.config/nvim/lua/plugins/presenterm.lua). The presenterm binary this plugin needs is installed by editor_presenterm_enabled — keep the two in sync. Only applies when editor_neovim_enabled is true. |
 | `editor_neovim_lazy_sync_enabled` | `true` | Whether to run a headless `lazy.nvim` sync (install + update + clean) on every apply, instead of relying on a human running :Lazy sync manually. Only applies when editor_neovim_enabled is true. |
 | `editor_neovim_version` | see `defaults/main.yml` | Neovim version (github-releases neovim/neovim), installed from a checksum-verified archive. |
@@ -78,12 +79,10 @@ so use `--tags neovim` to (re)deploy it; `--tags presenterm` covers the binary, 
 - The LazyVim starter (`https://github.com/LazyVim/starter.git`) is cloned
   to `~/.config/nvim/` on first run only (guarded by a stat check on
   `init.lua`); `.git` is removed afterwards so the config is not a
-  submodule. This clones the default branch rather than an immutable ref,
-  a deliberate exception to this collection's "never fetch from a mutable
-  ref" convention: `LazyVim/starter` publishes no release tags at all — it
-  is a template meant to be cloned once and then customized/committed by
-  the user, not a versioned artifact this role tracks for updates. Re-runs
-  never re-clone or overwrite an existing config.
+  submodule. The clone is pinned to the commit
+  `editor_neovim_lazyvim_starter_ref` (`LazyVim/starter` publishes no release tags, so a Renovate regex manager with the
+  `git-refs` datasource bumps the SHA). It remains a template cloned once and then customized by the user: re-runs never
+  re-clone or overwrite an existing config.
 - LazyVim extras are configured in `~/.config/nvim/lazyvim.json`:
   `ai.claudecode`, `lang.markdown`, `lang.terraform`, `lang.ansible`,
   `lang.yaml`, `lang.python`, `lang.json`. See

@@ -25,6 +25,7 @@ cluster list. Split out of the former `iac_tools` role.
 | `k8s_tools_kubectl_checksum_url` | see `defaults/main.yml` | URL of kubectl's published `.sha256` file |
 | `k8s_tools_k9s_version` | see `defaults/main.yml` | k9s (github-releases, Renovate-managed) |
 | `k8s_tools_helm_version` | see `defaults/main.yml` | helm (github-releases, Renovate-managed) |
+| `k8s_tools_helm_diff_version` | see `defaults/main.yml` | helm-diff plugin tag (github-releases: `databus23/helm-diff`, Renovate-managed) |
 | `k8s_tools_kubectx_version` | see `defaults/main.yml` | kubectx/kubens (github-releases, Renovate-managed) |
 | `k8s_tools_kubectx_archive` | see `defaults/main.yml` | Filename of the kubectx release archive |
 | `k8s_tools_kubens_archive` | see `defaults/main.yml` | Filename of the kubens release archive |
@@ -87,8 +88,9 @@ per-component enable switches: the role as a whole is the unit.
 - **Python libraries on non-Ubuntu**: injected into the `ansible-core` pipx venv created by the `ansible_dev` role,
   and skipped (not failed) if that venv doesn't exist yet — run `ansible_dev` first and re-run this role. `hvac` is
   injected by `ansible_dev` only.
-- **helm-diff** is installed from the upstream repository's default branch with `--verify=false` (the plugin ships
-  no provenance file); this is a known limitation and not version-pinned. `git` (for the plugin clone) and `curl`
+- **helm-diff** is installed from the upstream repository at the pinned tag `k8s_tools_helm_diff_version` (Renovate-tracked) with
+  `--verify=false` (the plugin ships no provenance file); this is a known limitation, but the
+  code is no longer a moving target. `git` (for the plugin clone) and `curl`
   (used by the plugin's install hook) are installed for it.
 - `~/.kube/config` and the k9s config are deployed with `force: false` so manual edits survive re-runs.
 - The zsh snippet was renamed from `kubernetes_tools.zsh` to `k8s_tools.zsh`; the role removes the old file.
