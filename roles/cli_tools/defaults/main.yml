@@ -61,7 +61,7 @@ cli_tools_procs_version: "0.14.12"
 # run time from GitHub's per-asset digest (see tasks/main.yml).
 
 # renovate: datasource=github-releases depName=bootandy/dust extractVersion=^v(?<version>.*)$
-cli_tools_dust_version: "1.2.7"
+cli_tools_dust_version: "1.2.8"
 
 # bootandy/dust publishes no checksum file; the .deb checksum is derived at run
 # time from GitHub's per-asset digest (see tasks/main.yml), so there is no static
