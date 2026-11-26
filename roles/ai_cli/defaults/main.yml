@@ -108,7 +108,7 @@ ai_cli_kiro_alias_login: kil
 ai_cli_opencode_bin: "{{ ansible_facts['env']['HOME'] }}/.local/bin/opencode"
 
 # renovate: datasource=github-releases depName=anomalyco/opencode extractVersion=^v(?<version>.*)$
-ai_cli_opencode_version: "2.4.1"
+ai_cli_opencode_version: "2.4.2"
 ai_cli_opencode_download_base: "https://github.com/anomalyco/opencode/releases/download/v{{ ai_cli_opencode_version }}"
 
 # The Linux x64 release asset. The tarball contains a single flat `opencode`
