@@ -123,6 +123,16 @@ version of this role, it's detected (`stat
 one-time `become: true` cleanup task, so there isn't a second, never-updated
 copy left on disk.
 
+Some `@anthropic-ai/claude-code` versions run a `postinstall` that installs the
+native self-updating binary under `~/.local/share/claude/versions/<version>/`
+and links `~/.local/bin/claude` to it while npm is still installing; npm's own
+bin-linking step then fails with `EEXIST` although the pinned version is in
+place. The role therefore skips the npm install when `~/.local/bin/claude`
+already links into `versions/<pinned version>`, tolerates an `EEXIST` from the
+npm task, and always finishes with a `claude --version` check that asserts the
+installed version is at least `ai_cli_claude_code_version` (`>=`, so a
+self-update past the pin does not fail the role).
+
 ### Node.js
 
 Claude Code needs Node.js and npm. This role does not install them: the `base` role installs Node.js LTS from

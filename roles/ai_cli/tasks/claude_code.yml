@@ -81,6 +81,21 @@
   when: ai_cli_claude_code_enabled
   tags: [claude-code, ai_cli]
 
+- name: Stat the claude symlink in ~/.local/bin
+  # @anthropic-ai/claude-code's postinstall (`node install.cjs`) installs
+  # Anthropic's native self-updating binary under
+  # ~/.local/share/claude/versions/<version>/ and links ~/.local/bin/claude to
+  # it during npm's own install run. npm's separate bin-linking step then
+  # collides with that symlink (EEXIST). A symlink into versions/<pinned
+  # version> therefore means the pinned version is already installed.
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.local/bin/claude"
+    follow: false
+  register: ai_cli_claude_code_link_stat
+  become: false
+  when: ai_cli_claude_code_enabled
+  tags: [claude-code, ai_cli]
+
 - name: Install Claude Code CLI globally via npm
   # NPM_CONFIG_PREFIX here too, not just via the environment.d file above:
   # environment.d only takes effect for new systemd user sessions started
@@ -95,6 +110,39 @@
   environment:
     NPM_CONFIG_PREFIX: "{{ ansible_facts['env']['HOME'] }}/.local"
   become: false
+  register: ai_cli_claude_code_npm
+  # Skip when the native installer already put the pinned version in place.
+  # Tolerate only the postinstall/bin-link EEXIST self-conflict; the version
+  # is verified right after, so a genuine failure still fails the run.
+  failed_when:
+    - ai_cli_claude_code_npm.failed | default(false)
+    - "'EEXIST' not in (ai_cli_claude_code_npm.msg | default('')) ~ (ai_cli_claude_code_npm.stderr | default(''))"
+  when: >-
+    ai_cli_claude_code_enabled and
+    not ansible_check_mode and
+    not (ai_cli_claude_code_link_stat.stat.lnk_source | default('') is search('/claude/versions/' ~ (ai_cli_claude_code_version | regex_escape) ~ '(/|$)'))
+  tags: [claude-code, ai_cli]
+
+- name: Get installed Claude Code version
+  ansible.builtin.command: "{{ ansible_facts['env']['HOME'] }}/.local/bin/claude --version"
+  register: ai_cli_claude_code_installed
+  become: false
+  changed_when: false
+  failed_when: false
+  when: ai_cli_claude_code_enabled and not ansible_check_mode
+  tags: [claude-code, ai_cli]
+
+- name: Assert Claude Code is installed at (at least) the pinned version
+  # `>=`, not `==`: Claude Code can self-update past the pin between runs, and
+  # that must not fail the role. This also catches a tolerated EEXIST that
+  # left no working binary behind.
+  ansible.builtin.assert:
+    that:
+      - ai_cli_claude_code_installed.rc == 0
+      - (ai_cli_claude_code_installed.stdout.split()[0]) is version(ai_cli_claude_code_version, '>=')
+    fail_msg: >-
+      Claude Code {{ ai_cli_claude_code_version }} is not installed
+      (`claude --version`: {{ ai_cli_claude_code_installed.stdout | default('') }}{{ ai_cli_claude_code_installed.stderr | default('') }}).
   when: ai_cli_claude_code_enabled and not ansible_check_mode
   tags: [claude-code, ai_cli]
 
