@@ -1,5 +1,68 @@
 # Changelog
 
+## [3.1.0](https://github.com/PMuellerCH/ansible-collection-workstation/compare/3.0.0...3.1.0) (2026-11-26)
+
+
+### Features
+
+* add ctty connection manager to cli_tools ([#225](https://github.com/PMuellerCH/ansible-collection-workstation/issues/225)) ([a535567](https://github.com/PMuellerCH/ansible-collection-workstation/commit/a535567fe02b082b6e1e2684a6856c6187d02608))
+
+
+### Bug Fixes
+
+* **ai_cli:** pin Claude Code MCP servers to exact versions ([#192](https://github.com/PMuellerCH/ansible-collection-workstation/issues/192)) ([d2157ef](https://github.com/PMuellerCH/ansible-collection-workstation/commit/d2157ef36abbfd94111a05c63b2a3c0372a9b20f))
+* **bitwarden:** download oss- prefixed .deb asset and bump to 2026.11.0 ([#186](https://github.com/PMuellerCH/ansible-collection-workstation/issues/186)) ([dcd14d8](https://github.com/PMuellerCH/ansible-collection-workstation/commit/dcd14d8deb405152118e1f861939f993281523e6)), closes [#185](https://github.com/PMuellerCH/ansible-collection-workstation/issues/185)
+* drop renovate minimumReleaseAge ([#211](https://github.com/PMuellerCH/ansible-collection-workstation/issues/211)) ([dad06f2](https://github.com/PMuellerCH/ansible-collection-workstation/commit/dad06f26dba7d745dc8e3747635d2e5c10577c3c)), closes [#210](https://github.com/PMuellerCH/ansible-collection-workstation/issues/210)
+* override katex to 0.18.2 (prototype pollution) ([#213](https://github.com/PMuellerCH/ansible-collection-workstation/issues/213)) ([40f7650](https://github.com/PMuellerCH/ansible-collection-workstation/commit/40f7650921c25237e99c53b9e99e8f36f1a03bfd)), closes [#212](https://github.com/PMuellerCH/ansible-collection-workstation/issues/212)
+* pin apt signing key fingerprints, helm-diff version and LazyVim starter commit ([#206](https://github.com/PMuellerCH/ansible-collection-workstation/issues/206)) ([8d866e2](https://github.com/PMuellerCH/ansible-collection-workstation/commit/8d866e22869048089829f2e33ec6a3796beb2afe))
+* replace deprecated npm server-github MCP server with github-mcp-server binary ([#209](https://github.com/PMuellerCH/ansible-collection-workstation/issues/209)) ([5ced6e4](https://github.com/PMuellerCH/ansible-collection-workstation/commit/5ced6e4ca29ae8a052ececba57aa6a4d308d7783)), closes [#208](https://github.com/PMuellerCH/ansible-collection-workstation/issues/208)
+* set renovate rebaseWhen to conflicted so automerge is not serial ([#223](https://github.com/PMuellerCH/ansible-collection-workstation/issues/223)) ([af84a04](https://github.com/PMuellerCH/ansible-collection-workstation/commit/af84a04fb8c49efcfd207af80240d8328d707338))
+* stage release downloads in private per-run temp directories ([#194](https://github.com/PMuellerCH/ansible-collection-workstation/issues/194)) ([bc39c9f](https://github.com/PMuellerCH/ansible-collection-workstation/commit/bc39c9f41bb9591ce948ac60b2ccc0aaed160167))
+* stage release downloads in private per-run temp directories (remaining roles) ([#198](https://github.com/PMuellerCH/ansible-collection-workstation/issues/198)) ([3cdb3d7](https://github.com/PMuellerCH/ansible-collection-workstation/commit/3cdb3d7ee7504975a0135d2087a716d2f21032eb)), closes [#193](https://github.com/PMuellerCH/ansible-collection-workstation/issues/193)
+
+
+### Miscellaneous
+
+* **deps:** update dependency @anthropic-ai/claude-code to v2.1.331 ([#179](https://github.com/PMuellerCH/ansible-collection-workstation/issues/179)) ([da08c9e](https://github.com/PMuellerCH/ansible-collection-workstation/commit/da08c9e268c5a895000c1001a84ee60cacfd08ac))
+* **deps:** update dependency @anthropic-ai/claude-code to v2.1.332 ([#201](https://github.com/PMuellerCH/ansible-collection-workstation/issues/201)) ([2fbb294](https://github.com/PMuellerCH/ansible-collection-workstation/commit/2fbb29417603163b89e919ac545a4676784020fa))
+* **deps:** update dependency anomalyco/opencode to v2 ([#190](https://github.com/PMuellerCH/ansible-collection-workstation/issues/190)) ([666a567](https://github.com/PMuellerCH/ansible-collection-workstation/commit/666a56741d91bd08b08d83f303465d5df8fe4082))
+* **deps:** update dependency anomalyco/opencode to v2.4.2 ([#224](https://github.com/PMuellerCH/ansible-collection-workstation/issues/224)) ([4f56001](https://github.com/PMuellerCH/ansible-collection-workstation/commit/4f560017dcd7390bf56aa05d43c1acbf71033ae8))
+* **deps:** update dependency ansible-lint to v26.11.0 ([#156](https://github.com/PMuellerCH/ansible-collection-workstation/issues/156)) ([a9ad173](https://github.com/PMuellerCH/ansible-collection-workstation/commit/a9ad1738a6afeff1f6c6a2b100524e63ddbb26e6))
+* **deps:** update dependency ansible-lint to v26.11.1 ([#214](https://github.com/PMuellerCH/ansible-collection-workstation/issues/214)) ([4da6623](https://github.com/PMuellerCH/ansible-collection-workstation/commit/4da66233c23c49d26f79667a88ab026557cbbefc))
+* **deps:** update dependency astral-sh/uv to v0.13.10 ([#199](https://github.com/PMuellerCH/ansible-collection-workstation/issues/199)) ([cb6d3f3](https://github.com/PMuellerCH/ansible-collection-workstation/commit/cb6d3f392516c390e1a020f9b67746c506a357bb))
+* **deps:** update dependency aws/aws-cli to v2.42.2 ([#181](https://github.com/PMuellerCH/ansible-collection-workstation/issues/181)) ([4450b5d](https://github.com/PMuellerCH/ansible-collection-workstation/commit/4450b5d92db8ef13783387d462a006d5c8e07078))
+* **deps:** update dependency aws/aws-cli to v2.42.4 ([#200](https://github.com/PMuellerCH/ansible-collection-workstation/issues/200)) ([5cc0d94](https://github.com/PMuellerCH/ansible-collection-workstation/commit/5cc0d940a9f0697fc8b7a21ec9175c457a0a9992))
+* **deps:** update dependency awslabs.aws-documentation-mcp-server to v1.2.7 ([#202](https://github.com/PMuellerCH/ansible-collection-workstation/issues/202)) ([adf86dd](https://github.com/PMuellerCH/ansible-collection-workstation/commit/adf86dd465ead96841d72cf9216e17d057ff9af7))
+* **deps:** update dependency bootandy/dust to v1.2.8 ([#204](https://github.com/PMuellerCH/ansible-collection-workstation/issues/204)) ([3cb1144](https://github.com/PMuellerCH/ansible-collection-workstation/commit/3cb114420084d95fd88ed0dbac1188af812c1774))
+* **deps:** update dependency boto3 to v1.44.10 ([#182](https://github.com/PMuellerCH/ansible-collection-workstation/issues/182)) ([f913325](https://github.com/PMuellerCH/ansible-collection-workstation/commit/f913325cc50cc9edf8910500edd55b14f7d66f02))
+* **deps:** update dependency boto3 to v1.44.12 ([#205](https://github.com/PMuellerCH/ansible-collection-workstation/issues/205)) ([9935488](https://github.com/PMuellerCH/ansible-collection-workstation/commit/993548860a8b5fbec6e34be6599733100dda66da))
+* **deps:** update dependency checkov to v3.4.10 ([#197](https://github.com/PMuellerCH/ansible-collection-workstation/issues/197)) ([1f77011](https://github.com/PMuellerCH/ansible-collection-workstation/commit/1f770114ef9fd72a2f0ce78763e70c8cb0aa07ab))
+* **deps:** update dependency checkov to v3.4.11 ([#215](https://github.com/PMuellerCH/ansible-collection-workstation/issues/215)) ([38d02ff](https://github.com/PMuellerCH/ansible-collection-workstation/commit/38d02ff1b0a84d425291fc32a7ce85e515a4c6fa))
+* **deps:** update dependency checkov to v3.4.8 ([#183](https://github.com/PMuellerCH/ansible-collection-workstation/issues/183)) ([cfa0567](https://github.com/PMuellerCH/ansible-collection-workstation/commit/cfa0567fd4e5143c814175fcdd1472d041a9a9df))
+* **deps:** update dependency checkov to v3.4.9 ([#195](https://github.com/PMuellerCH/ansible-collection-workstation/issues/195)) ([7352f83](https://github.com/PMuellerCH/ansible-collection-workstation/commit/7352f83bc6c44718c5f5bf462f7eed628682ec36))
+* **deps:** update dependency community.docker to v5.4.1 ([#184](https://github.com/PMuellerCH/ansible-collection-workstation/issues/184)) ([254a069](https://github.com/PMuellerCH/ansible-collection-workstation/commit/254a0694b74e85af80965c8faeefdf98bac63e05))
+* **deps:** update dependency floci-io/floci-cli to v1 ([#191](https://github.com/PMuellerCH/ansible-collection-workstation/issues/191)) ([fc193e9](https://github.com/PMuellerCH/ansible-collection-workstation/commit/fc193e960e0541e647ee65f467af54b8a4de5e05))
+* **deps:** update dependency katex to v0.19.1 ([#220](https://github.com/PMuellerCH/ansible-collection-workstation/issues/220)) ([dce3154](https://github.com/PMuellerCH/ansible-collection-workstation/commit/dce3154ec9f14dfd4de0c4d3c70f309a6cc11bc2))
+* **deps:** update dependency kubernetes/kubernetes to v1.37.3 ([#216](https://github.com/PMuellerCH/ansible-collection-workstation/issues/216)) ([9832555](https://github.com/PMuellerCH/ansible-collection-workstation/commit/98325550018bab7d9525b8ed54b02f4b983f26a6))
+* **deps:** update dependency molecule to v26.11.0 ([#164](https://github.com/PMuellerCH/ansible-collection-workstation/issues/164)) ([3cc47ee](https://github.com/PMuellerCH/ansible-collection-workstation/commit/3cc47eea33f8a518eac3671a3e9f1d32a5aff352))
+* **deps:** update dependency molecule to v26.11.1 ([#217](https://github.com/PMuellerCH/ansible-collection-workstation/issues/217)) ([8107f15](https://github.com/PMuellerCH/ansible-collection-workstation/commit/8107f15d537be5bb61234566005013cfb2561332))
+* **deps:** update dependency pipx to v1.19.1 ([#188](https://github.com/PMuellerCH/ansible-collection-workstation/issues/188)) ([afffed0](https://github.com/PMuellerCH/ansible-collection-workstation/commit/afffed03be5e35b2916b84db09227aeddc7700e3))
+* **deps:** update dependency renovate-mcp to v2.2.2 ([#218](https://github.com/PMuellerCH/ansible-collection-workstation/issues/218)) ([92d601d](https://github.com/PMuellerCH/ansible-collection-workstation/commit/92d601d29bac007ab567d81cab3516359f656d6f))
+* **deps:** update dependency romkatv/powerlevel10k to v1.21.0 ([#178](https://github.com/PMuellerCH/ansible-collection-workstation/issues/178)) ([b991b55](https://github.com/PMuellerCH/ansible-collection-workstation/commit/b991b55b8a0ae4ccf231a54aa632cd718e9754f0))
+* **deps:** update dependency terraform-linters/tflint to v0.66.0 ([#189](https://github.com/PMuellerCH/ansible-collection-workstation/issues/189)) ([50984ad](https://github.com/PMuellerCH/ansible-collection-workstation/commit/50984ade97b5454471e806b72dd0dc0975812d66))
+* **deps:** update dependency walles/moar to v2.19.8 ([#219](https://github.com/PMuellerCH/ansible-collection-workstation/issues/219)) ([ecb2eb4](https://github.com/PMuellerCH/ansible-collection-workstation/commit/ecb2eb44096d589dd001efec9f81e8b25c6fb300))
+
+
+### CI/CD
+
+* re-run molecule for dependent roles and retry GitHub API digest fetches ([#196](https://github.com/PMuellerCH/ansible-collection-workstation/issues/196)) ([37af4cb](https://github.com/PMuellerCH/ansible-collection-workstation/commit/37af4cbb6b15b791677ebe911e130bdb4f7b447e)), closes [#174](https://github.com/PMuellerCH/ansible-collection-workstation/issues/174)
+* SHA-pin third-party GitHub Actions and add Renovate minimumReleaseAge ([#203](https://github.com/PMuellerCH/ansible-collection-workstation/issues/203)) ([b176a95](https://github.com/PMuellerCH/ansible-collection-workstation/commit/b176a95b7f25025e1f6e7db472938fc587eba516))
+
+
+### Documentation
+
+* record decision to keep cli_tools as a single role ([#207](https://github.com/PMuellerCH/ansible-collection-workstation/issues/207)) ([51e2a03](https://github.com/PMuellerCH/ansible-collection-workstation/commit/51e2a03df97009f59e5961e7bf0dd46907fcc089))
+
 ## [3.0.0](https://github.com/PMuellerCH/ansible-collection-workstation/compare/2.0.0...3.0.0) (2026-11-23)
 
 
