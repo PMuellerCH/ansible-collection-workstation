@@ -59,7 +59,7 @@ role's molecule scenario.
 | `ai_cli_opencode_download_base` | see `defaults/main.yml` | Base URL the opencode release asset is downloaded from, before the filename. |
 | `ai_cli_opencode_asset` | `opencode-linux-x64.tar.gz` | Linux x64 release asset filename. Contains a single flat `opencode` binary and is verified against GitHub's per-asset sha256 digest (OpenCode publishes no checksum file). |
 | `ai_cli_opencode_github_api_token` | see `defaults/main.yml` | Optional GitHub API token used only to raise the rate limit when resolving the opencode release-asset digest. Defaults to the same GH_TOKEN/GITHUB_TOKEN env lookup as ai_cli_github_api_token. |
-| `ai_cli_opencode_model` | `mistral/devstral-medium-2507` | Default model OpenCode talks to ("provider/model-id"), written into the deployed opencode.json. Defaults to Mistral AI's agentic coding model; mistral/codestral-2508 is a completion-focused alternative. The MISTRAL_API_KEY and `opencode` login are left to the user. |
+| `ai_cli_opencode_model` | `mistral/mistral-medium-2604` | Default model OpenCode talks to ("provider/model-id"), written into the deployed opencode.json. Defaults to a date-pinned Mistral AI model with tool-call support; mistral/codestral-2508 is a completion-focused alternative. The MISTRAL_API_KEY and `opencode` login are left to the user. |
 | `ai_cli_opencode_deploy_config` | `true` | Whether to deploy ~/.config/opencode/opencode.json. The role owns only the top-level `model` key, rewriting the file only when it differs (user-added keys are preserved). |
 | `ai_cli_opencode_deploy_shell_aliases` | `true` | Whether to deploy ~/.config/zsh/conf.d/opencode.zsh with the TUI and headless-run aliases. |
 | `ai_cli_opencode_alias_tui` | `oc` | Alias name for `opencode` (interactive TUI). |
@@ -289,9 +289,12 @@ environment or secret store.
 
 ### Model and backend
 
-The default model is `mistral/devstral-medium-2507`, Mistral AI's
-agentic/tool-use coding model — the sensible default for an agentic terminal
-tool. `mistral/codestral-2508` is a completion-focused alternative. Mistral is
+The default model is `mistral/mistral-medium-2604`: in OpenCode's models.dev
+catalog, tool-call capable (262k context) and date-pinned rather than a
+`-latest` alias. (The earlier default `devstral-medium-2507` is not in the
+catalog, so OpenCode rejected the deployed config.) `mistral/codestral-2508` is
+a completion-focused alternative. To list valid ids run
+`opencode models mistral` once a Mistral key is configured. Mistral is
 a built-in catalog provider for OpenCode, so no custom-provider config is
 needed; only the `MISTRAL_API_KEY` in the user's own environment (which this
 role never writes). Point `ai_cli_opencode_model` at any
