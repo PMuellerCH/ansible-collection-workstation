@@ -154,7 +154,7 @@ argument_specs:
         required: false
         type: str
       ai_cli_opencode_model:
-        default: mistral/devstral-medium-2507
+        default: mistral/mistral-medium-2604
         description: Default model OpenCode talks to ("provider/model-id"), written into the deployed opencode.json. Defaults to Mistral AI's agentic coding
           model; mistral/codestral-2508 is a completion-focused alternative. The MISTRAL_API_KEY and `opencode` login are left to the user.
         required: false

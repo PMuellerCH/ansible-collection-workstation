@@ -127,13 +127,15 @@ ai_cli_opencode_asset: "opencode-linux-x64.tar.gz"
 ai_cli_opencode_github_api_token: "{{ ai_cli_github_api_token }}"
 
 # Default model OpenCode talks to, written into the deployed opencode.json as
-# the top-level `model` ("provider/model-id"). devstral-medium-2507 is Mistral
-# AI's agentic/tool-use coding model (from the models.dev catalog OpenCode
-# ships), the sensible default for an agentic terminal tool. The Mistral
-# completion-focused alternative is mistral/codestral-2508. Mistral is a
-# built-in catalog provider, so no custom-provider config is needed — only the
-# MISTRAL_API_KEY in the user's own environment, which this role never writes.
-ai_cli_opencode_model: "mistral/devstral-medium-2507"
+# the top-level `model` ("provider/model-id"). mistral-medium-2604 is in the
+# models.dev catalog OpenCode ships, supports tool calls (262k context) and is
+# date-pinned rather than a `-latest` alias. The earlier default
+# devstral-medium-2507 is not in that catalog, so OpenCode rejected the deployed
+# opencode.json. The Mistral completion-focused alternative is
+# mistral/codestral-2508. Mistral is a built-in catalog provider, so no
+# custom-provider config is needed — only the MISTRAL_API_KEY in the user's own
+# environment, which this role never writes.
+ai_cli_opencode_model: "mistral/mistral-medium-2604"
 
 # Deploy ~/.config/opencode/opencode.json. The role owns only the top-level
 # `model` key: it reads any existing file, merges the desired model onto it,
