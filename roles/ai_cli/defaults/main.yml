@@ -84,6 +84,25 @@ ai_cli_kiro_tool_search_enabled: true
 # runs non-interactively.
 ai_cli_kiro_disable_trust_all_confirmation: true
 
+# ---- Kiro local command sandbox ----
+# Needs kiro-cli >= 2.31. Installs bubblewrap and socat and creates
+# ~/.kiro/settings/sandbox.json once (never overwritten: it belongs to the user
+# afterwards). The allowed hosts are `sandbox_network` permission rules defined
+# by the team configuration, not here.
+ai_cli_kiro_sandbox_enabled: true
+ai_cli_kiro_sandbox_network_access: DEFAULT_BLOCKED
+
+# ---- Kiro team configuration (opt-in) ----
+# Git URL of a repository with the shared Kiro configuration (steering, skills,
+# hooks, permissions) and an idempotent install.sh. Empty = disabled. Set it
+# per consumer (the repository may be private and needs the user's own git
+# credentials); user-specific values do not belong in role defaults.
+ai_cli_kiro_team_config_repo: ""
+ai_cli_kiro_team_config_dest: "{{ ansible_facts['env']['HOME'] }}/Repos/infra-ai-skills"
+# Branch or tag to check out. A tag fits the pinning rule better than a branch;
+# the role re-runs install.sh whenever the checkout changes.
+ai_cli_kiro_team_config_version: main
+
 # ---- kiro-cli shell aliases ----
 ai_cli_kiro_deploy_shell_aliases: true
 

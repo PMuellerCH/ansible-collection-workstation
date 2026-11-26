@@ -157,6 +157,31 @@
         that: _ai_cli_kiro_zsh_snippet.stat.exists
 
 
+    - name: Find the Kiro sandbox prerequisites on PATH
+      ansible.builtin.command: "which {{ item }}"
+      loop: [bwrap, socat]
+      register: _ai_cli_kiro_sandbox_bins
+      changed_when: false
+
+
+    - name: Assert bubblewrap and socat are installed
+      ansible.builtin.assert:
+        that: _ai_cli_kiro_sandbox_bins.results | map(attribute='rc') | select('ne', 0) | list | length == 0
+
+
+    - name: Read the Kiro sandbox configuration
+      ansible.builtin.slurp:
+        src: "{{ ansible_facts['env']['HOME'] }}/.kiro/settings/sandbox.json"
+      register: _ai_cli_kiro_sandbox_file
+
+
+    - name: Assert the Kiro sandbox is enabled with network access blocked by default
+      ansible.builtin.assert:
+        that:
+          - (_ai_cli_kiro_sandbox_file.content | b64decode | from_json).enabled == true
+          - (_ai_cli_kiro_sandbox_file.content | b64decode | from_json).networkAccess == ai_cli_kiro_sandbox_network_access
+
+
     - name: Read kiro-cli zsh alias snippet content
       ansible.builtin.slurp:
         src: "{{ ansible_facts['env']['HOME'] }}/.config/zsh/conf.d/kiro.zsh"

@@ -181,3 +181,19 @@
     - ai_cli_kiro_enabled
     - ai_cli_kiro_deploy_shell_aliases
   tags: [kiro, ai_cli]
+
+- name: Configure the Kiro local command sandbox
+  ansible.builtin.include_tasks:
+    file: kiro_sandbox.yml
+    apply:
+      tags: [kiro, ai_cli]
+  when: ai_cli_kiro_sandbox_enabled
+  tags: [kiro, ai_cli]
+
+- name: Install the Kiro team configuration
+  ansible.builtin.include_tasks:
+    file: kiro_team_config.yml
+    apply:
+      tags: [kiro, ai_cli]
+  when: ai_cli_kiro_team_config_repo | length > 0
+  tags: [kiro, ai_cli]
