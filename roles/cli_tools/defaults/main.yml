@@ -89,7 +89,7 @@ cli_tools_jaq_version: "3.2.0"
 # to resolve a name clash — release assets and the installed binary are
 # named "moor", not "moar", even though the GitHub repo path is unchanged.
 # renovate: datasource=github-releases depName=walles/moar extractVersion=^v(?<version>.*)$
-cli_tools_moor_version: "2.19.7"
+cli_tools_moor_version: "2.19.8"
 
 # walles/moar publishes no checksum file; the binary checksum is derived at run
 # time from GitHub's per-asset digest (see tasks/main.yml), so there is no static
