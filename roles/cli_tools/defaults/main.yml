@@ -22,6 +22,7 @@ cli_tools_doggo_enabled: true
 cli_tools_jaq_enabled: true
 cli_tools_moor_enabled: true
 cli_tools_yazi_enabled: true
+cli_tools_ctty_enabled: true
 
 # Optional GitHub API token used only to raise the rate limit when resolving
 # release-asset digests for tools that publish no checksum file (dust, jaq,
@@ -78,6 +79,9 @@ cli_tools_xcp_version: "0.24.9"
 
 # renovate: datasource=github-releases depName=mr-karan/doggo extractVersion=^v(?<version>.*)$
 cli_tools_doggo_version: "1.4.2"
+
+# renovate: datasource=github-releases depName=zsuroy/ctty extractVersion=^v(?<version>.*)$
+cli_tools_ctty_version: "1.4.0"
 
 # renovate: datasource=github-releases depName=01mf02/jaq extractVersion=^v(?<version>.*)$
 cli_tools_jaq_version: "3.2.0"

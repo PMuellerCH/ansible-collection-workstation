@@ -122,6 +122,7 @@
         - { bin: doggo, version: "{{ cli_tools_doggo_version }}" }
         - { bin: jaq, version: "{{ cli_tools_jaq_version }}" }
         - { bin: moor, version: "{{ cli_tools_moor_version }}" }
+        - { bin: ctty, version: "{{ cli_tools_ctty_version }}" }
       loop_control:
         label: "{{ item.bin }}"
 

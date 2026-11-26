@@ -1,0 +1,40 @@
+---
+# ctty (github release tar.gz, aggregate checksums.txt — dynamic checksum)
+- name: Get installed ctty version
+  ansible.builtin.command: ctty --version
+  register: cli_tools_ctty_current_version
+  changed_when: false
+  failed_when: false
+  when: cli_tools_ctty_enabled
+  tags: [ctty, cli_tools]
+
+- name: Download ctty archive
+  ansible.builtin.get_url:
+    url: "https://github.com/zsuroy/ctty/releases/download/v{{ cli_tools_ctty_version }}/ctty_Linux_x86_64.tar.gz"
+    dest: "{{ cli_tools_dl_tmp.path }}/ctty-{{ cli_tools_ctty_version }}.tar.gz"
+    # zsuroy/ctty publishes an aggregate checksums.txt per release — get_url
+    # fetches it and matches the entry by the source URL's basename, so there
+    # is no static checksum to keep in sync when Renovate bumps the version.
+    checksum: "sha256:https://github.com/zsuroy/ctty/releases/download/v{{ cli_tools_ctty_version }}/checksums.txt"
+    mode: "0644"
+  when: >-
+    cli_tools_ctty_enabled and
+    (cli_tools_ctty_current_version.rc != 0 or
+     cli_tools_ctty_version not in cli_tools_ctty_current_version.stdout)
+  tags: [ctty, cli_tools]
+
+- name: Install ctty binary to /usr/local/bin
+  ansible.builtin.unarchive:
+    src: "{{ cli_tools_dl_tmp.path }}/ctty-{{ cli_tools_ctty_version }}.tar.gz"
+    dest: /usr/local/bin/
+    include:
+      - ctty
+    remote_src: true
+    mode: "0755"
+  become: true
+  when: >-
+    not ansible_check_mode and
+    cli_tools_ctty_enabled and
+    (cli_tools_ctty_current_version.rc != 0 or
+     cli_tools_ctty_version not in cli_tools_ctty_current_version.stdout)
+  tags: [ctty, cli_tools]

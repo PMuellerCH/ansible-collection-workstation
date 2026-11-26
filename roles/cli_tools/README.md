@@ -3,7 +3,8 @@
 Installs modern replacements for the classic CLI tools: `bat` (cat), `btop`/`htop` (top), `eza` (ls), `fd` (find),
 `ripgrep` (grep), `zoxide` (cd), `fzf` (fuzzy finder), `emoji-fzf` (emoji picker), `sd` (sed), `duf` (df), `gping`
 (ping), `hexyl` (hexdump), `procs` (ps), `dust` (du), `viddy` (watch), `xcp` (cp), `doggo` (dig), `jaq` (jq), `moor`
-(less) and `yazi` (file manager). Each tool is independently toggleable. Split out of the former `modern_cli` role;
+(less), `yazi` (file manager) and `ctty` (connection manager TUI for SSH, serial, telnet, SFTP, FTP, WebDAV and S3).
+Each tool is independently toggleable. Split out of the former `modern_cli` role;
 `delta` moved to `git`, `presenterm` to `editor`.
 
 `bat`, `btop`, `fzf` and `yazi` are Catppuccin-Mocha themed (the collection-wide theme; the other tools have no official
@@ -60,6 +61,7 @@ aliases to take effect. `emoji-fzf`'s `emoji` function pipes through `wl-copy` (
 | `cli_tools_jaq_enabled` | `true` | Whether to install jaq. |
 | `cli_tools_moor_enabled` | `true` | Whether to install moor (the tool formerly known as "moar" — upstream renamed it; the GitHub repo path is unchanged). |
 | `cli_tools_yazi_enabled` | `true` | Whether to install yazi (from a GitHub-released .deb). |
+| `cli_tools_ctty_enabled` | `true` | Whether to install ctty. |
 | `cli_tools_bat_theme_ref` | see `defaults/main.yml` | Pinned commit of catppuccin/bat the theme file is downloaded from (immutable, unlike the "main" branch). |
 | `cli_tools_bat_theme_checksum` | see `defaults/main.yml` | Checksum of the bat theme file at cli_tools_bat_theme_ref, verified by get_url. |
 | `cli_tools_btop_catppuccin_version` | see `defaults/main.yml` | Release tag of catppuccin/btop to download the Mocha theme archive from. The installed tag is recorded in `~/.config/btop/themes/.catppuccin_version`; a bump re-downloads and re-extracts the theme. |
@@ -74,6 +76,7 @@ aliases to take effect. `emoji-fzf`'s `emoji` function pipes through `wl-copy` (
 | `cli_tools_doggo_version` | see `defaults/main.yml` | doggo version (github-releases mr-karan/doggo), installed from a checksum-verified binary tarball. |
 | `cli_tools_jaq_version` | see `defaults/main.yml` | jaq version (github-releases 01mf02/jaq), installed from a checksum-verified bare binary. |
 | `cli_tools_moor_version` | see `defaults/main.yml` | moor version (github-releases walles/moar), installed from a checksum-verified bare binary. |
+| `cli_tools_ctty_version` | see `defaults/main.yml` | ctty version (github-releases zsuroy/ctty), installed from a checksum-verified binary tarball. |
 | `cli_tools_yazi_version` | see `defaults/main.yml` | yazi version (github-releases sxyazi/yazi), installed from a checksum-verified .deb. |
 | `cli_tools_yazi_theme_ref` | see `defaults/main.yml` | Pinned commit of catppuccin/yazi the theme file is downloaded from (no releases/tags published upstream). |
 | `cli_tools_yazi_theme_checksum` | see `defaults/main.yml` | Checksum of the yazi theme file at cli_tools_yazi_theme_ref, verified by get_url. |
@@ -98,7 +101,7 @@ the alias snippet. The snippet is also (re)deployed whenever a single tool tag r
 
 Most GitHub-release tools here verify their download against a checksum file
 the upstream project publishes (`get_url`'s `checksum:` fetches it directly —
-fzf, viddy, doggo). Six tools (`dust`, `jaq`, `moor`, `procs`,
+fzf, viddy, doggo, ctty). Six tools (`dust`, `jaq`, `moor`, `procs`,
 `xcp`, `yazi`) publish **no** checksum file of any kind. Rather than hand-pin a
 static checksum that goes stale on every Renovate version bump, the role
 derives the checksum at run time from GitHub's own per-asset digest: it fetches

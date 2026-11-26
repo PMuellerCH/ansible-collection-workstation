@@ -21,7 +21,7 @@ already in place.
 | [git](roles/git/README.md) | git config (identity, SSH signing), GitHub CLI, lazygit, delta |
 | [editor](roles/editor/README.md) | neovim (LazyVim), presenterm + mermaid-cli |
 | [ai_cli](roles/ai_cli/README.md) | Claude Code CLI, Kiro CLI, OpenCode |
-| [cli_tools](roles/cli_tools/README.md) | bat, btop, eza, fd, fzf, htop, ripgrep, zoxide, emoji-fzf, sd, duf, gping, hexyl, procs, dust, viddy, xcp, doggo, jaq, moor, yazi |
+| [cli_tools](roles/cli_tools/README.md) | bat, btop, eza, fd, fzf, htop, ripgrep, zoxide, emoji-fzf, sd, duf, gping, hexyl, procs, dust, viddy, xcp, doggo, jaq, moor, yazi, ctty |
 | [code_quality_tools](roles/code_quality_tools/README.md) | trivy, pre-commit, detect-secrets, yamllint, checkov, ansible-lint |
 | [desktop_apps](roles/desktop_apps/README.md) | OnlyOffice, Firefox policies, Brave, LibreWolf, Slack, Microsoft Teams |
 | [desktop_integration](roles/desktop_integration/README.md) | GNOME workspaces and keybindings, Flameshot, emoji picker (smile), Wayland clipboard tooling (wl-clipboard, cliphist, clipse) |

@@ -190,12 +190,20 @@
       when: cli_tools_yazi_enabled
       tags: [yazi, cli_tools]
 
+    - name: Install ctty
+      ansible.builtin.include_tasks:
+        file: ctty.yml
+        apply:
+          tags: [ctty, cli_tools]
+      when: cli_tools_ctty_enabled
+      tags: [ctty, cli_tools]
+
     - name: Deploy shell aliases for the installed tools
       ansible.builtin.include_tasks:
         file: shell.yml
         apply:
           tags: [shell, cli_tools]
-      tags: [bat, btop, htop, eza, fd, ripgrep, zoxide, fzf, emoji_fzf, sd, duf, gping, hexyl, procs, dust, viddy, xcp, doggo, jaq, moor, yazi, cli_tools, shell]
+      tags: [bat, btop, htop, eza, fd, ripgrep, zoxide, fzf, emoji_fzf, sd, duf, gping, hexyl, procs, dust, viddy, xcp, doggo, jaq, moor, yazi, ctty, cli_tools, shell]
   rescue:
     - name: Report the failed cli_tools component
       ansible.builtin.fail:
