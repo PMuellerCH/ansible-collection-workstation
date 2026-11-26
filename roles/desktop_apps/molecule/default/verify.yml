@@ -46,6 +46,7 @@
           - "'{446900e4-71c2-419f-a6a7-df9c091e268b}' in _desktop_apps_firefox_policies.policies.ExtensionSettings"
           - _desktop_apps_firefox_policies.policies.ExtensionSettings['{446900e4-71c2-419f-a6a7-df9c091e268b}'].installation_mode == 'force_installed'
           - "'de-CH@dictionaries.addons.mozilla.org' in _desktop_apps_firefox_policies.policies.ExtensionSettings"
+          - "'uBlock0@raymondhill.net' in _desktop_apps_firefox_policies.policies.ExtensionSettings"
 
     - name: Assert brave-browser is installed
       ansible.builtin.assert:
@@ -68,6 +69,7 @@
           - _desktop_apps_brave_policies.PasswordManagerEnabled == false
           - "'nngceckbapebfimnlniiiahkandclblb' in _desktop_apps_brave_policies.ExtensionSettings"
           - _desktop_apps_brave_policies.ExtensionSettings['nngceckbapebfimnlniiiahkandclblb'].installation_mode == 'force_installed'
+          - "'cjpalhdlnbpafiamejdnhcphjbkeiagm' in _desktop_apps_brave_policies.ExtensionSettings"
 
     - name: Assert librewolf is installed
       ansible.builtin.assert:

@@ -13,9 +13,9 @@
   when: desktop_apps_firefox_enabled
   tags: [firefox, desktop_apps]
 
-- name: Deploy Firefox policies (Bitwarden extension, de-CH dictionary, password manager disabled)
-  ansible.builtin.copy:
-    src: policies.json
+- name: Deploy Firefox policies (Bitwarden and uBlock Origin extensions, de-CH dictionary, password manager disabled)
+  ansible.builtin.template:
+    src: policies.json.j2
     dest: /etc/firefox/policies/policies.json
     owner: root
     group: root

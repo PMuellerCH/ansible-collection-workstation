@@ -69,9 +69,9 @@
   when: desktop_apps_brave_enabled
   tags: [brave, desktop_apps]
 
-- name: Deploy Brave policies (crypto wallet/rewards disabled, Bitwarden extension, password manager disabled)
-  ansible.builtin.copy:
-    src: brave_policies.json
+- name: Deploy Brave policies (crypto wallet/rewards disabled, Bitwarden and uBlock Origin extensions, password manager disabled)
+  ansible.builtin.template:
+    src: brave_policies.json.j2
     dest: /etc/brave/policies/managed/policies.json
     owner: root
     group: root

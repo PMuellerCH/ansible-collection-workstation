@@ -8,6 +8,14 @@ desktop_apps_firefox_enabled: true
 # for every consumer of this role unless explicitly toggled on.
 desktop_apps_brave_enabled: false
 desktop_apps_librewolf_enabled: false
+# Force-install the Bitwarden browser extension in every managed browser.
+# Set to false when the consumer does not use Bitwarden (e.g. computer-setup
+# can derive it from whether the bitwarden role is enabled for the host).
+desktop_apps_bitwarden_extension_enabled: true
+
+# Force-install the uBlock Origin browser extension in every managed browser.
+desktop_apps_ublock_origin_enabled: true
+
 desktop_apps_slack_enabled: true
 desktop_apps_teams_enabled: true
 

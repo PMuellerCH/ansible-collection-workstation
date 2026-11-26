@@ -54,12 +54,12 @@
   when: desktop_apps_librewolf_enabled
   tags: [librewolf, desktop_apps]
 
-- name: Deploy LibreWolf policies (Bitwarden extension, de-CH dictionary, password manager disabled)
+- name: Deploy LibreWolf policies (Bitwarden and uBlock Origin extensions, de-CH dictionary, password manager disabled)
   # LibreWolf is a Firefox fork and reads the identical Mozilla policies.json
-  # schema from its own /etc/librewolf/policies/ path — the same file
+  # schema from its own /etc/librewolf/policies/ path — the same template
   # Firefox uses above is reused as-is, not duplicated.
-  ansible.builtin.copy:
-    src: policies.json
+  ansible.builtin.template:
+    src: policies.json.j2
     dest: /etc/librewolf/policies/policies.json
     owner: root
     group: root
