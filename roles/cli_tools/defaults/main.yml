@@ -81,7 +81,7 @@ cli_tools_xcp_version: "0.24.9"
 cli_tools_doggo_version: "1.4.2"
 
 # renovate: datasource=github-releases depName=zsuroy/ctty extractVersion=^v(?<version>.*)$
-cli_tools_ctty_version: "1.4.0"
+cli_tools_ctty_version: "1.4.1"
 
 # renovate: datasource=github-releases depName=01mf02/jaq extractVersion=^v(?<version>.*)$
 cli_tools_jaq_version: "3.2.0"
