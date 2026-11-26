@@ -388,6 +388,10 @@ Automerge is driven entirely by `renovate.json`, not by a shared approval workfl
 config sets `platformAutomerge: false` and a package rule that marks minor, patch, pin and
 digest updates `automerge: true` with `automergeStrategy: squash`, so Renovate merges them
 itself (squashed) once CI passes; major and breaking updates always stay on manual review.
+`rebaseWhen` is `conflicted`: with the default `auto`, Renovate rebases every open PR after each
+merge, CI reruns, and the PRs only become mergeable again in the next Renovate run (every 4-5 hours),
+so roughly one PR merged per run. With `conflicted` green PRs are merged in the same run. Trade-off: a PR
+is merged on CI results from an older base commit (the `main` ruleset does not require branches to be up to date).
 If a Renovate PR stops merging, check that lint and Molecule are green on the PR head.
 
 Supply-chain hardening: third-party GitHub Actions are pinned to full commit SHAs with the
