@@ -18,7 +18,7 @@ ansible_dev_no_proxy: ""
 # 24.04's apt-provided pipx is only 1.4.3. See README "pipx bootstrap"
 # section (same pattern as the code_quality_tools role).
 # renovate: datasource=pypi depName=pipx
-ansible_dev_pipx_min_version: "1.19.1"
+ansible_dev_pipx_min_version: "1.19.2"
 
 # ── ansible ──────────────────────────────────────────────────────────────
 # Held on the 2.21.x line: ansible-core 2.22+ requires Python >= 3.13, but the
