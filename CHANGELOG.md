@@ -1,5 +1,24 @@
 # Changelog
 
+## [3.1.1](https://github.com/PMuellerCH/ansible-collection-workstation/compare/3.1.0...3.1.1) (2026-11-28)
+
+
+### Bug Fixes
+
+* default OpenCode to an existing Mistral model ([#234](https://github.com/PMuellerCH/ansible-collection-workstation/issues/234)) ([b783a68](https://github.com/PMuellerCH/ansible-collection-workstation/commit/b783a68bd4943a73097bd2d1eb25e2ffec32287d))
+* tolerate the claude-code npm postinstall EEXIST and verify the installed version ([#235](https://github.com/PMuellerCH/ansible-collection-workstation/issues/235)) ([5d3e861](https://github.com/PMuellerCH/ansible-collection-workstation/commit/5d3e861f5473038a90e96fe2b8a8bdb088b0c5a3))
+
+
+### Miscellaneous
+
+* **deps:** update dependency aws/aws-cli to v2.42.5 ([#241](https://github.com/PMuellerCH/ansible-collection-workstation/issues/241)) ([b95c7bb](https://github.com/PMuellerCH/ansible-collection-workstation/commit/b95c7bba08ff303ea1eec8cecf3e956fcec712bc))
+* **deps:** update dependency boto3 to v1.44.13 ([#242](https://github.com/PMuellerCH/ansible-collection-workstation/issues/242)) ([ccf495c](https://github.com/PMuellerCH/ansible-collection-workstation/commit/ccf495c7844187bf522b4004875230c8e1022f55))
+* **deps:** update dependency community.postgresql to v5.1.3 ([#240](https://github.com/PMuellerCH/ansible-collection-workstation/issues/240)) ([b835ce9](https://github.com/PMuellerCH/ansible-collection-workstation/commit/b835ce98441e1edd4d0051e7d42b38a05e79f1a7))
+* **deps:** update dependency nektos/act to v0.2.99 ([#243](https://github.com/PMuellerCH/ansible-collection-workstation/issues/243)) ([62576f4](https://github.com/PMuellerCH/ansible-collection-workstation/commit/62576f4a394f8d6ab9aed05fa77b3b299d2888d9))
+* **deps:** update dependency pipx to v1.19.2 ([#244](https://github.com/PMuellerCH/ansible-collection-workstation/issues/244)) ([8d04914](https://github.com/PMuellerCH/ansible-collection-workstation/commit/8d049143dbe6eda754463d6ef4afb21672e10dc0))
+* **deps:** update dependency renovate-mcp to v2.2.3 ([#245](https://github.com/PMuellerCH/ansible-collection-workstation/issues/245)) ([3eb3b8f](https://github.com/PMuellerCH/ansible-collection-workstation/commit/3eb3b8f40c9bede3fce8ec3c1950d25649363b78))
+* **deps:** update dependency zsuroy/ctty to v1.4.1 ([#236](https://github.com/PMuellerCH/ansible-collection-workstation/issues/236)) ([203a06c](https://github.com/PMuellerCH/ansible-collection-workstation/commit/203a06c87c9fa3c1830764b92fedfba49a99cad4))
+
 ## [3.1.0](https://github.com/PMuellerCH/ansible-collection-workstation/compare/3.0.0...3.1.0) (2026-11-26)
 
 
