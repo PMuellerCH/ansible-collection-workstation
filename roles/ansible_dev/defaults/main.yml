@@ -37,5 +37,5 @@ ansible_dev_hvac_version: "2.4.0"
 
 # ── act ──────────────────────────────────────────────────────────────────
 # renovate: datasource=github-releases depName=nektos/act extractVersion=^v(?<version>.*)$
-ansible_dev_act_version: "0.2.98"
+ansible_dev_act_version: "0.2.99"
 ansible_dev_act_download_base: "https://github.com/nektos/act/releases/download/v{{ ansible_dev_act_version }}"
