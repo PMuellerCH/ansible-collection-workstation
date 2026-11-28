@@ -23,7 +23,7 @@ collections:
     version: "12.1.0"
   # renovate: datasource=galaxy-collection depName=community.postgresql
   - name: community.postgresql
-    version: "5.1.2"
+    version: "5.1.3"
   # renovate: datasource=galaxy-collection depName=kubernetes.core
   - name: kubernetes.core
     version: "6.6.0"
