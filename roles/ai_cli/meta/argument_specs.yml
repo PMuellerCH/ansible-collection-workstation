@@ -106,6 +106,35 @@ argument_specs:
           autonomous chat without a per-launch confirmation prompt.
         required: false
         type: bool
+      ai_cli_kiro_sandbox_enabled:
+        default: true
+        description: Whether to set up the Kiro local command sandbox (needs kiro-cli >= 2.31) — install bubblewrap and socat and create
+          ~/.kiro/settings/sandbox.json if it does not exist. An existing sandbox.json is never overwritten.
+        required: false
+        type: bool
+      ai_cli_kiro_sandbox_network_access:
+        default: DEFAULT_BLOCKED
+        description: Value of `networkAccess` written to a newly created ~/.kiro/settings/sandbox.json. Allowed hosts are sandbox_network permission rules
+          of the team configuration, not set here.
+        required: false
+        type: str
+      ai_cli_kiro_team_config_repo:
+        default: ''
+        description: Git URL of the shared Kiro team configuration (steering, skills, hooks, permissions) with an idempotent install.sh. Empty disables
+          the feature. Set per consumer; the repository may need the user's own git credentials.
+        required: false
+        type: str
+      ai_cli_kiro_team_config_dest:
+        default: '{{ ansible_facts[''env''][''HOME''] }}/Repos/infra-ai-skills'
+        description: Directory the team configuration repository is cloned to.
+        required: false
+        type: str
+      ai_cli_kiro_team_config_version:
+        default: main
+        description: Branch or tag of the team configuration repository to check out. A tag is preferable to a branch. install.sh is re-run when the checkout
+          changes.
+        required: false
+        type: str
       ai_cli_kiro_deploy_shell_aliases:
         default: true
         description: Whether to deploy ~/.config/zsh/conf.d/kiro.zsh with the chat and login aliases.

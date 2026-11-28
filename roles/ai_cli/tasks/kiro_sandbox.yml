@@ -1,0 +1,38 @@
+---
+# Kiro local command sandbox (needs kiro-cli >= 2.31, which the install/update
+# in kiro.yml keeps current): bubblewrap and socat are its runtime
+# prerequisites, and ~/.kiro/settings/sandbox.json switches it on.
+- name: Install the Kiro sandbox prerequisites (bubblewrap, socat)
+  ansible.builtin.apt:
+    name:
+      - bubblewrap
+      - socat
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: ai_cli_kiro_sandbox_enabled
+  tags: [kiro, ai_cli]
+
+- name: Create the kiro-cli settings directory
+  ansible.builtin.file:
+    path: "{{ ansible_facts['env']['HOME'] }}/.kiro/settings"
+    state: directory
+    mode: "0755"
+  become: false
+  when: ai_cli_kiro_sandbox_enabled
+  tags: [kiro, ai_cli]
+
+- name: Deploy the Kiro sandbox configuration (only when absent)
+  # force: false — the file is created once and then belongs to the user, so a
+  # hand-edited sandbox.json is never overwritten silently. The allowed hosts
+  # are not set here: they are `sandbox_network` permission rules owned by the
+  # team configuration (infra-ai-skills).
+  ansible.builtin.copy:
+    dest: "{{ ansible_facts['env']['HOME'] }}/.kiro/settings/sandbox.json"
+    content: "{{ {'enabled': true, 'networkAccess': ai_cli_kiro_sandbox_network_access} | to_nice_json(indent=2) }}\n"
+    mode: "0644"
+    force: false
+  become: false
+  when: ai_cli_kiro_sandbox_enabled
+  tags: [kiro, ai_cli]

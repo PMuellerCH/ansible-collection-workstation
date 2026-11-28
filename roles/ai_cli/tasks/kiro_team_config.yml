@@ -1,0 +1,48 @@
+---
+# Team configuration for Kiro (steering, skills, hooks, permissions): clone the
+# configured repository and run its install.sh. install.sh is idempotent,
+# symlinks steering/skills/agents into ~/.kiro/ and never overwrites a
+# permissions file the user wrote. Disabled unless ai_cli_kiro_team_config_repo
+# is set. Secrets (Jira/Confluence tokens, the Kiro login) stay with the user.
+- name: Install git (needed to clone the Kiro team configuration)
+  ansible.builtin.apt:
+    name: git
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+  become: true
+  when: ai_cli_kiro_team_config_repo | length > 0
+  tags: [kiro, ai_cli]
+
+- name: Clone or update the Kiro team configuration
+  ansible.builtin.git:
+    repo: "{{ ai_cli_kiro_team_config_repo }}"
+    dest: "{{ ai_cli_kiro_team_config_dest }}"
+    version: "{{ ai_cli_kiro_team_config_version }}"
+    update: true
+  become: false
+  register: ai_cli_kiro_team_config_git
+  when: ai_cli_kiro_team_config_repo | length > 0
+  tags: [kiro, ai_cli]
+
+- name: Stat the installed team steering directory
+  ansible.builtin.stat:
+    path: "{{ ansible_facts['env']['HOME'] }}/.kiro/steering/team"
+  register: ai_cli_kiro_team_config_steering
+  become: false
+  when: ai_cli_kiro_team_config_repo | length > 0
+  tags: [kiro, ai_cli]
+
+- name: Run the team configuration installer
+  # Only after a clone/update or when the result is missing, so an unchanged
+  # converged machine reports no change.
+  ansible.builtin.command:
+    cmd: bash install.sh
+    chdir: "{{ ai_cli_kiro_team_config_dest }}"
+  become: false
+  changed_when: true
+  when:
+    - ai_cli_kiro_team_config_repo | length > 0
+    - not ansible_check_mode
+    - ai_cli_kiro_team_config_git.changed or not ai_cli_kiro_team_config_steering.stat.exists
+  tags: [kiro, ai_cli]

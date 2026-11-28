@@ -50,6 +50,11 @@ role's molecule scenario.
 | `ai_cli_kiro_agent_engine` | `v3` | Value for the global `chat.agentEngine` setting ("v3 cli"). Applied via `kiro-cli settings`. |
 | `ai_cli_kiro_tool_search_enabled` | `true` | Value for the global `toolSearch.enabled` setting ("autosearch for tools"). Applied via `kiro-cli settings`. |
 | `ai_cli_kiro_disable_trust_all_confirmation` | `true` | Value for the global `chat.disableTrustAllConfirmation` setting. When true, the `ki` alias (which passes `--trust-all-tools`) starts autonomous chat without a per-launch confirmation prompt. |
+| `ai_cli_kiro_sandbox_enabled` | `true` | Set up the Kiro local command sandbox (needs kiro-cli >= 2.31): install `bubblewrap` and `socat` and create `~/.kiro/settings/sandbox.json` if absent (never overwritten). |
+| `ai_cli_kiro_sandbox_network_access` | `DEFAULT_BLOCKED` | `networkAccess` written to a newly created `sandbox.json`. Allowed hosts are `sandbox_network` permission rules of the team configuration. |
+| `ai_cli_kiro_team_config_repo` | `""` | Git URL of the shared Kiro team configuration (steering, skills, hooks, permissions) with an idempotent `install.sh`. Empty disables it. Set per consumer. |
+| `ai_cli_kiro_team_config_dest` | `~/Repos/infra-ai-skills` | Directory the team configuration repository is cloned to. |
+| `ai_cli_kiro_team_config_version` | `main` | Branch or tag to check out (a tag is preferable). `install.sh` is re-run when the checkout changes. |
 | `ai_cli_kiro_deploy_shell_aliases` | `true` | Whether to deploy ~/.config/zsh/conf.d/kiro.zsh with the chat and login aliases. |
 | `ai_cli_kiro_alias_chat` | `ki` | Alias name for `kiro-cli chat --trust-all-tools` (autonomous mode). |
 | `ai_cli_kiro_alias_login` | `kil` | Alias name for `kiro-cli login`. |
@@ -214,6 +219,23 @@ log in.
 - Deploys `~/.config/zsh/conf.d/kiro.zsh` with:
   - `ki`  → `kiro-cli chat --trust-all-tools` (autonomous mode)
   - `kil` → `kiro-cli login`
+- Sets up the **local command sandbox** (`ai_cli_kiro_sandbox_enabled`, needs
+  kiro-cli >= 2.31): installs `bubblewrap` and `socat` (apt, root) and creates
+  `~/.kiro/settings/sandbox.json` (`enabled: true`, `networkAccess:
+  DEFAULT_BLOCKED`) only when it does not exist yet, so a hand-edited file is
+  never overwritten. The allowed hosts are `sandbox_network` permission rules
+  that belong to the team configuration, not to this role.
+- Optionally installs the **team configuration** (opt-in: set
+  `ai_cli_kiro_team_config_repo`): clones the repository to
+  `ai_cli_kiro_team_config_dest`, checks out `ai_cli_kiro_team_config_version`
+  (use a tag rather than a branch) and runs its `install.sh`, which is
+  idempotent, symlinks steering/skills/agents into `~/.kiro/` and never
+  overwrites a permissions file the user wrote. `install.sh` re-runs only when
+  the checkout changed or `~/.kiro/steering/team` is missing. The repository may
+  be private and needs the user's own git credentials (SSH key or token); this
+  role does not manage them. Secrets such as Jira/Confluence tokens and the Kiro
+  login stay with the user. Disabled by default because the value is
+  user/organisation specific.
 
 ### Autonomous mode is an alias, not a setting
 
