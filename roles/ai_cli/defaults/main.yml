@@ -40,7 +40,7 @@ ai_cli_mcp_github_bin: "{{ ansible_facts['env']['HOME'] }}/.local/bin/github-mcp
 ai_cli_mcp_github_api_token: "{{ ai_cli_github_api_token }}"
 
 # renovate: datasource=npm depName=renovate-mcp
-ai_cli_mcp_renovate_version: "2.2.2"
+ai_cli_mcp_renovate_version: "2.2.3"
 
 # ---- kiro-cli (Kiro CLI, AI coding agent) ----
 # Grouped here with Claude Code and OpenCode: all three are CLI-first AI coding
