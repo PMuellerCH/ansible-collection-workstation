@@ -11,11 +11,11 @@ each is a standard desktop application a workstation wants. Each lives in its ow
 ## What it does
 
 - Installs OnlyOffice Desktop Editors from its own apt repository.
-- Deploys `/etc/firefox/policies/policies.json`: disables the native Firefox password manager, force-installs the
-  Bitwarden extension pinned to the navigation bar and the Swiss German (`de-CH`) dictionary, and sets it as the
-  default spellcheck language.
+- Deploys `/etc/firefox/policies/policies.json` (rendered from a template): disables the native Firefox password
+  manager, force-installs the Bitwarden and uBlock Origin extensions (both pinned to the navigation bar) and the Swiss
+  German (`de-CH`) dictionary, and sets it as the default spellcheck language.
 - Installs Brave from its own apt repository (opt-in); disables Brave Wallet and Rewards via managed policy,
-  force-installs the Bitwarden extension and disables the native password manager.
+  force-installs the Bitwarden and uBlock Origin extensions and disables the native password manager.
 - Installs LibreWolf via `extrepo` (opt-in) and deploys the same Firefox `policies.json`.
 - Installs Slack as the Flatpak `com.slack.Slack` (bootstrapping Flatpak and Flathub first).
 - Downloads the `teams-for-linux` `.deb` from GitHub releases and installs it via `apt`; the installed version is
@@ -38,6 +38,8 @@ role — it ships pre-installed with most Ubuntu desktop images.
 | `desktop_apps_firefox_enabled` | `true` | Whether to deploy system-wide Firefox policies. |
 | `desktop_apps_brave_enabled` | `false` | Whether to install Brave as an opt-in alternative browser, with crypto wallet/rewards features disabled via managed policy. Default false — Firefox stays the default for every consumer of this role unless explicitly toggled on. |
 | `desktop_apps_librewolf_enabled` | `false` | Whether to install LibreWolf as an opt-in alternative browser (via extrepo). Default false — Firefox stays the default for every consumer of this role unless explicitly toggled on. |
+| `desktop_apps_bitwarden_extension_enabled` | `true` | Whether to force-install the Bitwarden extension in the managed browsers (Firefox, LibreWolf, Brave). Set to `false` when Bitwarden is not used. |
+| `desktop_apps_ublock_origin_enabled` | `true` | Whether to force-install the uBlock Origin extension in the managed browsers (Firefox, LibreWolf, Brave). |
 | `desktop_apps_slack_enabled` | `true` | Whether to install Slack (also gates the Flatpak/Flathub bootstrap). |
 | `desktop_apps_teams_enabled` | `true` | Whether to install teams-for-linux. |
 | `desktop_apps_teams_version` | see `defaults/main.yml` | teams-for-linux version (github-releases IsmaelMartinez/teams-for-linux). |
@@ -97,7 +99,11 @@ locale, not something meant to be parameterized per machine).
 - The native Firefox password manager is disabled
   (`PasswordManagerEnabled: false`).
 - The Bitwarden extension (`{446900e4-71c2-419f-a6a7-df9c091e268b}`) is
-  force-installed and pinned to the navigation bar.
+  force-installed and pinned to the navigation bar, unless
+  `desktop_apps_bitwarden_extension_enabled` is `false`.
+- The uBlock Origin extension (`uBlock0@raymondhill.net`) is force-installed and
+  pinned to the navigation bar, unless `desktop_apps_ublock_origin_enabled` is
+  `false`.
 - The Swiss German dictionary (`de-CH@dictionaries.addons.mozilla.org`) is
   force-installed.
 - The default spellcheck language is set to `de-CH` via
@@ -122,7 +128,11 @@ existing consumer.
   - `PasswordManagerEnabled: false`: same posture as Firefox above.
   - The Bitwarden extension (Chrome Web Store ID
     `nngceckbapebfimnlniiiahkandclblb`) is force-installed via
-    `ExtensionSettings`, mirroring Firefox's Bitwarden force-install.
+    `ExtensionSettings`, mirroring Firefox's Bitwarden force-install (skipped
+    with `desktop_apps_bitwarden_extension_enabled: false`).
+  - The uBlock Origin extension (Chrome Web Store ID
+    `cjpalhdlnbpafiamejdnhcphjbkeiagm`) is force-installed the same way
+    (skipped with `desktop_apps_ublock_origin_enabled: false`).
 - Same check-mode chain-dependency reasoning as OnlyOffice: the GPG key
   download, apt repository, and package install are skipped under `--check`
   since each depends on the previous step having happened for real.

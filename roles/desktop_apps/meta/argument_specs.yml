@@ -27,6 +27,17 @@ argument_specs:
           of this role unless explicitly toggled on.
         required: false
         type: bool
+      desktop_apps_bitwarden_extension_enabled:
+        default: true
+        description: Whether to force-install the Bitwarden extension through the managed browser policies (Firefox, LibreWolf, Brave). Set to false when
+          Bitwarden is not used.
+        required: false
+        type: bool
+      desktop_apps_ublock_origin_enabled:
+        default: true
+        description: Whether to force-install the uBlock Origin extension through the managed browser policies (Firefox, LibreWolf, Brave).
+        required: false
+        type: bool
       desktop_apps_slack_enabled:
         default: true
         description: Whether to install Slack (also gates the Flatpak/Flathub bootstrap).
